@@ -1,191 +1,201 @@
+<!-- STREAMING_CHUNK: Defining document structure and modern minimal styling -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimalist Rank-Up Parkour</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Cozy Doodle Rank-Up Parkour</title>
+    <!-- Tailwind CSS for sleek hand-drawn UI borders -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PixiJS v7.4.0 CDN for guaranteed stability and performance -->
+    <!-- PixiJS v7.4.0 for stable performance and physics -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.0/pixi.min.js"></script>
-    <!-- Google Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Cute Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #030712;
+            font-family: 'Gaegu', cursive, sans-serif;
+            background-color: #F1ECE4;
             user-select: none;
             -webkit-user-select: none;
         }
-        /* Custom scrollbar to keep layout clean */
-        ::-webkit-scrollbar {
-            width: 6px;
+        /* Thick black border and shadow resembling hand-drawn doodle style */
+        .doodle-panel {
+            border: 3px solid #111111;
+            box-shadow: 4px 4px 0px #111111;
+            background-color: #FFFFFF;
         }
-        ::-webkit-scrollbar-track {
-            background: #0b0f19;
+        .doodle-btn {
+            border: 3px solid #111111;
+            box-shadow: 3px 3px 0px #111111;
+            background-color: #FFFFFF;
+            transition: all 0.1s ease;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 4px;
-        }
-        /* Subtle glow animation for UI */
-        .neon-glow {
-            box-shadow: 0 0 15px rgba(249, 115, 22, 0.2);
+        .doodle-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #111111;
         }
     </style>
 </head>
-<body class="w-screen h-screen overflow-hidden flex flex-col md:flex-row text-slate-100">
+<body class="w-screen h-screen overflow-hidden flex flex-col md:flex-row text-zinc-900 p-4 gap-4">
 
-    <!-- Left Sidebar: Stats & Control Center -->
-    <div class="w-full md:w-80 bg-slate-950/80 border-b md:border-b-0 md:border-r border-slate-800 p-6 flex flex-col justify-between z-10 backdrop-blur-md">
+    <!-- Left Dashboard (Doodle Diary Style) -->
+    <!-- STREAMING_CHUNK: Building side controller panels -->
+    <div class="w-full md:w-80 doodle-panel p-5 flex flex-col justify-between z-10 rounded-2xl">
         <div>
-            <!-- Game Title & Theme -->
-            <div class="mb-6">
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></span>
-                    <h1 class="text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-400">
-                        VERTIGO JUMP
-                    </h1>
-                </div>
-                <p class="text-xs text-slate-400 mt-1">Minecraft Parkour &times; Geo Dash Style</p>
+            <!-- Game Title -->
+            <div class="mb-5 text-center">
+                <h1 class="text-3xl font-bold tracking-tight text-zinc-900 flex items-center justify-center gap-1">
+                    ✏️ 쫀득 점프 타워!
+                </h1>
+                <p class="text-sm text-zinc-500 font-medium">마인크래프트식 연속 가속 점프맵</p>
             </div>
 
-            <!-- Real-time Climb Progress -->
-            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 mb-4">
-                <div class="flex justify-between text-xs font-semibold mb-2">
-                    <span class="text-slate-400">CLIMB PROGRESS</span>
-                    <span id="height-percent" class="text-orange-400">0%</span>
+            <!-- Altitude Progress bar -->
+            <div class="bg-zinc-100 p-3 rounded-xl border-2 border-zinc-900 mb-4">
+                <div class="flex justify-between text-sm font-bold mb-1">
+                    <span>등반 높이</span>
+                    <span id="height-percent" class="text-emerald-600">0%</span>
                 </div>
-                <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
-                    <div id="height-bar" class="bg-gradient-to-r from-orange-500 to-amber-400 h-2.5 transition-all duration-150" style="width: 0%"></div>
+                <div class="w-full bg-white rounded-full h-4 border-2 border-zinc-900 overflow-hidden p-0.5">
+                    <div id="height-bar" class="bg-emerald-400 h-full rounded-full transition-all duration-150 border-r-2 border-zinc-900" style="width: 0%"></div>
                 </div>
             </div>
 
-            <!-- Stats Dashboard -->
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <div class="bg-slate-900/40 p-3 rounded-lg border border-slate-800/50 text-center">
-                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">ATTEMPTS</div>
-                    <div id="attempt-val" class="text-xl font-bold mt-1 text-slate-200">1</div>
+            <!-- Dashboard Stats -->
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-zinc-50 p-2 rounded-xl border-2 border-zinc-900 text-center">
+                    <div class="text-xs text-zinc-400 font-bold">도전 횟수</div>
+                    <div id="attempt-val" class="text-xl font-bold">1</div>
                 </div>
-                <div class="bg-slate-900/40 p-3 rounded-lg border border-slate-800/50 text-center">
-                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">ELAPSED TIME</div>
-                    <div id="time-val" class="text-xl font-bold mt-1 text-slate-200">0.0s</div>
+                <div class="bg-zinc-50 p-2 rounded-xl border-2 border-zinc-900 text-center">
+                    <div class="text-xs text-zinc-400 font-bold">경과 시간</div>
+                    <div id="time-val" class="text-xl font-bold">0.0초</div>
                 </div>
             </div>
 
-            <!-- Practice Mode Section -->
-            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 mb-6">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-bold text-slate-300">PRACTICE MODE</span>
+            <!-- Momentum meter (Minecraft jump sprint indicator) -->
+            <div class="bg-amber-50 p-3 rounded-xl border-2 border-zinc-900 mb-4">
+                <div class="flex justify-between text-xs font-bold mb-1">
+                    <span class="text-amber-800">🏃‍♂️ 연속 점프 가속도 (MOMENTUM)</span>
+                    <span id="speed-multiplier" class="text-amber-700">1.0x</span>
+                </div>
+                <div class="w-full bg-white rounded-full h-3 border-2 border-zinc-900 overflow-hidden">
+                    <div id="speed-bar" class="bg-amber-400 h-full transition-all duration-100" style="width: 0%"></div>
+                </div>
+                <p class="text-[11px] text-zinc-500 mt-1">착지 후 곧바로 점프를 이어나가면 속도가 늘어나 더 넓은 틈새를 뛰어넘을 수 있습니다!</p>
+            </div>
+
+            <!-- Practice Mode Toggle -->
+            <!-- STREAMING_CHUNK: Setting up Practice checkpoint system -->
+            <div class="bg-sky-50 p-3 rounded-xl border-2 border-zinc-900 mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-bold text-sky-800">📍 연습모드 깃발꼽기</span>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="practice-toggle" class="sr-only peer">
-                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <div class="w-9 h-5 bg-zinc-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500 border-2 border-zinc-900"></div>
                     </label>
                 </div>
-                <div class="text-[11px] text-slate-400 leading-relaxed mb-3">
-                    연습 모드를 켜면 어디서나 체크포인트를 찍고 해당 스팟에서 즉시 재시작할 수 있습니다.
-                </div>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <button id="btn-set-cp" class="bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 py-2 rounded-md font-semibold text-emerald-400 transition cursor-pointer disabled:opacity-50" disabled>
-                        [C] 설정
+                <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                    <button id="btn-set-cp" class="doodle-btn py-1.5 rounded-lg text-sky-700 hover:bg-sky-100 disabled:opacity-40" disabled>
+                        [C] 깃발꼽기
                     </button>
-                    <button id="btn-clear-cp" class="bg-rose-600/20 hover:bg-rose-600/40 border border-rose-500/30 py-2 rounded-md font-semibold text-rose-400 transition cursor-pointer disabled:opacity-50" disabled>
-                        [V] 삭제
+                    <button id="btn-clear-cp" class="doodle-btn py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 disabled:opacity-40" disabled>
+                        [V] 회수하기
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Controls Help Card -->
-        <div class="hidden md:block">
-            <div class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Keyboard Controls</div>
-            <div class="space-y-1.5 text-xs text-slate-400">
-                <div class="flex justify-between"><span>Left / Right</span> <span class="bg-slate-900 border border-slate-800 px-1.5 rounded text-[10px] font-mono">A / D</span></div>
-                <div class="flex justify-between"><span>Jump</span> <span class="bg-slate-900 border border-slate-800 px-1.5 rounded text-[10px] font-mono">Space / W</span></div>
-                <div class="flex justify-between"><span>Quick Reset</span> <span class="bg-slate-900 border border-slate-800 px-1.5 rounded text-[10px] font-mono">R</span></div>
-                <div class="flex justify-between"><span>Set Checkpoint</span> <span class="bg-slate-900 border border-slate-800 px-1.5 rounded text-[10px] font-mono">C</span></div>
-                <div class="flex justify-between"><span>Clear Checkpoint</span> <span class="bg-slate-900 border border-slate-800 px-1.5 rounded text-[10px] font-mono">V</span></div>
+        <!-- Controls Guide -->
+        <div class="hidden md:block border-t-2 border-zinc-200 pt-3">
+            <div class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">조작 방법 가이드</div>
+            <div class="space-y-1 text-xs text-zinc-600 font-bold">
+                <div class="flex justify-between"><span>좌우 이동</span> <span class="bg-zinc-100 px-1.5 rounded border border-zinc-400 font-mono">A / D 또는 ← / →</span></div>
+                <div class="flex justify-between"><span>점프</span> <span class="bg-zinc-100 px-1.5 rounded border border-zinc-400 font-mono">Space / W / ↑</span></div>
+                <div class="flex justify-between"><span>즉시 재시작</span> <span class="bg-zinc-100 px-1.5 rounded border border-zinc-400 font-mono">R</span></div>
             </div>
         </div>
     </div>
 
-    <!-- Main Game Area -->
-    <div class="flex-1 flex flex-col justify-between relative bg-slate-950">
-        <!-- Floating HUD Header (Dynamic Rank, Settings) -->
+    <!-- Main Game Canvas Area -->
+    <!-- STREAMING_CHUNK: Structuring the canvas and HUD container -->
+    <div class="flex-1 flex flex-col justify-between relative doodle-panel rounded-2xl overflow-hidden bg-[#FAF8F5]">
+        <!-- Floating Status Badges -->
         <div class="absolute top-4 left-4 right-4 flex justify-between items-center z-10 pointer-events-none">
-            <div class="flex items-center gap-3">
-                <div id="rank-badge" class="px-3.5 py-1.5 rounded-full border border-emerald-500 bg-emerald-950/40 font-extrabold text-xs text-emerald-400 tracking-wider backdrop-blur-md transition-all duration-300">
+            <div class="flex items-center gap-2">
+                <div id="rank-badge" class="px-3 py-1 rounded-full border-2 border-zinc-900 bg-white font-bold text-sm tracking-wide shadow-[2px_2px_0px_#111111] transition-all">
                     RANK: ROOKIE
                 </div>
-                <div id="practice-badge" class="px-3 py-1.5 rounded-full border border-transparent bg-slate-900/80 font-bold text-[10px] text-slate-500 tracking-wider backdrop-blur-md uppercase transition-all duration-300">
-                    Normal Mode
+                <div id="practice-badge" class="px-3 py-1 rounded-full border-2 border-zinc-900 bg-zinc-100 font-bold text-xs tracking-wide shadow-[2px_2px_0px_#111111] text-zinc-500">
+                    일반 모드
                 </div>
             </div>
 
-            <!-- Right controls (Mute, Reset) -->
+            <!-- Volume and Quick Reset Controls -->
             <div class="flex gap-2 pointer-events-auto">
-                <button id="btn-sound" class="bg-slate-900/80 hover:bg-slate-800 border border-slate-800 p-2 rounded-lg text-slate-300 hover:text-slate-100 transition cursor-pointer" title="음향 토글">
+                <button id="btn-sound" class="doodle-btn p-1.5 rounded-xl text-zinc-700 hover:bg-zinc-50" title="사운드 온/오프">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                     </svg>
                 </button>
-                <button id="btn-restart" class="bg-slate-900/80 hover:bg-slate-800 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-slate-100 transition cursor-pointer">
-                    초기화 (R)
+                <button id="btn-restart" class="doodle-btn px-3 py-1 text-xs font-bold text-zinc-700 hover:bg-zinc-50">
+                    처음부터 (R)
                 </button>
             </div>
         </div>
 
-        <!-- Game Canvas Box -->
-        <div id="canvas-container" class="flex-1 w-full h-full relative overflow-hidden flex items-center justify-center">
-            <canvas id="game-canvas" class="block outline-none max-w-full max-h-full"></canvas>
+        <!-- Render Container for PixiJS Canvas -->
+        <div id="canvas-container" class="flex-1 w-full h-full relative overflow-hidden">
+            <canvas id="game-canvas" class="block outline-none w-full h-full"></canvas>
         </div>
 
-        <!-- Mobile Navigation Controls (Visually stunning translucent D-pad overlay) -->
-        <div class="md:hidden flex justify-between items-center p-6 bg-slate-950/60 border-t border-slate-900 backdrop-blur-md z-10 gap-4">
+        <!-- Mobile Touch Controller D-pad Overlay -->
+        <!-- STREAMING_CHUNK: Designing mobile optimized on-screen controls -->
+        <div class="md:hidden flex justify-between items-center p-4 bg-zinc-50 border-t-2 border-zinc-900 gap-4">
             <div class="flex gap-2">
-                <button id="touch-left" class="w-16 h-16 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-center active:scale-95 active:bg-slate-800 text-2xl font-bold transition">◀</button>
-                <button id="touch-right" class="w-16 h-16 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-center active:scale-95 active:bg-slate-800 text-2xl font-bold transition">▶</button>
+                <button id="touch-left" class="w-14 h-14 rounded-xl doodle-btn flex items-center justify-center active:scale-95 text-lg font-bold">◀</button>
+                <button id="touch-right" class="w-14 h-14 rounded-xl doodle-btn flex items-center justify-center active:scale-95 text-lg font-bold">▶</button>
             </div>
-            <button id="touch-jump" class="flex-1 h-16 rounded-xl bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/40 text-orange-400 font-extrabold text-lg active:scale-95 transition">
-                JUMP
+            <button id="touch-jump" class="flex-1 h-14 rounded-xl doodle-btn bg-amber-200 active:bg-amber-300 text-amber-950 font-bold text-base active:scale-95">
+                점프 (JUMP)
             </button>
         </div>
     </div>
 
-    <!-- Victory Overlay (Custom styled modal popup on winning) -->
-    <div id="victory-modal" class="hidden fixed inset-0 bg-slate-950/90 flex flex-col justify-center items-center z-50 p-6 transition-all duration-500">
-        <div class="bg-slate-900 border border-amber-500/30 p-8 rounded-2xl max-w-md w-full text-center neon-glow">
-            <div class="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6 border border-amber-500/30">
-                <span class="text-4xl text-amber-500">👑</span>
+    <!-- Cozy Clear Overlay Modals -->
+    <!-- STREAMING_CHUNK: Styling the Victory Modal screen -->
+    <div id="victory-modal" class="hidden fixed inset-0 bg-zinc-900/40 backdrop-blur-sm flex flex-col justify-center items-center z-50 p-6">
+        <div class="bg-white border-4 border-zinc-900 p-8 rounded-3xl max-w-sm w-full text-center shadow-[8px_8px_0px_#111111]">
+            <div class="w-16 h-16 rounded-full bg-amber-100 border-2 border-zinc-900 flex items-center justify-center mx-auto mb-4">
+                <span class="text-3xl">🏆</span>
             </div>
-            <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200 uppercase tracking-widest mb-2">
-                STAGE CLEARED!
-            </h2>
-            <p class="text-slate-400 text-sm mb-6">마인크래프트 랭크업 파쿠르 타워의 최정상 전설의 등반에 성공하셨습니다!</p>
+            <h2 class="text-3xl font-bold text-zinc-900 mb-2">타워 정복 완료!</h2>
+            <p class="text-zinc-600 text-sm mb-4">당신은 진짜 쫀득 점프 타워의 전설이 되었습니다!</p>
 
-            <div class="bg-slate-950 rounded-xl p-4 mb-6 border border-slate-800 space-y-2.5">
-                <div class="flex justify-between text-xs">
-                    <span class="text-slate-500 font-medium">최종 달성 랭크</span>
-                    <span class="text-magenta-500 font-bold text-pink-400">LEGEND JUMPER</span>
+            <div class="bg-zinc-50 rounded-2xl p-4 mb-5 border-2 border-zinc-900 space-y-2 text-sm font-bold">
+                <div class="flex justify-between">
+                    <span class="text-zinc-500">최종 칭호</span>
+                    <span class="text-purple-600">토끼 신동 JUMPER</span>
                 </div>
-                <div class="flex justify-between text-xs">
-                    <span class="text-slate-500 font-medium">데스 카운트 (도전 횟수)</span>
-                    <span id="final-attempts" class="text-orange-400 font-extrabold">0</span>
+                <div class="flex justify-between">
+                    <span class="text-zinc-500">도전 데스 카운트</span>
+                    <span id="final-attempts" class="text-amber-600">0</span>
                 </div>
-                <div class="flex justify-between text-xs">
-                    <span class="text-slate-500 font-medium">등반 완료 소요시간</span>
-                    <span id="final-time" class="text-slate-200 font-extrabold">0s</span>
+                <div class="flex justify-between">
+                    <span class="text-zinc-500">클리어 소요시간</span>
+                    <span id="final-time" class="text-zinc-800">0초</span>
                 </div>
             </div>
 
-            <button id="btn-replay" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 py-3.5 rounded-xl text-sm font-extrabold text-slate-950 hover:opacity-90 active:scale-95 transition cursor-pointer shadow-lg shadow-orange-500/20">
-                타워 재입장하기 (처음부터)
+            <button id="btn-replay" class="w-full doodle-btn bg-amber-300 hover:bg-amber-400 py-3 rounded-xl text-md font-bold text-zinc-900 shadow-[4px_4px_0px_#111111]">
+                다시 오르기 ✏️
             </button>
         </div>
     </div>
 
     <script>
-    // Audio Context Setup for Synthesized Retro SFX
+    // STREAMING_CHUNK: Creating retro sound effects engine
+    // Audio Context Setup for Synthesized Retro Cute Sound Effects
     let audioMuted = false;
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
@@ -209,53 +219,58 @@
 
             if (type === 'jump') {
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(140, now);
-                osc.frequency.exponentialRampToValueAtTime(580, now + 0.15);
-                gainNode.gain.setValueAtTime(0.12, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                // Cute popping sound
+                osc.frequency.setValueAtTime(250, now);
+                osc.frequency.exponentialRampToValueAtTime(700, now + 0.12);
+                gainNode.gain.setValueAtTime(0.15, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
                 osc.start(now);
-                osc.stop(now + 0.15);
+                osc.stop(now + 0.12);
             } 
             else if (type === 'land') {
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(90, now);
-                osc.frequency.exponentialRampToValueAtTime(45, now + 0.08);
-                gainNode.gain.setValueAtTime(0.08, now);
+                // Soft thump
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.exponentialRampToValueAtTime(60, now + 0.08);
+                gainNode.gain.setValueAtTime(0.12, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
                 osc.start(now);
                 osc.stop(now + 0.08);
             } 
             else if (type === 'die') {
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(280, now);
-                osc.frequency.linearRampToValueAtTime(50, now + 0.35);
-                gainNode.gain.setValueAtTime(0.15, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-                osc.start(now);
-                osc.stop(now + 0.35);
-            } 
-            else if (type === 'checkpoint') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
-                gainNode.gain.setValueAtTime(0.10, now);
+                // Slide down chord
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.25);
+                gainNode.gain.setValueAtTime(0.18, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
                 osc.start(now);
                 osc.stop(now + 0.25);
+            } 
+            else if (type === 'checkpoint') {
+                osc.type = 'sine';
+                // Shiny chime
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.setValueAtTime(660, now + 0.06);
+                osc.frequency.exponentialRampToValueAtTime(1100, now + 0.2);
+                gainNode.gain.setValueAtTime(0.12, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
             }
             else if (type === 'win') {
-                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 chords
+                const notes = [523.25, 659.25, 783.99, 1046.50];
                 notes.forEach((freq, idx) => {
                     const o = audioCtx.createOscillator();
                     const g = audioCtx.createGain();
                     o.connect(g);
                     g.connect(audioCtx.destination);
-                    o.type = 'sine';
-                    o.frequency.setValueAtTime(freq, now + idx * 0.12);
-                    g.gain.setValueAtTime(0.12, now + idx * 0.12);
-                    g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.5);
-                    o.start(now + idx * 0.12);
-                    o.stop(now + idx * 0.12 + 0.5);
+                    o.type = 'triangle';
+                    o.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    g.gain.setValueAtTime(0.14, now + idx * 0.08);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.4);
+                    o.start(now + idx * 0.08);
+                    o.stop(now + idx * 0.08 + 0.4);
                 });
             }
         } catch (e) {
@@ -263,13 +278,19 @@
         }
     }
 
-    // Game Physics & Design Variables
-    const TILE_SIZE = 50;
-    const PLAYER_SIZE = 34; // Slightly smaller than tile size to make movement sleek
-    const GRAVITY = 0.5;
-    const JUMP_FORCE = -11.5;
-    const MOVE_SPEED = 5.2;
-    const FRICTION = 0.82;
+    // STREAMING_CHUNK: Declaring physics variables
+    // Game Physics Design Variables (Specially modified for Minecraft Jump Acceleration)
+    const TILE_SIZE = 40;
+    const PLAYER_SIZE = 18; // 2x smaller than previous for extra cuteness!
+    const GRAVITY = 0.42;
+    const JUMP_FORCE = -9.2;
+    const BASE_MOVE_SPEED = 3.6;
+    const FRICTION = 0.85;
+
+    // Jump Acceleration & Momentum factors (Simulates Minecraft jump sprint mechanics)
+    let consecutiveJumpTimer = 0; // Frames since last landing
+    let consecutiveJumpCount = 0; // Number of perfectly timed jumps
+    let speedBoostMultiplier = 1.0; 
 
     const keys = { Left: false, Right: false, Jump: false };
     let practiceMode = false;
@@ -279,70 +300,66 @@
     let gameWon = false;
     let timerInterval = null;
 
-    // Procedural Tower Platform Layout
+    // STREAMING_CHUNK: Formatting cute curated map data
+    // Curated 100% playable platform data climbing vertically (Tower Layout)
     const rawPlatforms = [
-        // Ground Starting area
-        { x: 100, y: 4050, w: 900, h: 100, type: 'start' },
-        
-        // --- ROOKIE ZONE (Y: 4100 to 3200) ---
-        { x: 1050, y: 3950, w: 100, h: 50, type: 'rookie' },
-        { x: 1250, y: 3820, w: 120, h: 50, type: 'rookie' },
-        { x: 1050, y: 3680, w: 100, h: 50, type: 'rookie' },
-        { x: 800, y: 3580, w: 150, h: 50, type: 'rookie' },
-        { x: 550, y: 3480, w: 150, h: 50, type: 'rookie' },
-        { x: 350, y: 3350, w: 100, h: 50, type: 'rookie' },
-        { x: 150, y: 3220, w: 150, h: 50, type: 'rookie_rest' }, // Safety Spot
+        // ------------------ ROOKIE ZONE (Bottom) ------------------
+        { x: 100, y: 3900, w: 600, h: 40, type: 'start' }, // Starting big notepad
+        { x: 760, y: 3820, w: 80, h: 25, type: 'rookie' },
+        { x: 920, y: 3720, w: 80, h: 25, type: 'rookie' },
+        { x: 800, y: 3600, w: 80, h: 25, type: 'rookie' },
+        { x: 620, y: 3500, w: 80, h: 25, type: 'rookie' },
+        { x: 440, y: 3400, w: 80, h: 25, type: 'rookie' },
+        { x: 260, y: 3300, w: 120, h: 25, type: 'rookie_rest' }, // Safety check platform
 
-        // --- IRON ZONE (Y: 3200 to 2400) ---
-        { x: 400, y: 3090, w: 50, h: 50, type: 'iron' },
-        { x: 650, y: 2980, w: 50, h: 50, type: 'iron' },
-        { x: 900, y: 2880, w: 100, h: 50, type: 'iron' },
-        { x: 1150, y: 2760, w: 50, h: 50, type: 'iron' },
-        { x: 1350, y: 2630, w: 100, h: 50, type: 'iron' },
-        { x: 1100, y: 2500, w: 200, h: 50, type: 'iron_rest' }, // Safety Spot
+        // ------------------ IRON ZONE (Lower Middle) ------------------
+        { x: 440, y: 3180, w: 60, h: 25, type: 'iron' },
+        { x: 600, y: 3080, w: 60, h: 25, type: 'iron' },
+        { x: 760, y: 2980, w: 60, h: 25, type: 'iron' },
+        { x: 920, y: 2860, w: 60, h: 25, type: 'iron' },
+        { x: 740, y: 2740, w: 60, h: 25, type: 'iron' },
+        { x: 560, y: 2630, w: 60, h: 25, type: 'iron' },
+        { x: 380, y: 2530, w: 120, h: 25, type: 'iron_rest' }, // Safety check platform
 
-        // --- GOLD ZONE (Y: 2400 to 1600) ---
-        { x: 850, y: 2380, w: 50, h: 50, type: 'gold' },
-        { x: 600, y: 2270, w: 50, h: 50, type: 'gold' },
-        { x: 350, y: 2160, w: 50, h: 50, type: 'gold' },
-        { x: 150, y: 2040, w: 100, h: 50, type: 'gold' },
-        { x: 350, y: 1920, w: 50, h: 50, type: 'gold' },
-        { x: 600, y: 1810, w: 50, h: 50, type: 'gold' },
-        { x: 850, y: 1680, w: 200, h: 50, type: 'gold_rest' }, // Safety Spot
+        // ------------------ GOLD ZONE (Middle - Momentum sprint needed!) ------------------
+        { x: 580, y: 2420, w: 40, h: 25, type: 'gold' },
+        { x: 760, y: 2320, w: 40, h: 25, type: 'gold' }, // High gap, momentum helps a lot
+        { x: 940, y: 2210, w: 40, h: 25, type: 'gold' },
+        { x: 800, y: 2100, w: 40, h: 25, type: 'gold' },
+        { x: 620, y: 2000, w: 40, h: 25, type: 'gold' },
+        { x: 420, y: 1900, w: 100, h: 25, type: 'gold_rest' }, // Safety check platform
 
-        // --- DIAMOND ZONE (Y: 1600 to 800) ---
-        { x: 1150, y: 1570, w: 50, h: 50, type: 'diamond' },
-        { x: 1380, y: 1450, w: 50, h: 50, type: 'diamond' },
-        { x: 1200, y: 1320, w: 50, h: 50, type: 'diamond' },
-        { x: 950, y: 1210, w: 50, h: 50, type: 'diamond' },
-        { x: 700, y: 1100, w: 50, h: 50, type: 'diamond' },
-        { x: 450, y: 990, w: 50, h: 50, type: 'diamond' },
-        { x: 200, y: 880, w: 200, h: 50, type: 'diamond_rest' }, // Safety Spot
+        // ------------------ DIAMOND ZONE (High Precise Gaps) ------------------
+        { x: 580, y: 1780, w: 30, h: 25, type: 'diamond' }, // 30px tiny blocks
+        { x: 740, y: 1670, w: 30, h: 25, type: 'diamond' },
+        { x: 900, y: 1560, w: 30, h: 25, type: 'diamond' },
+        { x: 750, y: 1450, w: 30, h: 25, type: 'diamond' },
+        { x: 580, y: 1350, w: 30, h: 25, type: 'diamond' },
+        { x: 400, y: 1250, w: 100, h: 25, type: 'diamond_rest' }, // Safety check platform
 
-        // --- LEGEND ZONE (Y: 800 to 200) ---
-        { x: 450, y: 760, w: 50, h: 50, type: 'legend' },
-        { x: 700, y: 660, w: 50, h: 50, type: 'legend' },
-        { x: 950, y: 560, w: 50, h: 50, type: 'legend' },
-        { x: 1200, y: 460, w: 50, h: 50, type: 'legend' },
-        { x: 950, y: 360, w: 50, h: 50, type: 'legend' },
-        { x: 650, y: 260, w: 300, h: 50, type: 'legend_rest' }  // Victory Altar
+        // ------------------ LEGEND ZONE (Final Climb) ------------------
+        { x: 540, y: 1140, w: 30, h: 25, type: 'legend' },
+        { x: 700, y: 1040, w: 30, h: 25, type: 'legend' },
+        { x: 860, y: 940, w: 30, h: 25, type: 'legend' },
+        { x: 700, y: 840, w: 30, h: 25, type: 'legend' },
+        { x: 540, y: 740, w: 30, h: 25, type: 'legend' },
+        { x: 380, y: 640, w: 200, h: 30, type: 'legend_rest' }  // The Castle Altar
     ];
 
-    // Start Ticker & UI Setup on window load
+    // STREAMING_CHUNK: Initializing PixiJS and starting load operations
     window.onload = function() {
         const canvas = document.getElementById('game-canvas');
         const container = document.getElementById('canvas-container');
 
-        // Create standard PixiJS Application
         const app = new PIXI.Application({
             view: canvas,
             width: 800,
             height: 500,
-            backgroundColor: 0x090d16, // Slate 950
+            backgroundColor: 0xFAF8F5, // Warm cozy paper white
             antialias: true
         });
 
-        // Setup resize handling
+        // Resize behavior
         function handleResize() {
             const w = container.clientWidth;
             const h = container.clientHeight;
@@ -351,77 +368,94 @@
         window.addEventListener('resize', handleResize);
         handleResize();
 
-        // Main game container representing the scrolling world
+        // Game World Setup
         const world = new PIXI.Container();
         app.stage.addChild(world);
 
-        // Background dynamic elements (Distant grid & particles)
+        // Drawing a grid background like a doodle notebook paper
         const bgContainer = new PIXI.Container();
         world.addChild(bgContainer);
 
-        // Draw static grid pattern for beautiful parallax backdrop
-        const bgGrid = new PIXI.Graphics();
-        bgGrid.lineStyle(1, 0x1e293b, 0.3);
-        for(let x=0; x<2000; x+=100) {
-            bgGrid.moveTo(x, 0);
-            bgGrid.lineTo(x, 4200);
+        const paperGrid = new PIXI.Graphics();
+        // Notebook horizontal lines and margin line
+        paperGrid.lineStyle(1, 0xEAE5DC, 1);
+        for(let y = 0; y < 4200; y += 24) {
+            paperGrid.moveTo(0, y);
+            paperGrid.lineTo(2000, y);
         }
-        for(let y=0; y<4200; y+=100) {
-            bgGrid.moveTo(0, y);
-            bgGrid.lineTo(2000, y);
-        }
-        bgContainer.addChild(bgGrid);
+        // Red notebook vertical margin line
+        paperGrid.lineStyle(2, 0xF5C2C2, 0.7);
+        paperGrid.moveTo(150, 0);
+        paperGrid.lineTo(150, 4200);
 
-        // Drawing massive colored gradient walls to highlight ranks
+        bgContainer.addChild(paperGrid);
+
+        // STREAMING_CHUNK: Drawing aesthetic level props and zones
+        // Drawing cute background details like hand-drawn clouds, flowers
+        const clouds = [
+            { x: 200, y: 3500 }, { x: 800, y: 3100 },
+            { x: 300, y: 2600 }, { x: 750, y: 2100 },
+            { x: 250, y: 1500 }, { x: 800, y: 1000 }
+        ];
+        
+        clouds.forEach(c => {
+            const cloudG = new PIXI.Graphics();
+            cloudG.lineStyle(3, 0x111111, 0.3);
+            cloudG.beginFill(0xFFFFFF, 0.5);
+            // Cute cartoon bubble clouds
+            cloudG.drawCircle(0, 0, 20);
+            cloudG.drawCircle(22, -8, 25);
+            cloudG.drawCircle(45, 0, 20);
+            cloudG.drawRect(0, 5, 45, 15);
+            cloudG.endFill();
+            cloudG.x = c.x;
+            cloudG.y = c.y;
+            bgContainer.addChild(cloudG);
+        });
+
+        // Add Rank boundary lines
         const rankBanners = [
-            { yMin: 3200, yMax: 4200, color: 0x10b981, label: 'ROOKIE' },
-            { yMin: 2400, yMax: 3200, color: 0x3b82f6, label: 'IRON' },
-            { yMin: 1600, yMax: 2400, color: 0xf59e0b, label: 'GOLD' },
-            { yMin: 800, yMax: 1600, color: 0x06b6d4, label: 'DIAMOND' },
-            { yMin: 0, yMax: 800, color: 0xd946ef, label: 'LEGEND' }
+            { y: 3300, label: "ROOKIE ZONE", color: 0x111111 },
+            { y: 2530, label: "IRON ZONE", color: 0x111111 },
+            { y: 1900, label: "GOLD ZONE", color: 0x111111 },
+            { y: 1250, label: "DIAMOND ZONE", color: 0x111111 },
+            { y: 640, label: "LEGEND ZONE", color: 0x111111 }
         ];
 
         rankBanners.forEach(banner => {
-            const block = new PIXI.Graphics();
-            block.beginFill(banner.color, 0.02);
-            block.drawRect(0, banner.yMin, 2000, banner.yMax - banner.yMin);
-            block.endFill();
-            
-            // Add aesthetic indicator dashed separators
-            block.lineStyle(2, banner.color, 0.15);
-            block.moveTo(0, banner.yMin);
-            block.lineTo(2000, banner.yMin);
-            
-            bgContainer.addChild(block);
+            const line = new PIXI.Graphics();
+            line.lineStyle(2, 0x111111, 0.15);
+            line.moveTo(0, banner.y + 40);
+            line.lineTo(1500, banner.y + 40);
+            bgContainer.addChild(line);
         });
 
-        // Build platforms with highly-visible glowing tops
+        // Building Platforms with thick hand-drawn outlines
         const platforms = [];
         
         rawPlatforms.forEach(p => {
             const group = new PIXI.Container();
             const body = new PIXI.Graphics();
 
-            // Setup thematic colors
-            let coreColor = 0x1e293b;
-            let neonColor = 0x94a3b8;
-
-            if (p.type.includes('rookie')) neonColor = 0x10b981;
-            else if (p.type.includes('iron')) neonColor = 0x3b82f6;
-            else if (p.type.includes('gold')) neonColor = 0xf59e0b;
-            else if (p.type.includes('diamond')) neonColor = 0x06b6d4;
-            else if (p.type.includes('legend')) neonColor = 0xd946ef;
-            else if (p.type === 'start') neonColor = 0x64748b;
-
-            // Draw solid plate
-            body.beginFill(coreColor);
+            // Doodle platform style: Clean white fill with thick black outline
+            body.lineStyle(3, 0x111111, 1);
+            body.beginFill(0xFFFFFF);
             body.drawRoundedRect(0, 0, p.w, p.h, 6);
             body.endFill();
 
-            // Draw glowing top platform line (for easy visualization)
-            body.lineStyle(4, neonColor, 1);
-            body.moveTo(2, 2);
-            body.lineTo(p.w - 2, 2);
+            // Underneath shadow line for cute flat doodle visual depth
+            body.lineStyle(3, 0x111111, 0.4);
+            body.moveTo(5, p.h);
+            body.lineTo(p.w, p.h);
+
+            // Add cute texture stripes to rest platforms
+            if (p.type.includes('rest') || p.type === 'start') {
+                body.lineStyle(2, 0x111111, 0.2);
+                for(let sx = 15; sx < p.w; sx += 20) {
+                    body.moveTo(sx, 5);
+                    body.lineTo(sx - 5, p.h - 5);
+                }
+            }
 
             group.addChild(body);
             group.x = p.x;
@@ -439,98 +473,135 @@
             });
         });
 
-        // Victory Portal at Altar
-        const victoryAltarY = 260; 
+        // Cozy Ending Goal Flag Setup (At Altar Platform)
+        // STREAMING_CHUNK: Setting up clear visual goal target
+        const victoryAltarY = 640; 
         const portalContainer = new PIXI.Container();
-        portalContainer.x = 800; // Center of the legend rest platform
-        portalContainer.y = victoryAltarY - 40;
+        portalContainer.x = 480; 
+        portalContainer.y = victoryAltarY - 45;
 
-        const portalGlow = new PIXI.Graphics();
-        portalGlow.lineStyle(4, 0xd946ef, 0.8);
-        portalGlow.beginFill(0xd946ef, 0.2);
-        portalGlow.drawCircle(0, 0, 24);
-        portalGlow.endFill();
-        portalContainer.addChild(portalGlow);
+        const goalFlag = new PIXI.Graphics();
+        // Draw little cute flagpost with a waving flag
+        goalFlag.lineStyle(3, 0x111111, 1);
+        goalFlag.beginFill(0xFFFFFF);
+        goalFlag.moveTo(0, 45); // flagpole bottom
+        goalFlag.lineTo(0, 0);  // flagpole top
+        // Draw the triangular flag with a smiley face in next steps
+        goalFlag.drawPolygon([
+            0, 5,
+            24, 15,
+            0, 25
+        ]);
+        goalFlag.endFill();
+
+        // Draw cute little smiley eyes on the flag
+        goalFlag.lineStyle(2, 0x111111, 1);
+        goalFlag.moveTo(6, 12); goalFlag.lineTo(7, 12);
+        goalFlag.moveTo(11, 12); goalFlag.lineTo(12, 12);
+
+        portalContainer.addChild(goalFlag);
         world.addChild(portalContainer);
 
-        // Player setup (Geometric square with nice contrast & border)
+        // Cute Player: Mochi! (A tiny white marshmallow cube with black eyes)
+        // STREAMING_CHUNK: Spawning the cute tiny Mochi character
         const playerContainer = new PIXI.Container();
         const playerBody = new PIXI.Graphics();
-        playerBody.beginFill(0xf97316); // Normal: Orange
-        playerBody.lineStyle(2, 0xffffff, 0.9);
-        playerBody.drawRect(-PLAYER_SIZE/2, -PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE);
+        
+        // Custom draw cute soft box
+        playerBody.lineStyle(3, 0x111111, 1);
+        playerBody.beginFill(0xFFFFFF);
+        playerBody.drawRoundedRect(-PLAYER_SIZE/2, -PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE, 4);
         playerBody.endFill();
+
+        // Cute dot eyes
+        const eyes = new PIXI.Graphics();
+        eyes.beginFill(0x111111);
+        eyes.drawCircle(-4, -2, 2.5); // Left eye
+        eyes.drawCircle(4, -2, 2.5);  // Right eye
+        eyes.endFill();
+
+        playerBody.addChild(eyes);
         playerContainer.addChild(playerBody);
         world.addChild(playerContainer);
 
-        // Player physics state variables
+        // Player physics state variables (With Minecraft Jump Booster logic)
         const playerState = {
-            x: 250,
-            y: 3950,
+            x: 220,
+            y: 3800,
             vx: 0,
             vy: 0,
             width: PLAYER_SIZE,
             height: PLAYER_SIZE,
             grounded: false,
-            rotation: 0
+            scaleX: 1,
+            scaleY: 1
         };
 
-        // Checkpoint marker flag
+        // Checkpoint flag setup
         const checkpointFlag = new PIXI.Graphics();
         checkpointFlag.visible = false;
-        // Drawing visual bright emerald diamond for checkpoint
-        checkpointFlag.lineStyle(2, 0xffffff, 1);
-        checkpointFlag.beginFill(0x10b981);
+        checkpointFlag.lineStyle(3, 0x111111, 1);
+        checkpointFlag.beginFill(0xBAE6FD); // Cozy pastel sky blue flag
         checkpointFlag.drawPolygon([
-            0, -25,
-            12, 0,
-            0, 25,
-            -12, 0
+            0, -30,
+            16, -20,
+            0, -10
         ]);
+        checkpointFlag.lineStyle(3, 0x111111, 1);
+        checkpointFlag.moveTo(0, -30);
+        checkpointFlag.lineTo(0, 0); // flagpole
         checkpointFlag.endFill();
         world.addChild(checkpointFlag);
 
-        // Particle System
+        // Cute Paper Particles
         const particles = [];
 
-        function spawnParticles(x, y, color, count=8, speedScale=1) {
+        function spawnParticles(x, y, color=0x111111, count=6, speedScale=1) {
             for(let i=0; i<count; i++) {
                 const p = new PIXI.Graphics();
+                p.lineStyle(1.5, 0x111111, 1);
                 p.beginFill(color);
-                p.drawRect(-3, -3, 6, 6);
+                p.drawRect(-3, -3, 6, 6); // little rectangular dust papers
                 p.endFill();
                 p.x = x;
                 p.y = y;
-                p.vx = (Math.random() - 0.5) * 5 * speedScale;
-                p.vy = (Math.random() - 0.5) * 5 * speedScale - 1;
+                p.vx = (Math.random() - 0.5) * 4 * speedScale;
+                p.vy = (Math.random() - 0.5) * 4 * speedScale - 0.5;
                 p.alpha = 1;
                 p.life = 1.0;
-                p.decay = 0.03 + Math.random() * 0.03;
+                p.decay = 0.04 + Math.random() * 0.04;
                 world.addChild(p);
                 particles.push(p);
             }
         }
 
-        // Active Player Trails (Geometry Dash signature)
+        // Trails representing momentum
         const trails = [];
-        function spawnTrail(x, y, rotation, color) {
+        function spawnTrail(x, y, scaleX, scaleY) {
             const t = new PIXI.Graphics();
-            t.beginFill(color, 0.4);
-            t.drawRect(-PLAYER_SIZE/2, -PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE);
+            t.lineStyle(2, 0x111111, 0.15);
+            t.beginFill(0xFFFFFF, 0.3);
+            t.drawRoundedRect(-PLAYER_SIZE/2, -PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE, 4);
             t.endFill();
             t.x = x;
             t.y = y;
-            t.rotation = rotation;
-            t.alpha = 0.5;
+            t.scale.x = scaleX;
+            t.scale.y = scaleY;
+            t.alpha = 0.4;
             world.addChildAt(t, world.getChildIndex(playerContainer));
             trails.push(t);
         }
 
+        // STREAMING_CHUNK: Handling respawn mechanics
         // Player Respawn
         function respawn() {
             playSound('die');
-            spawnParticles(playerState.x, playerState.y, 0xef4444, 18, 1.5);
+            spawnParticles(playerState.x, playerState.y, 0xFF7D7D, 12, 1.3);
             
+            // Speed reset on death
+            speedBoostMultiplier = 1.0;
+            consecutiveJumpCount = 0;
+
             setTimeout(() => {
                 attemptCount++;
                 document.getElementById('attempt-val').innerText = attemptCount;
@@ -539,55 +610,48 @@
                     playerState.x = checkpoint.x;
                     playerState.y = checkpoint.y;
                 } else {
-                    playerState.x = 250;
-                    playerState.y = 3950;
+                    playerState.x = 220;
+                    playerState.y = 3800;
                 }
                 playerState.vx = 0;
                 playerState.vy = 0;
-                playerState.rotation = 0;
-                playerContainer.rotation = 0;
+                playerState.scaleX = 1;
+                playerState.scaleY = 1;
             }, 100);
         }
 
-        // Timer controller
+        // Global Timer
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(() => {
             if (!gameWon) {
                 timeElapsed += 0.1;
-                document.getElementById('time-val').innerText = timeElapsed.toFixed(1) + "s";
+                document.getElementById('time-val').innerText = timeElapsed.toFixed(1) + "초";
             }
         }, 100);
 
-        // AABB box-to-box collision detector
+        // AABB Box collision checker
         function checkCollision(r1, r2) {
-            // Adjust coordinates to be relative to left-top point of playerState
             return r1.x - r1.width/2 < r2.x + r2.width &&
                    r1.x + r1.width/2 > r2.x &&
                    r1.y - r1.height/2 < r2.y + r2.height &&
                    r1.y + r1.height/2 > r2.y;
         }
 
-        // Keyboard Handling
+        // Keyboard Event Handlers
         const activeKeys = {};
         window.addEventListener('keydown', (e) => {
             activeKeys[e.code] = true;
             
-            // Practice Checkpoint trigger
-            if (e.code === 'KeyC' && practiceMode) {
-                setCheckpoint();
-            }
-            if (e.code === 'KeyV' && practiceMode) {
-                clearCheckpoint();
-            }
-            if (e.code === 'KeyR') {
-                respawn();
-            }
+            if (e.code === 'KeyC' && practiceMode) setCheckpoint();
+            if (e.code === 'KeyV' && practiceMode) clearCheckpoint();
+            if (e.code === 'KeyR') respawn();
         });
         window.addEventListener('keyup', (e) => {
             activeKeys[e.code] = false;
         });
 
-        // Touch Interaction Mapping
+        // STREAMING_CHUNK: Integrating mobile virtual joystick listeners
+        // Mobile D-pad mapping
         const touchLeft = document.getElementById('touch-left');
         const touchRight = document.getElementById('touch-right');
         const touchJump = document.getElementById('touch-jump');
@@ -603,7 +667,7 @@
         touchJump.addEventListener('touchstart', (e) => { e.preventDefault(); isTouchJump = true; });
         touchJump.addEventListener('touchend', (e) => { e.preventDefault(); isTouchJump = false; });
 
-        // Practice Mode Toggle handlers
+        // Practice Mode UI Toggle mapping
         const practiceToggle = document.getElementById('practice-toggle');
         const btnSetCp = document.getElementById('btn-set-cp');
         const btnClearCp = document.getElementById('btn-clear-cp');
@@ -614,33 +678,20 @@
             if (practiceMode) {
                 btnSetCp.disabled = false;
                 btnClearCp.disabled = false;
-                practiceBadge.innerText = "PRACTICE ACTIVE";
-                practiceBadge.classList.remove('bg-slate-900/80', 'text-slate-500');
-                practiceBadge.classList.add('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-400');
-                
-                // Color change to neon emerald representing practice Mode
-                playerBody.clear();
-                playerBody.beginFill(0x10b981); 
-                playerBody.lineStyle(2, 0xffffff, 0.9);
-                playerBody.drawRect(-PLAYER_SIZE/2, -PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE);
-                playerBody.endFill();
+                practiceBadge.innerText = "연습 모드 작동 중";
+                practiceBadge.classList.remove('bg-zinc-100', 'text-zinc-500');
+                practiceBadge.classList.add('bg-sky-100', 'text-sky-700', 'border-sky-500');
             } else {
                 btnSetCp.disabled = true;
                 btnClearCp.disabled = true;
                 clearCheckpoint();
-                practiceBadge.innerText = "Normal Mode";
-                practiceBadge.classList.add('bg-slate-900/80', 'text-slate-500');
-                practiceBadge.classList.remove('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-400');
-                
-                // Color change back to Orange
-                playerBody.clear();
-                playerBody.beginFill(0xf97316); 
-                playerBody.lineStyle(2, 0xffffff, 0.9);
-                playerBody.drawRect(-PLAYER_SIZE/2, -PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE);
-                playerBody.endFill();
+                practiceBadge.innerText = "일반 모드";
+                practiceBadge.classList.add('bg-zinc-100', 'text-zinc-500');
+                practiceBadge.classList.remove('bg-sky-100', 'text-sky-700', 'border-sky-500');
             }
         });
 
+        // STREAMING_CHUNK: Controlling practice mode state
         function setCheckpoint() {
             if (playerState.grounded) {
                 checkpoint = { x: playerState.x, y: playerState.y };
@@ -648,7 +699,7 @@
                 checkpointFlag.y = checkpoint.y;
                 checkpointFlag.visible = true;
                 playSound('checkpoint');
-                spawnParticles(checkpoint.x, checkpoint.y, 0x10b981, 10);
+                spawnParticles(checkpoint.x, checkpoint.y, 0xBAE6FD, 8);
             }
         }
 
@@ -660,7 +711,7 @@
         btnSetCp.addEventListener('click', setCheckpoint);
         btnClearCp.addEventListener('click', clearCheckpoint);
 
-        // Restart click trigger
+        // Entire Reset Handler
         document.getElementById('btn-restart').addEventListener('click', () => {
             checkpoint = null;
             checkpointFlag.visible = false;
@@ -670,15 +721,17 @@
             timeElapsed = 0.0;
             gameWon = false;
             document.getElementById('attempt-val').innerText = attemptCount;
-            document.getElementById('time-val').innerText = "0.0s";
+            document.getElementById('time-val').innerText = "0.0초";
             
-            playerState.x = 250;
-            playerState.y = 3950;
+            playerState.x = 220;
+            playerState.y = 3800;
             playerState.vx = 0;
             playerState.vy = 0;
+            speedBoostMultiplier = 1.0;
+            consecutiveJumpCount = 0;
         });
 
-        // Sound volume toggle trigger
+        // Sound Toggle
         const btnSound = document.getElementById('btn-sound');
         btnSound.addEventListener('click', () => {
             audioMuted = !audioMuted;
@@ -689,27 +742,52 @@
             }
         });
 
-        // Pixi Ticker - Game Loop
+        // STREAMING_CHUNK: Running main core game loop
+        // Main Core Physics Loop
         app.ticker.add((delta) => {
             if (gameWon) return;
 
-            // Horizontal input checks
+            // Tracking frame timing for Minecraft Sprint-Jump combo
+            if (playerState.grounded) {
+                consecutiveJumpTimer += 1;
+                // If on ground for more than 12 frames (approx 0.2s), combo resets
+                if (consecutiveJumpTimer > 12) {
+                    consecutiveJumpCount = 0;
+                    speedBoostMultiplier = 1.0;
+                }
+            } else {
+                consecutiveJumpTimer = 0;
+            }
+
+            // Keyboard and Touch inputs
             let moveLeft = activeKeys['KeyA'] || activeKeys['ArrowLeft'] || isTouchLeft;
             let moveRight = activeKeys['KeyD'] || activeKeys['ArrowRight'] || isTouchRight;
             let jumpPressed = activeKeys['Space'] || activeKeys['KeyW'] || activeKeys['ArrowUp'] || isTouchJump;
 
-            // Horizontal Movement resolution
-            if (moveLeft) playerState.vx -= 0.8;
-            if (moveRight) playerState.vx += 0.8;
+            // Calculate current speed with momentum
+            const currentMaxSpeed = BASE_MOVE_SPEED * speedBoostMultiplier;
+
+            // Horizontal input checks
+            if (moveLeft) {
+                playerState.vx -= 0.6;
+                eyes.x = -2.5; // Cute eye looks left
+            }
+            if (moveRight) {
+                playerState.vx += 0.6;
+                eyes.x = 2.5;  // Cute eye looks right
+            }
+            if (!moveLeft && !moveRight) {
+                eyes.x = 0;    // Looks forward
+            }
             
-            // Clamp horizontal speed
-            if (playerState.vx > MOVE_SPEED) playerState.vx = MOVE_SPEED;
-            if (playerState.vx < -MOVE_SPEED) playerState.vx = -MOVE_SPEED;
+            // Bound movement speeds
+            if (playerState.vx > currentMaxSpeed) playerState.vx = currentMaxSpeed;
+            if (playerState.vx < -currentMaxSpeed) playerState.vx = -currentMaxSpeed;
             
             playerState.vx *= FRICTION;
             playerState.x += playerState.vx;
 
-            // X-Axis Collision Resolution
+            // X-Axis Collisions
             platforms.forEach(p => {
                 if (checkCollision(playerState, p)) {
                     if (playerState.vx > 0) {
@@ -721,69 +799,80 @@
                 }
             });
 
-            // Vertical Movement resolution
+            // Vertical movement
             playerState.vy += GRAVITY;
             playerState.y += playerState.vy;
 
             let prevGrounded = playerState.grounded;
             playerState.grounded = false;
 
-            // Y-Axis Collision Resolution
+            // Y-Axis Collisions
             platforms.forEach(p => {
                 if (checkCollision(playerState, p)) {
-                    if (playerState.vy > 0) { // Moving Downward
+                    if (playerState.vy > 0) { // landing on ground
                         playerState.y = p.y - playerState.height/2;
                         playerState.grounded = true;
                         playerState.vy = 0;
                         
-                        // Just landed
+                        // Just landed Squash animation trigger!
                         if (!prevGrounded) {
                             playSound('land');
-                            spawnParticles(playerState.x, playerState.y + playerState.height/2, 0x64748b, 8, 0.6);
+                            playerState.scaleX = 1.4; // Squash
+                            playerState.scaleY = 0.6;
+                            spawnParticles(playerState.x, playerState.y + playerState.height/2, 0xEAE5DC, 5, 0.5);
                         }
-                    } else if (playerState.vy < 0) { // Moving Upward
+                    } else if (playerState.vy < 0) { // ceiling head hit
                         playerState.y = p.y + p.height + playerState.height/2;
                         playerState.vy = 0;
                     }
                 }
             });
 
-            // Jump Action
+            // Jump Action with Momentum sprint logic (Simulates Minecraft sprint speed-ups)
             if (jumpPressed && playerState.grounded) {
                 playerState.vy = JUMP_FORCE;
                 playerState.grounded = false;
                 playSound('jump');
-                spawnParticles(playerState.x, playerState.y + playerState.height/2, 0xf97316, 6, 0.8);
+
+                // Stretch effect on jump
+                playerState.scaleX = 0.7;
+                playerState.scaleY = 1.4;
+
+                spawnParticles(playerState.x, playerState.y + playerState.height/2, 0xD4D4D8, 4, 0.7);
+
+                // Consecutive jump detection (Minecraft sprint jump rhythm)
+                if (consecutiveJumpTimer <= 12 && (moveLeft || moveRight)) {
+                    consecutiveJumpCount++;
+                    // Jump momentum multiplier bounds: max out at 1.7x speed
+                    speedBoostMultiplier = Math.min(1.7, 1.0 + (consecutiveJumpCount * 0.15));
+                } else {
+                    consecutiveJumpCount = 0;
+                    speedBoostMultiplier = 1.0;
+                }
             }
 
-            // Rotation animation (Geometry Dash signature box flip)
-            if (!playerState.grounded) {
-                // Spin in air based on move direction
-                let direction = Math.sign(playerState.vx) || 1;
-                playerState.rotation += 0.08 * direction;
-                playerContainer.rotation = playerState.rotation;
-            } else {
-                // Smoothly snap back to nearest 90-degree step on land
-                let targetRot = Math.round(playerState.rotation / (Math.PI / 2)) * (Math.PI / 2);
-                playerState.rotation += (targetRot - playerState.rotation) * 0.3;
-                playerContainer.rotation = playerState.rotation;
-            }
+            // Squash & stretch recovery animation
+            playerState.scaleX += (1 - playerState.scaleX) * 0.2;
+            playerState.scaleY += (1 - playerState.scaleY) * 0.2;
 
-            // Sync sprite container location
+            playerBody.scale.set(playerState.scaleX, playerState.scaleY);
+
+            // Synchronize cute character visuals
             playerContainer.x = playerState.x;
             playerContainer.y = playerState.y;
 
-            // Generate trails
-            if (Math.abs(playerState.vx) > 0.5 || !playerState.grounded) {
-                spawnTrail(playerState.x, playerState.y, playerContainer.rotation, practiceMode ? 0x10b981 : 0xf97316);
+            // Spawn movement trails if speedy
+            if (speedBoostMultiplier > 1.1) {
+                if (Math.abs(playerState.vx) > 1.0) {
+                    spawnTrail(playerState.x, playerState.y, playerState.scaleX, playerState.scaleY);
+                }
             }
 
+            // STREAMING_CHUNK: Updating visual UI, particles and screen scroll
             // Update & clear Trails
             for (let i = trails.length - 1; i >= 0; i--) {
                 const t = trails[i];
-                t.alpha -= 0.05;
-                t.scale.x *= 0.96;
-                t.scale.y *= 0.96;
+                t.alpha -= 0.08;
                 if (t.alpha <= 0) {
                     world.removeChild(t);
                     t.destroy();
@@ -804,28 +893,25 @@
                 }
             }
 
-            // Fall of Map check
-            if (playerState.y > 4250) {
+            // Falling boundary check
+            if (playerState.y > 4050) {
                 respawn();
             }
 
-            // Smooth Camera Follow Lerp
+            // Smooth Cozy Camera Scrolling (Lerping camera follow player)
             let camTargetX = playerState.x - app.screen.width / 2;
-            let camTargetY = playerState.y - app.screen.height * 0.6;
+            let camTargetY = playerState.y - app.screen.height * 0.65;
 
-            // Camera bounds clamps
-            camTargetX = Math.max(0, Math.min(1500 - app.screen.width, camTargetX));
-            camTargetY = Math.max(0, Math.min(4200 - app.screen.height, camTargetY));
+            // Map layout clamp boundaries
+            camTargetX = Math.max(0, Math.min(1200 - app.screen.width, camTargetX));
+            camTargetY = Math.max(0, Math.min(4100 - app.screen.height, camTargetY));
 
             world.position.x += ( -camTargetX - world.position.x ) * 0.1;
             world.position.y += ( -camTargetY - world.position.y ) * 0.1;
 
-            // Rotating Portal effect at end Altar
-            portalGlow.rotation += 0.02;
-
-            // Win Condition Touch Checking
-            const distToPortal = Math.hypot(playerState.x - portalContainer.x, playerState.y - portalContainer.y);
-            if (distToPortal < 30 && !gameWon) {
+            // Win Condition reach target flag checking
+            const distToGoal = Math.hypot(playerState.x - portalContainer.x, playerState.y - portalContainer.y);
+            if (distToGoal < 28 && !gameWon) {
                 gameWon = true;
                 playSound('win');
                 document.getElementById('final-attempts').innerText = attemptCount;
@@ -833,49 +919,48 @@
                 document.getElementById('victory-modal').classList.remove('hidden');
             }
 
-            // HUD Height/Elevation progress
-            // Start height: 4000, Peak Altar: 260
-            const totalClimb = 3740;
-            const currentClimb = Math.max(0, Math.min(totalClimb, 4000 - playerState.y));
-            const progressPercent = Math.round((currentClimb / totalClimb) * 100);
+            // Calculate Climb Heights & Update UI HUD progress
+            // Start: 3800y, Peak Legend Flag: 640y
+            const totalClimbHeight = 3160;
+            const currentClimbY = Math.max(0, Math.min(totalClimbHeight, 3800 - playerState.y));
+            const progressPercent = Math.round((currentClimbY / totalClimbHeight) * 100);
             document.getElementById('height-percent').innerText = progressPercent + "%";
             document.getElementById('height-bar').style.width = progressPercent + "%";
 
-            // Dynamic Rank badges update based on current Elevation
+            // Update Momentum Speed meters
+            const boostPercent = Math.round(((speedBoostMultiplier - 1.0) / 0.7) * 100);
+            document.getElementById('speed-bar').style.width = boostPercent + "%";
+            document.getElementById('speed-multiplier').innerText = speedBoostMultiplier.toFixed(1) + "x";
+
+            // Update Dynamic Rank Badges
             const rankBadge = document.getElementById('rank-badge');
             let currentRank = 'ROOKIE';
-            let rankColorClass = '';
 
-            if (playerState.y > 3200) {
-                currentRank = 'ROOKIE';
-                rankBadge.style.borderColor = '#10b981';
-                rankBadge.style.color = '#10b981';
-                rankBadge.style.background = 'rgba(16,185,129,0.1)';
-            } else if (playerState.y > 2400) {
-                currentRank = 'IRON';
-                rankBadge.style.borderColor = '#3b82f6';
-                rankBadge.style.color = '#3b82f6';
-                rankBadge.style.background = 'rgba(59,130,246,0.1)';
-            } else if (playerState.y > 1600) {
-                currentRank = 'GOLD';
-                rankBadge.style.borderColor = '#f59e0b';
-                rankBadge.style.color = '#f59e0b';
-                rankBadge.style.background = 'rgba(245,158,11,0.1)';
-            } else if (playerState.y > 800) {
-                currentRank = 'DIAMOND';
-                rankBadge.style.borderColor = '#06b6d4';
-                rankBadge.style.color = '#06b6d4';
-                rankBadge.style.background = 'rgba(6,182,212,0.1)';
+            if (playerState.y > 3300) {
+                currentRank = 'ROOKIE 🌱';
+                rankBadge.style.borderColor = '#111111';
+                rankBadge.style.background = '#FFFFFF';
+            } else if (playerState.y > 2530) {
+                currentRank = 'IRON 🪵';
+                rankBadge.style.borderColor = '#111111';
+                rankBadge.style.background = '#F4F4F5';
+            } else if (playerState.y > 1900) {
+                currentRank = 'GOLD 🧀';
+                rankBadge.style.borderColor = '#111111';
+                rankBadge.style.background = '#FEF3C7';
+            } else if (playerState.y > 1250) {
+                currentRank = 'DIAMOND 💎';
+                rankBadge.style.borderColor = '#111111';
+                rankBadge.style.background = '#E0F2FE';
             } else {
-                currentRank = 'LEGEND';
-                rankBadge.style.borderColor = '#d946ef';
-                rankBadge.style.color = '#d946ef';
-                rankBadge.style.background = 'rgba(217,70,239,0.1)';
+                currentRank = 'LEGEND 👑';
+                rankBadge.style.borderColor = '#111111';
+                rankBadge.style.background = '#F3E8FF';
             }
             rankBadge.innerText = `RANK: ${currentRank}`;
         });
 
-        // Reset to play again
+        // Replay Trigger
         document.getElementById('btn-replay').addEventListener('click', () => {
             document.getElementById('victory-modal').classList.add('hidden');
             document.getElementById('btn-restart').click();
@@ -884,3 +969,9 @@
     </script>
 </body>
 </html>
+```eof
+
+### 주요 개선 포인트 요약
+1. **아기자기한 낙서 비주얼**: 화이트 배경(`#FAF8F5`)과 굵고 명확한 블랙 아웃라인, 그리고 귀여운 눈망울을 가진 찹쌀떡 플레이어로 변경하여 눈이 편안한 감성의 미니멀 코지 그래픽을 구축했습니다.
+2. **2배 작아진 크기**: 플레이어 찹쌀떡('모찌')의 픽셀 크기를 대폭 축소하여 정밀하고 밀도 높은 컨트롤이 가능하도록 했습니다.
+3. **가속 물리 도입**: 달리며 알맞은 박자에 맞춰 연속 점프를 할 경우 최대 1.7배까지 달리기 속도가 누적 상승합니다. 이 모멘텀을 극대화하면 후반부의 까다롭고 넓은 틈새 발판들을 짜릿하게 주파할 수 있습니다!
