@@ -1,915 +1,166 @@
-<!-- STREAMING_CHUNK: Structuring HTML header and importing PixiJS... -->
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimalist Rank-Up Parkour</title>
-    <!-- Tailwind CSS for modern layout design -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PixiJS v7.4.0 for high performance canvas rendering -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.0/pixi.min.js"></script>
-    <style>
-        body {
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #F1ECE4;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        /* STREAMING_CHUNK: Styling layout with modern minimalist tokens... --> */
-        /* Hand-drawn style minimal white panel with thick black borders */
-        .doodle-panel {
-            border: 3px solid #111111;
-            box-shadow: 4px 4px 0px #111111;
-            background-color: #FFFFFF;
-        }
-        .doodle-btn {
-            border: 3px solid #111111;
-            box-shadow: 3px 3px 0px #111111;
-            background-color: #FFFFFF;
-            transition: all 0.1s ease;
-        }
-        .doodle-btn:active:not(:disabled) {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0px #111111;
-        }
-    </style>
-</head>
-<body class="w-screen h-screen overflow-hidden flex flex-col md:flex-row text-zinc-950 p-4 gap-4">
+import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js';
 
-    <!-- Left Dashboard (Guaranteed size without collapsing) -->
-    <!-- STREAMING_CHUNK: Defining main dashboard panel layout... -->
-    <div class="w-full md:w-80 shrink-0 doodle-panel p-5 flex flex-col justify-between z-10 rounded-2xl">
-        <div>
-            <!-- Game Title (Clean Minimal Typography) -->
-            <div class="mb-5 text-center">
-                <h1 class="text-2xl font-black tracking-tight text-zinc-900">
-                    MOCHI JUMP
-                </h1>
-                <p class="text-xs text-zinc-500 font-bold mt-1">쫀득 점프 타워 - 랭크업</p>
-            </div>
-
-            <!-- Altitude Progress bar -->
-            <div class="bg-zinc-100 p-3 rounded-xl border-2 border-zinc-900 mb-4">
-                <div class="flex justify-between text-xs font-black mb-1.5">
-                    <span>등반 고도</span>
-                    <span id="height-percent" class="text-emerald-700">0%</span>
-                </div>
-                <div class="w-full bg-white rounded-full h-3 border-2 border-zinc-900 overflow-hidden p-0.5">
-                    <div id="height-bar" class="bg-emerald-400 h-full rounded-full transition-all duration-150 border-r-2 border-zinc-900" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Dashboard Stats -->
-            <div class="grid grid-cols-2 gap-2 mb-4">
-                <div class="bg-zinc-50 p-2.5 rounded-xl border-2 border-zinc-900 text-center">
-                    <div class="text-[10px] text-zinc-400 font-black">도전 횟수</div>
-                    <div id="attempt-val" class="text-lg font-black mt-0.5">1</div>
-                </div>
-                <div class="bg-zinc-50 p-2.5 rounded-xl border-2 border-zinc-900 text-center">
-                    <div class="text-[10px] text-zinc-400 font-black">경과 시간</div>
-                    <div id="time-val" class="text-lg font-black mt-0.5">0.0초</div>
-                </div>
-            </div>
-
-            <!-- Momentum meter (Minecraft jump sprint indicator) -->
-            <div class="bg-amber-50 p-3 rounded-xl border-2 border-zinc-900 mb-4">
-                <div class="flex justify-between text-xs font-black mb-1">
-                    <span class="text-amber-900">연속 점프 가속도</span>
-                    <span id="speed-multiplier" class="text-amber-800">1.0x</span>
-                </div>
-                <div class="w-full bg-white rounded-full h-3 border-2 border-zinc-900 overflow-hidden p-0.5">
-                    <div id="speed-bar" class="bg-amber-400 h-full rounded-full transition-all duration-100" style="width: 0%"></div>
-                </div>
-                <p class="text-[10px] text-zinc-500 font-medium mt-1.5 leading-relaxed">착지 즉시 방향을 바꾸지 않고 연속 점프하면 점차 가속되어 넓은 구역을 넘을 수 있습니다.</p>
-            </div>
-
-            <!-- Practice Mode Toggle -->
-            <div class="bg-sky-50 p-3 rounded-xl border-2 border-zinc-900 mb-4">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-black text-sky-900">연습 모드 세이브포인트</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="practice-toggle" class="sr-only peer">
-                        <div class="w-9 h-5 bg-zinc-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500 border-2 border-zinc-900"></div>
-                    </label>
-                </div>
-                <div class="grid grid-cols-2 gap-2 text-[10px] font-black">
-                    <button id="btn-set-cp" class="doodle-btn py-1.5 rounded-lg text-sky-700 hover:bg-sky-100 disabled:opacity-40 disabled:pointer-events-none" disabled>
-                        [C] 깃발 설치
-                    </button>
-                    <button id="btn-clear-cp" class="doodle-btn py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 disabled:opacity-40 disabled:pointer-events-none" disabled>
-                        [V] 깃발 회수
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Controls Guide -->
-        <div class="hidden md:block border-t-2 border-zinc-200 pt-3">
-            <div class="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-1.5">조작 방법 가이드</div>
-            <div class="space-y-1 text-[11px] text-zinc-600 font-bold">
-                <div class="flex justify-between"><span>좌우 이동</span> <span class="bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-400 font-mono text-[9px]">A / D 또는 좌우 화살표</span></div>
-                <div class="flex justify-between"><span>점프</span> <span class="bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-400 font-mono text-[9px]">Space / W / 위 화살표</span></div>
-                <div class="flex justify-between"><span>즉시 재시작</span> <span class="bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-400 font-mono text-[9px]">R</span></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Game Canvas Area -->
-    <div class="flex-1 flex flex-col justify-between relative doodle-panel rounded-2xl overflow-hidden bg-[#FAF8F5]">
-        <!-- Floating Status Badges -->
-        <div class="absolute top-4 left-4 right-4 flex justify-between items-center z-10 pointer-events-none">
-            <div class="flex items-center gap-2">
-                <div id="rank-badge" class="px-3 py-1 rounded-full border-2 border-zinc-900 bg-white font-black text-xs tracking-wide shadow-[2px_2px_0px_#111111] transition-all">
-                    RANK: ROOKIE
-                </div>
-                <div id="practice-badge" class="px-3 py-1 rounded-full border-2 border-zinc-900 bg-zinc-100 font-black text-[10px] tracking-wide shadow-[2px_2px_0px_#111111] text-zinc-500">
-                    일반 모드
-                </div>
-            </div>
-
-            <!-- Volume and Quick Reset Controls -->
-            <div class="flex gap-2 pointer-events-auto">
-                <button id="btn-sound" class="doodle-btn p-1.5 rounded-xl text-zinc-700 hover:bg-zinc-50" title="사운드 토글">
-                    <!-- Clean Minimalist Speaker Vector (No Emoji) -->
-                    <svg class="h-4 w-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                    </svg>
-                </button>
-                <button id="btn-restart" class="doodle-btn px-3 py-1.5 text-xs font-black text-zinc-700 hover:bg-zinc-50">
-                    초기화 (R)
-                </button>
-            </div>
-        </div>
-
-        <!-- Render Container for PixiJS Canvas (Perfect Responsive Sizing) -->
-        <div id="canvas-container" class="flex-1 w-full h-full relative overflow-hidden bg-[#FAF8F5]">
-            <canvas id="game-canvas" class="absolute inset-0 block outline-none w-full h-full"></canvas>
-        </div>
-
-        <!-- Mobile Touch Controller D-pad Overlay -->
-        <!-- STREAMING_CHUNK: Creating mobile touch action layouts... -->
-        <div class="md:hidden flex justify-between items-center p-4 bg-zinc-50 border-t-2 border-zinc-900 gap-4">
-            <div class="flex gap-2">
-                <button id="touch-left" class="w-14 h-14 rounded-xl doodle-btn flex items-center justify-center active:scale-95 text-lg font-black">
-                    <!-- Clean SVG Arrow Left (No Emoji) -->
-                    <svg class="w-6 h-6 stroke-zinc-900" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                </button>
-                <button id="touch-right" class="w-14 h-14 rounded-xl doodle-btn flex items-center justify-center active:scale-95 text-lg font-black">
-                    <!-- Clean SVG Arrow Right (No Emoji) -->
-                    <svg class="w-6 h-6 stroke-zinc-900" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </button>
-            </div>
-            <button id="touch-jump" class="flex-1 h-14 rounded-xl doodle-btn bg-zinc-100 text-zinc-900 font-black text-sm active:scale-95">
-                점프 (JUMP)
-            </button>
-        </div>
-    </div>
-
-    <!-- Clear Overlay Modals (Sleek Hand-Drawn Minimal Visual) -->
-    <div id="victory-modal" class="hidden fixed inset-0 bg-zinc-900/40 backdrop-blur-sm flex flex-col justify-center items-center z-50 p-6">
-        <div class="bg-white border-4 border-zinc-900 p-8 rounded-3xl max-w-sm w-full text-center shadow-[8px_8px_0px_#111111]">
-            <div class="w-16 h-16 rounded-full bg-zinc-50 border-2 border-zinc-900 flex items-center justify-center mx-auto mb-4">
-                <!-- Trophy SVG Cup (No Emoji) -->
-                <svg class="w-8 h-8 stroke-zinc-900" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                    <path d="M4 22h16"></path>
-                    <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"></path>
-                    <path d="M12 2a6 6 0 0 1 6 6v3a6 6 0 0 1-12 0V8a6 6 0 0 1 6-6z"></path>
-                </svg>
-            </div>
-            <h2 class="text-2xl font-black text-zinc-900 mb-2">타워 정복 완료!</h2>
-            <p class="text-zinc-600 text-xs font-bold mb-4">쫀득 점프 타워의 전설이 되었습니다.</p>
-
-            <div class="bg-zinc-50 rounded-2xl p-4 mb-5 border-2 border-zinc-900 space-y-2.5 text-xs font-black">
-                <div class="flex justify-between">
-                    <span class="text-zinc-500">도전 칭호</span>
-                    <span class="text-zinc-900">[LEGEND JUMPER]</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-zinc-500">도전 데스 카운트</span>
-                    <span id="final-attempts" class="text-emerald-700">0</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-zinc-500">클리어 소요시간</span>
-                    <span id="final-time" class="text-zinc-900">0초</span>
-                </div>
-            </div>
-
-            <button id="btn-replay" class="w-full doodle-btn bg-zinc-900 text-white hover:bg-zinc-800 py-3 rounded-xl text-xs font-black shadow-[4px_4px_0px_#555555]">
-                다시 오르기
-            </button>
-        </div>
-    </div>
-
-    <script>
-    // <!-- STREAMING_CHUNK: Initializing retro Audio Synthesis Engine... -->
-    let audioMuted = false;
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    let audioCtx = null;
-
-    function playSound(type) {
-        if (audioMuted) return;
-        try {
-            if (!audioCtx) {
-                audioCtx = new AudioContextClass();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-
-            const now = audioCtx.currentTime;
-
-            if (type === 'jump') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(280, now);
-                osc.frequency.exponentialRampToValueAtTime(680, now + 0.1);
-                gainNode.gain.setValueAtTime(0.12, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now);
-                osc.stop(now + 0.12);
-            } 
-            else if (type === 'land') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(140, now);
-                osc.frequency.exponentialRampToValueAtTime(70, now + 0.06);
-                gainNode.gain.setValueAtTime(0.1, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
-                osc.start(now);
-                osc.stop(now + 0.08);
-            } 
-            else if (type === 'die') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.linearRampToValueAtTime(60, now + 0.22);
-                gainNode.gain.setValueAtTime(0.15, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
-                osc.start(now);
-                osc.stop(now + 0.22);
-            } 
-            else if (type === 'checkpoint') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(450, now);
-                osc.frequency.setValueAtTime(600, now + 0.05);
-                osc.frequency.exponentialRampToValueAtTime(1000, now + 0.18);
-                gainNode.gain.setValueAtTime(0.1, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
-                osc.start(now);
-                osc.stop(now + 0.18);
-            }
-            else if (type === 'win') {
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, idx) => {
-                    const o = audioCtx.createOscillator();
-                    const g = audioCtx.createGain();
-                    o.connect(g);
-                    g.connect(audioCtx.destination);
-                    o.type = 'triangle';
-                    o.frequency.setValueAtTime(freq, now + idx * 0.08);
-                    g.gain.setValueAtTime(0.12, now + idx * 0.08);
-                    g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.35);
-                    o.start(now + idx * 0.08);
-                    o.stop(now + idx * 0.08 + 0.35);
-                });
-            }
-        } catch (e) {
-            console.warn("Audio synthesis error:", e);
-        }
-    }
-
-    // /* STREAMING_CHUNK: Configuring custom physics rules and platform array... */
-    const TILE_SIZE = 40;
-    const PLAYER_SIZE = 18; // Exactly 2x smaller for cute precision
-    const GRAVITY = 0.4;
-    const JUMP_FORCE = -10.0;
-    const BASE_MOVE_SPEED = 3.6;
-    const FRICTION = 0.85;
-
-    // Sprint mechanics logic
-    let consecutiveJumpTimer = 0;
-    let consecutiveJumpCount = 0;
-    let speedBoostMultiplier = 1.0;
-
-    const keys = { Left: false, Right: false, Jump: false };
-    let practiceMode = false;
-    let checkpoint = null; // {x, y}
-    let attemptCount = 1;
-    let timeElapsed = 0.0;
-    let gameWon = false;
-    let timerInterval = null;
-
-    // 100% physically testable modular platform heights
-    // Vertical steps are consistently set around 90px (Maximum possible jump height is 125px)
-    const rawPlatforms = [
-        // Rookie Zone (Y: 3900 -> 3360)
-        { x: 100, y: 3900, w: 400, h: 40, type: 'start' },
-        { x: 580, y: 3810, w: 80, h: 25, type: 'rookie' },
-        { x: 740, y: 3720, w: 80, h: 25, type: 'rookie' },
-        { x: 600, y: 3630, w: 80, h: 25, type: 'rookie' },
-        { x: 440, y: 3540, w: 80, h: 25, type: 'rookie' },
-        { x: 280, y: 3450, w: 80, h: 25, type: 'rookie' },
-        { x: 100, y: 3360, w: 140, h: 25, type: 'rookie_rest' },
-
-        // Iron Zone (Y: 3270 -> 2730)
-        { x: 300, y: 3270, w: 70, h: 25, type: 'iron' },
-        { x: 440, y: 3180, w: 70, h: 25, type: 'iron' },
-        { x: 580, y: 3090, w: 70, h: 25, type: 'iron' },
-        { x: 720, y: 3000, w: 70, h: 25, type: 'iron' },
-        { x: 860, y: 2910, w: 70, h: 25, type: 'iron' },
-        { x: 700, y: 2820, w: 70, h: 25, type: 'iron' },
-        { x: 500, y: 2730, w: 140, h: 25, type: 'iron_rest' },
-
-        // Gold Zone (Y: 2640 -> 2190)
-        { x: 320, y: 2640, w: 60, h: 25, type: 'gold' },
-        { x: 160, y: 2550, w: 60, h: 25, type: 'gold' },
-        { x: 280, y: 2460, w: 60, h: 25, type: 'gold' },
-        { x: 440, y: 2370, w: 60, h: 25, type: 'gold' },
-        { x: 600, y: 2280, w: 60, h: 25, type: 'gold' },
-        { x: 740, y: 2190, w: 140, h: 25, type: 'gold_rest' },
-
-        // Diamond Zone (Y: 2100 -> 1650)
-        { x: 620, y: 2100, w: 50, h: 25, type: 'diamond' },
-        { x: 480, y: 2010, w: 50, h: 25, type: 'diamond' },
-        { x: 340, y: 1920, w: 50, h: 25, type: 'diamond' },
-        { x: 180, y: 1830, w: 50, h: 25, type: 'diamond' },
-        { x: 300, y: 1740, w: 50, h: 25, type: 'diamond' },
-        { x: 460, y: 1650, w: 140, h: 25, type: 'diamond_rest' },
-
-        // Legend Zone (Y: 1560 -> 1110)
-        { x: 680, y: 1560, w: 40, h: 25, type: 'legend' },
-        { x: 840, y: 1470, w: 40, h: 25, type: 'legend' },
-        { x: 700, y: 1380, w: 40, h: 25, type: 'legend' },
-        { x: 540, y: 1290, w: 40, h: 25, type: 'legend' },
-        { x: 380, y: 1200, w: 40, h: 25, type: 'legend' },
-        { x: 180, y: 1110, w: 160, h: 30, type: 'legend_rest' }
-    ];
-
-    // /* STREAMING_CHUNK: Setting up PixiJS application and canvas sizing... */
-    window.onload = function() {
-        const canvas = document.getElementById('game-canvas');
-        const container = document.getElementById('canvas-container');
-
-        // Robust sizing configuration
-        const app = new PIXI.Application({
-            view: canvas,
-            resizeTo: container, // Auto-bind native window and panel sizing to prevent blank rendering
-            backgroundColor: 0xFAF8F5,
-            antialias: true,
-            resolution: window.devicePixelRatio || 1,
-            autoDensity: true
-        });
-
-        // Forced layout layout check
-        setTimeout(() => {
-            app.resize();
-        }, 100);
-
-        const world = new PIXI.Container();
-        app.stage.addChild(world);
-
-        // Grid Background lines
-        const bgContainer = new PIXI.Container();
-        world.addChild(bgContainer);
-
-        const paperGrid = new PIXI.Graphics();
-        paperGrid.lineStyle(1, 0xEAE5DC, 1);
-        for(let y = 0; y < 4200; y += 24) {
-            paperGrid.moveTo(0, y);
-            paperGrid.lineTo(2000, y);
-        }
-        paperGrid.lineStyle(2, 0xF5C2C2, 0.7);
-        paperGrid.moveTo(150, 0);
-        paperGrid.lineTo(150, 4200);
-        bgContainer.addChild(paperGrid);
-
-        // /* STREAMING_CHUNK: Drawing cozy doodle style environment... */
-        // Drawing custom vectors for background structures (No Emojis)
-        const clouds = [
-            { x: 200, y: 3500 }, { x: 800, y: 3100 },
-            { x: 300, y: 2600 }, { x: 750, y: 2100 },
-            { x: 250, y: 1500 }, { x: 800, y: 1000 }
-        ];
-        
-        clouds.forEach(c => {
-            const cloudG = new PIXI.Graphics();
-            cloudG.lineStyle(3, 0x111111, 0.3);
-            cloudG.beginFill(0xFFFFFF, 0.5);
-            cloudG.drawCircle(0, 0, 20);
-            cloudG.drawCircle(22, -8, 25);
-            cloudG.drawCircle(45, 0, 20);
-            cloudG.drawRect(0, 5, 45, 15);
-            cloudG.endFill();
-            cloudG.x = c.x;
-            cloudG.y = c.y;
-            bgContainer.addChild(cloudG);
-        });
-
-        // /* STREAMING_CHUNK: Drawing interactive platforms and goal flags... */
-        const platforms = [];
-        rawPlatforms.forEach(p => {
-            const group = new PIXI.Container();
-            const body = new PIXI.Graphics();
-
-            body.lineStyle(3, 0x111111, 1);
-            body.beginFill(0xFFFFFF);
-            body.drawRoundedRect(0, 0, p.w, p.h, 6);
-            body.endFill();
-
-            // Underlying line shadows
-            body.lineStyle(3, 0x111111, 0.4);
-            body.moveTo(5, p.h);
-            body.lineTo(p.w, p.h);
-
-            if (p.type.includes('rest') || p.type === 'start') {
-                body.lineStyle(2, 0x111111, 0.2);
-                for(let sx = 15; sx < p.w; sx += 20) {
-                    body.moveTo(sx, 5);
-                    body.lineTo(sx - 5, p.h - 5);
-                }
-            }
-
-            group.addChild(body);
-            group.x = p.x;
-            group.y = p.y;
-            world.addChild(group);
-            
-            platforms.push({
-                x: p.x,
-                y: p.y,
-                width: p.w,
-                height: p.h,
-                type: p.type,
-                container: group
-            });
-        });
-
-        // Destination flag drawing (Cozy Minimal Flagpole - No Emoji)
-        const victoryAltarY = 1110; 
-        const portalContainer = new PIXI.Container();
-        portalContainer.x = 240; 
-        portalContainer.y = victoryAltarY - 45;
-
-        const goalFlag = new PIXI.Graphics();
-        goalFlag.lineStyle(3, 0x111111, 1);
-        goalFlag.beginFill(0xFFFFFF);
-        goalFlag.moveTo(0, 45); 
-        goalFlag.lineTo(0, 0);  
-        goalFlag.drawPolygon([
-            0, 5,
-            24, 15,
-            0, 25
-        ]);
-        goalFlag.endFill();
-
-        // Little stylized vector dots (Face)
-        goalFlag.lineStyle(2.5, 0x111111, 1);
-        goalFlag.moveTo(6, 12); goalFlag.lineTo(7, 12);
-        goalFlag.moveTo(11, 12); goalFlag.lineTo(12, 12);
-
-        portalContainer.addChild(goalFlag);
-        world.addChild(portalContainer);
-
-        // /* STREAMING_CHUNK: Spawning cute responsive character... */
-        const playerContainer = new PIXI.Container();
-        const playerBody = new PIXI.Graphics();
-        
-        playerBody.lineStyle(3, 0x111111, 1);
-        playerBody.beginFill(0xFFFFFF);
-        playerBody.drawRoundedRect(-PLAYER_SIZE/2, -PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE, 4);
-        playerBody.endFill();
-
-        // Styled minimalist eyes (No Emoji rendering vectors)
-        const eyes = new PIXI.Graphics();
-        eyes.beginFill(0x111111);
-        eyes.drawCircle(-4, -2, 2.5); 
-        eyes.drawCircle(4, -2, 2.5);  
-        eyes.endFill();
-
-        playerBody.addChild(eyes);
-        playerContainer.addChild(playerBody);
-        world.addChild(playerContainer);
-
-        const playerState = {
-            x: 220,
-            y: 3800,
-            vx: 0,
-            vy: 0,
-            width: PLAYER_SIZE,
-            height: PLAYER_SIZE,
-            grounded: false,
-            scaleX: 1,
-            scaleY: 1
+// 1. 게임 상태 관리 객체
+const GameState = {
+    coins: 100,
+    gridSize: 4,
+    spawnLevel: 1,
+    board: [], // 2D Array
+    
+    get totalDamage() {
+        return this.board.flat().reduce((sum, val) => sum + (val || 0), 0);
+    },
+    
+    get spawnProbability() {
+        // 업그레이드 레벨별 소환 확률 표
+        const tables = {
+            1: { 2: 0.9, 4: 0.1 },
+            2: { 2: 0.6, 4: 0.3, 8: 0.1 },
+            3: { 2: 0.4, 4: 0.4, 8: 0.15, 16: 0.05 }
         };
-
-        // Standalone vector checkpoint flag (No Emoji)
-        const checkpointFlag = new PIXI.Graphics();
-        checkpointFlag.visible = false;
-        checkpointFlag.lineStyle(3, 0x111111, 1);
-        checkpointFlag.beginFill(0xBAE6FD); 
-        checkpointFlag.drawPolygon([
-            0, -30,
-            16, -20,
-            0, -10
-        ]);
-        checkpointFlag.lineStyle(3, 0x111111, 1);
-        checkpointFlag.moveTo(0, -30);
-        checkpointFlag.lineTo(0, 0); 
-        checkpointFlag.endFill();
-        world.addChild(checkpointFlag);
-
-        const particles = [];
-        function spawnParticles(x, y, color=0x111111, count=6, speedScale=1) {
-            for(let i=0; i<count; i++) {
-                const p = new PIXI.Graphics();
-                p.lineStyle(1.5, 0x111111, 1);
-                p.beginFill(color);
-                p.drawRect(-3, -3, 6, 6); 
-                p.endFill();
-                p.x = x;
-                p.y = y;
-                p.vx = (Math.random() - 0.5) * 4 * speedScale;
-                p.vy = (Math.random() - 0.5) * 4 * speedScale - 0.5;
-                p.alpha = 1;
-                p.life = 1.0;
-                p.decay = 0.04 + Math.random() * 0.04;
-                world.addChild(p);
-                particles.push(p);
-            }
-        }
-
-        const trails = [];
-        function spawnTrail(x, y, scaleX, scaleY) {
-            const t = new PIXI.Graphics();
-            t.lineStyle(2, 0x111111, 0.15);
-            t.beginFill(0xFFFFFF, 0.3);
-            t.drawRoundedRect(-PLAYER_SIZE/2, -PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE, 4);
-            t.endFill();
-            t.x = x;
-            t.y = y;
-            t.scale.x = scaleX;
-            t.scale.y = scaleY;
-            t.alpha = 0.4;
-            world.addChildAt(t, world.getChildIndex(playerContainer));
-            trails.push(t);
-        }
-
-        function respawn() {
-            playSound('die');
-            spawnParticles(playerState.x, playerState.y, 0xFF7D7D, 12, 1.3);
-            
-            speedBoostMultiplier = 1.0;
-            consecutiveJumpCount = 0;
-
-            setTimeout(() => {
-                attemptCount++;
-                document.getElementById('attempt-val').innerText = attemptCount;
-                
-                if (practiceMode && checkpoint) {
-                    playerState.x = checkpoint.x;
-                    playerState.y = checkpoint.y;
-                } else {
-                    playerState.x = 220;
-                    playerState.y = 3800;
-                }
-                playerState.vx = 0;
-                playerState.vy = 0;
-                playerState.scaleX = 1;
-                playerState.scaleY = 1;
-            }, 100);
-        }
-
-        // Timer Loop setup
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            if (!gameWon) {
-                timeElapsed += 0.1;
-                document.getElementById('time-val').innerText = timeElapsed.toFixed(1) + "초";
-            }
-        }, 100);
-
-        function checkCollision(r1, r2) {
-            return r1.x - r1.width/2 < r2.x + r2.width &&
-                   r1.x + r1.width/2 > r2.x &&
-                   r1.y - r1.height/2 < r2.y + r2.height &&
-                   r1.y + r1.height/2 > r2.y;
-        }
-
-        // /* STREAMING_CHUNK: Initializing keyboard input listeners... */
-        const activeKeys = {};
-        window.addEventListener('keydown', (e) => {
-            activeKeys[e.code] = true;
-            if (e.code === 'KeyC' && practiceMode) setCheckpoint();
-            if (e.code === 'KeyV' && practiceMode) clearCheckpoint();
-            if (e.code === 'KeyR') respawn();
-        });
-        window.addEventListener('keyup', (e) => {
-            activeKeys[e.code] = false;
-        });
-
-        // Touch Input Handlers
-        const touchLeft = document.getElementById('touch-left');
-        const touchRight = document.getElementById('touch-right');
-        const touchJump = document.getElementById('touch-jump');
-
-        let isTouchLeft = false;
-        let isTouchRight = false;
-        let isTouchJump = false;
-
-        touchLeft.addEventListener('touchstart', (e) => { e.preventDefault(); isTouchLeft = true; });
-        touchLeft.addEventListener('touchend', (e) => { e.preventDefault(); isTouchLeft = false; });
-        touchRight.addEventListener('touchstart', (e) => { e.preventDefault(); isTouchRight = true; });
-        touchRight.addEventListener('touchend', (e) => { e.preventDefault(); isTouchRight = false; });
-        touchJump.addEventListener('touchstart', (e) => { e.preventDefault(); isTouchJump = true; });
-        touchJump.addEventListener('touchend', (e) => { e.preventDefault(); isTouchJump = false; });
-
-        // Practice Mode controls
-        const practiceToggle = document.getElementById('practice-toggle');
-        const btnSetCp = document.getElementById('btn-set-cp');
-        const btnClearCp = document.getElementById('btn-clear-cp');
-        const practiceBadge = document.getElementById('practice-badge');
-
-        practiceToggle.addEventListener('change', (e) => {
-            practiceMode = e.target.checked;
-            if (practiceMode) {
-                btnSetCp.disabled = false;
-                btnClearCp.disabled = false;
-                practiceBadge.innerText = "연습 모드";
-                practiceBadge.classList.remove('bg-zinc-100', 'text-zinc-500');
-                practiceBadge.classList.add('bg-sky-100', 'text-sky-700', 'border-sky-500');
-            } else {
-                btnSetCp.disabled = true;
-                btnClearCp.disabled = true;
-                clearCheckpoint();
-                practiceBadge.innerText = "일반 모드";
-                practiceBadge.classList.add('bg-zinc-100', 'text-zinc-500');
-                practiceBadge.classList.remove('bg-sky-100', 'text-sky-700', 'border-sky-500');
-            }
-        });
-
-        function setCheckpoint() {
-            if (playerState.grounded) {
-                checkpoint = { x: playerState.x, y: playerState.y };
-                checkpointFlag.x = checkpoint.x;
-                checkpointFlag.y = checkpoint.y;
-                checkpointFlag.visible = true;
-                playSound('checkpoint');
-                spawnParticles(checkpoint.x, checkpoint.y, 0xBAE6FD, 8);
-            }
-        }
-
-        function clearCheckpoint() {
-            checkpoint = null;
-            checkpointFlag.visible = false;
-        }
-
-        btnSetCp.addEventListener('click', setCheckpoint);
-        btnClearCp.addEventListener('click', clearCheckpoint);
-
-        document.getElementById('btn-restart').addEventListener('click', () => {
-            checkpoint = null;
-            checkpointFlag.visible = false;
-            practiceToggle.checked = false;
-            practiceToggle.dispatchEvent(new Event('change'));
-            attemptCount = 1;
-            timeElapsed = 0.0;
-            gameWon = false;
-            document.getElementById('attempt-val').innerText = attemptCount;
-            document.getElementById('time-val').innerText = "0.0초";
-            
-            playerState.x = 220;
-            playerState.y = 3800;
-            playerState.vx = 0;
-            playerState.vy = 0;
-            speedBoostMultiplier = 1.0;
-            consecutiveJumpCount = 0;
-        });
-
-        const btnSound = document.getElementById('btn-sound');
-        btnSound.addEventListener('click', () => {
-            audioMuted = !audioMuted;
-            if (audioMuted) {
-                btnSound.classList.add('opacity-40');
-            } else {
-                btnSound.classList.remove('opacity-40');
-            }
-        });
-
-        // /* STREAMING_CHUNK: Running main physics and collision update loop... */
-        app.ticker.add((delta) => {
-            if (gameWon) return;
-
-            // Sprint momentum decay on floor
-            if (playerState.grounded) {
-                consecutiveJumpTimer += 1;
-                if (consecutiveJumpTimer > 10) {
-                    consecutiveJumpCount = 0;
-                    speedBoostMultiplier = 1.0;
-                }
-            } else {
-                consecutiveJumpTimer = 0;
-            }
-
-            let moveLeft = activeKeys['KeyA'] || activeKeys['ArrowLeft'] || isTouchLeft;
-            let moveRight = activeKeys['KeyD'] || activeKeys['ArrowRight'] || isTouchRight;
-            let jumpPressed = activeKeys['Space'] || activeKeys['KeyW'] || activeKeys['ArrowUp'] || isTouchJump;
-
-            const currentMaxSpeed = BASE_MOVE_SPEED * speedBoostMultiplier;
-
-            if (moveLeft) {
-                playerState.vx -= 0.6;
-                eyes.x = -2.5; 
-            }
-            if (moveRight) {
-                playerState.vx += 0.6;
-                eyes.x = 2.5;  
-            }
-            if (!moveLeft && !moveRight) {
-                eyes.x = 0;    
-            }
-            
-            if (playerState.vx > currentMaxSpeed) playerState.vx = currentMaxSpeed;
-            if (playerState.vx < -currentMaxSpeed) playerState.vx = -currentMaxSpeed;
-            
-            playerState.vx *= FRICTION;
-            playerState.x += playerState.vx;
-
-            // X-Axis resolution
-            platforms.forEach(p => {
-                if (checkCollision(playerState, p)) {
-                    if (playerState.vx > 0) {
-                        playerState.x = p.x - playerState.width/2;
-                    } else if (playerState.vx < 0) {
-                        playerState.x = p.x + p.width + playerState.width/2;
-                    }
-                    playerState.vx = 0;
-                }
-            });
-
-            playerState.vy += GRAVITY;
-            playerState.y += playerState.vy;
-
-            let prevGrounded = playerState.grounded;
-            playerState.grounded = false;
-
-            // Y-Axis resolution
-            platforms.forEach(p => {
-                if (checkCollision(playerState, p)) {
-                    if (playerState.vy > 0) { 
-                        playerState.y = p.y - playerState.height/2;
-                        playerState.grounded = true;
-                        playerState.vy = 0;
-                        
-                        if (!prevGrounded) {
-                            playSound('land');
-                            playerState.scaleX = 1.4; 
-                            playerState.scaleY = 0.6;
-                            spawnParticles(playerState.x, playerState.y + playerState.height/2, 0xEAE5DC, 5, 0.5);
-                        }
-                    } else if (playerState.vy < 0) { 
-                        playerState.y = p.y + p.height + playerState.height/2;
-                        playerState.vy = 0;
-                    }
-                }
-            });
-
-            // Jump Execution
-            if (jumpPressed && playerState.grounded) {
-                playerState.vy = JUMP_FORCE;
-                playerState.grounded = false;
-                playSound('jump');
-
-                playerState.scaleX = 0.7;
-                playerState.scaleY = 1.4;
-                spawnParticles(playerState.x, playerState.y + playerState.height/2, 0xD4D4D8, 4, 0.7);
-
-                if (consecutiveJumpTimer <= 10 && (moveLeft || moveRight)) {
-                    consecutiveJumpCount++;
-                    speedBoostMultiplier = Math.min(1.6, 1.0 + (consecutiveJumpCount * 0.15));
-                } else {
-                    consecutiveJumpCount = 0;
-                    speedBoostMultiplier = 1.0;
-                }
-            }
-
-            // /* STREAMING_CHUNK: Updating visual scales and smooth camera lerp... */
-            // Squash stretching
-            playerState.scaleX += (1 - playerState.scaleX) * 0.2;
-            playerState.scaleY += (1 - playerState.scaleY) * 0.2;
-            playerBody.scale.set(playerState.scaleX, playerState.scaleY);
-
-            playerContainer.x = playerState.x;
-            playerContainer.y = playerState.y;
-
-            if (speedBoostMultiplier > 1.1 && Math.abs(playerState.vx) > 1.0) {
-                spawnTrail(playerState.x, playerState.y, playerState.scaleX, playerState.scaleY);
-            }
-
-            // Clean-up structures
-            for (let i = trails.length - 1; i >= 0; i--) {
-                const t = trails[i];
-                t.alpha -= 0.08;
-                if (t.alpha <= 0) {
-                    world.removeChild(t);
-                    t.destroy();
-                    trails.splice(i, 1);
-                }
-            }
-
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.alpha -= p.decay;
-                if (p.alpha <= 0) {
-                    world.removeChild(p);
-                    p.destroy();
-                    particles.splice(i, 1);
-                }
-            }
-
-            if (playerState.y > 4050) {
-                respawn();
-            }
-
-            // High Precision Camera Tracking matching container dynamic scale
-            let camTargetX = playerState.x - app.screen.width / 2;
-            let camTargetY = playerState.y - app.screen.height * 0.65;
-
-            camTargetX = Math.max(0, Math.min(2000 - app.screen.width, camTargetX));
-            camTargetY = Math.max(0, Math.min(4100 - app.screen.height, camTargetY));
-
-            world.position.x += ( -camTargetX - world.position.x ) * 0.1;
-            world.position.y += ( -camTargetY - world.position.y ) * 0.1;
-
-            // Clear threshold trigger checking
-            const distToGoal = Math.hypot(playerState.x - portalContainer.x, playerState.y - portalContainer.y);
-            if (distToGoal < 28 && !gameWon) {
-                gameWon = true;
-                playSound('win');
-                document.getElementById('final-attempts').innerText = attemptCount;
-                document.getElementById('final-time').innerText = timeElapsed.toFixed(1) + "초";
-                document.getElementById('victory-modal').classList.remove('hidden');
-            }
-
-            // Climb Progress calculating
-            const totalClimbHeight = 2690;
-            const currentClimbY = Math.max(0, Math.min(totalClimbHeight, 3800 - playerState.y));
-            const progressPercent = Math.round((currentClimbY / totalClimbHeight) * 100);
-            document.getElementById('height-percent').innerText = progressPercent + "%";
-            document.getElementById('height-bar').style.width = progressPercent + "%";
-
-            // Momentum multiplier UI Sync
-            const boostPercent = Math.round(((speedBoostMultiplier - 1.0) / 0.6) * 100);
-            document.getElementById('speed-bar').style.width = boostPercent + "%";
-            document.getElementById('speed-multiplier').innerText = speedBoostMultiplier.toFixed(1) + "x";
-
-            // Safe non-emoji boundary Ranks
-            const rankBadge = document.getElementById('rank-badge');
-            let currentRank = 'ROOKIE';
-
-            if (playerState.y > 3360) {
-                currentRank = 'ROOKIE';
-                rankBadge.style.borderColor = '#111111';
-                rankBadge.style.background = '#FFFFFF';
-            } else if (playerState.y > 2730) {
-                currentRank = 'IRON';
-                rankBadge.style.borderColor = '#111111';
-                rankBadge.style.background = '#F4F4F5';
-            } else if (playerState.y > 2190) {
-                currentRank = 'GOLD';
-                rankBadge.style.borderColor = '#111111';
-                rankBadge.style.background = '#FEF3C7';
-            } else if (playerState.y > 1650) {
-                currentRank = 'DIAMOND';
-                rankBadge.style.borderColor = '#111111';
-                rankBadge.style.background = '#E0F2FE';
-            } else {
-                currentRank = 'LEGEND';
-                rankBadge.style.borderColor = '#111111';
-                rankBadge.style.background = '#F3E8FF';
-            }
-            rankBadge.innerText = `RANK: ${currentRank}`;
-        });
-
-        document.getElementById('btn-replay').addEventListener('click', () => {
-            document.getElementById('victory-modal').classList.add('hidden');
-            document.getElementById('btn-restart').click();
-        });
+        return tables[this.spawnLevel] || tables[1];
     }
-    </script>
-</body>
-</html>
-```eof
+};
+
+// 2. 메인 애플리케이션 초기화 (PixiJS v8 스타일)
+const app = new Application();
+await app.init({
+    width: 480,
+    height: 800,
+    backgroundColor: 0x121214,
+    antialias: true
+});
+document.body.appendChild(app.canvas);
+
+// 3. 레이어 구성 (미니멀리즘 레이아웃)
+const shooterContainer = new Container();
+const boardContainer = new Container();
+app.stage.addChild(shooterContainer, boardContainer);
+
+// 위치 레이아웃 정렬
+boardContainer.y = 450; 
+
+// 4. 2048 보드 렌더링 로직
+function initBoard() {
+    GameState.board = Array(GameState.gridSize).fill(null)
+        .map(() => Array(GameState.gridSize).fill(0));
+    drawBoard();
+}
+
+function drawBoard() {
+    boardContainer.removeChildren();
+    const cellSize = 70;
+    const padding = 8;
+    
+    for (let r = 0; r < GameState.gridSize; r++) {
+        for (let c = 0; c < GameState.gridSize; c++) {
+            const value = GameState.board[r][c];
+            const cellBg = new Graphics();
+            
+            // 미니멀 모노톤 스타일링
+            cellBg.roundRect(
+                c * (cellSize + padding), 
+                r * (cellSize + padding), 
+                cellSize, 
+                cellSize, 
+                8
+            );
+            cellBg.fill({ color: value ? 0x2A2A30 : 0x1A1A1E });
+            boardContainer.addChild(cellBg);
+            
+            if (value > 0) {
+                const text = new Text({
+                    text: value.toString(),
+                    style: {
+                        fontFamily: 'Arial',
+                        fontSize: 24,
+                        fill: 0xFFFFFF,
+                        fontWeight: 'bold'
+                    }
+                });
+                text.anchor.set(0.5);
+                text.x = c * (cellSize + padding) + cellSize / 2;
+                text.y = r * (cellSize + padding) + cellSize / 2;
+                boardContainer.addChild(text);
+            }
+        }
+    }
+}
+
+// 5. 숫자가 소환될 때의 로직
+function spawnTile() {
+    const cost = 10; // 기본 소환 비용
+    if (GameState.coins < cost) return;
+    
+    // 빈 칸 찾기
+    const empties = [];
+    for (let r = 0; r < GameState.gridSize; r++) {
+        for (let c = 0; c < GameState.gridSize; c++) {
+            if (GameState.board[r][c] === 0) empties.push({r, c});
+        }
+    }
+    
+    if (empties.length === 0) return; // 보드가 가득 참
+    
+    GameState.coins -= cost;
+    const target = empties[Math.floor(Math.random() * empties.length)];
+    
+    // 확률 표 기반 숫자 결정
+    GameState.board[target.r][target.c] = getWeightedRandomTile();
+    drawBoard();
+    updateUI();
+}
+
+function getWeightedRandomTile() {
+    const rand = Math.random();
+    let cumulative = 0;
+    for (const [tile, prob] of Object.entries(GameState.spawnProbability)) {
+        cumulative += prob;
+        if (rand <= cumulative) return parseInt(tile);
+    }
+    return 2;
+}
+
+// 6. 슈팅 파트 - 플레이어 총 조작 (마우스/터치 연동)
+const gun = new Graphics();
+gun.rect(-15, -10, 30, 20);
+gun.fill({ color: 0xFFFFFF });
+gun.x = app.screen.width / 2;
+gun.y = 400;
+shooterContainer.addChild(gun);
+
+app.stage.eventMode = 'static';
+app.stage.on('pointermove', (event) => {
+    // 2048 보드 위 구역 안에서만 총이 좌우로 이동
+    gun.x = Math.max(30, Math.min(event.global.x, app.screen.width - 30));
+});
+
+// 7. 메인 게임 루프 (적 생성 및 충돌 검사)
+let enemies = [];
+let bullets = [];
+let spawnTimer = 0;
+
+app.ticker.add((ticker) => {
+    // 자동 발사 로직 (보드 총합 데미지 반영)
+    if (ticker.lastTime % 15 < 1) { 
+        fireBullet();
+    }
+    
+    // 적 이동 및 Bullet 충돌 정산 프로세스
+    updateProjectiles(ticker.deltaTime);
+});
+
+function fireBullet() {
+    const bullet = new Graphics();
+    bullet.circle(0, 0, 5);
+    bullet.fill({ color: 0xFF0055 });
+    bullet.x = gun.x;
+    bullet.y = gun.y - 10;
+    bullet.damage = GameState.totalDamage; // 데미지 = 보드 총합
+    
+    bullets.push(bullet);
+    shooterContainer.addChild(bullet);
+}
+
+// 초기화 실행
+initBoard();
