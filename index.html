@@ -4,64 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2048shooter</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Share Tech Mono for ultra-minimalist geometric typography -->
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <!-- PixiJS CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.0/pixi.min.js"></script>
     <style>
-        body {
-            background-color: #040406;
-            font-family: 'Share Tech Mono', monospace;
-            overflow-y: auto;
-            letter-spacing: 0.05em;
+        body { 
+            background-color: #040406; 
+            font-family: 'Share Tech Mono', monospace; 
+            overflow: hidden; 
+            letter-spacing: 0.05em; 
         }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            border: 2px solid #1e1e2e;
-            box-shadow: 0 0 40px rgba(6, 182, 212, 0.12);
+        canvas { 
+            display: block; 
+            margin: 0 auto; 
+            border: 1px solid #2d2d3f; 
+            box-shadow: 0 0 60px rgba(6, 182, 212, 0.12); 
             max-width: 100%;
             height: auto;
         }
-        /* 기하학적 플랫 테두리 스타일 */
-        .vector-panel {
-            background-color: #0a0a0e;
-            border: 1px solid #1f1f2e;
+        .vector-panel { 
+            background-color: #0a0a0e; 
+            border: 1px solid #1f1f2e; 
         }
-        .vector-btn {
-            background-color: #0c0c12;
-            border: 1px solid #1f1f2e;
-            transition: all 0.15s ease-in-out;
+        .vector-btn { 
+            background-color: #0c0c12; 
+            border: 1px solid #1f1f2e; 
+            transition: all 0.15s ease-in-out; 
         }
-        .vector-btn:hover:not(:disabled) {
-            background-color: #141420;
-            border-color: #06b6d4;
-            color: #22d3ee;
+        .vector-btn:hover:not(:disabled) { 
+            background-color: #141420; 
+            border-color: #06b6d4; 
+            color: #22d3ee; 
         }
-        .vector-btn:disabled {
-            opacity: 0.25;
-            cursor: not-allowed;
+        .vector-btn:disabled { 
+            opacity: 0.25; 
+            cursor: not-allowed; 
+        }
+        /* 스크롤바 바인딩 스타일 */
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #060608;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #1f1f2e;
+            border-radius: 2px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4;
         }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen text-slate-300 p-2 md:p-4 select-none">
 
-    <!-- 상단 벡터 정보 패널 (더욱 콤팩트하게 크기 축소) -->
-    <div class="w-full max-w-[400px] vector-panel p-3 mb-1.5">
+    <!-- 상단 계기판 콘솔 정보 영역 -->
+    <div class="w-full max-w-[400px] vector-panel p-3 mb-2">
         <div class="flex justify-between items-start">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="text-[8px] font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 bg-cyan-950/20">GRID_CORE_V5</span>
-                    <!-- 일시정지 및 설정 토글 버튼 -->
+                    <span class="text-[8px] font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-2 py-0.5 bg-cyan-950/20">GRID_CORE_V5</span>
                     <button id="btn-settings-toggle" class="text-[8px] font-bold tracking-widest text-zinc-400 border border-zinc-800 px-2 py-0.5 hover:bg-zinc-900 hover:text-white transition-all">
                         [ SETTINGS / PAUSE ]
                     </button>
                 </div>
                 <h1 class="text-lg font-bold tracking-widest text-zinc-100 mt-1.5">2048SHOOTER</h1>
             </div>
-            
             <div class="text-right">
                 <span class="text-[8px] text-zinc-500 tracking-widest block">RESERVE_CAPITAL</span>
                 <span id="coin-display" class="text-xl font-bold text-white tracking-normal">100</span>
@@ -71,9 +79,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- 슬림형 탭 체인저 -->
-        <div class="grid grid-cols-2 gap-1 mt-2.5">
+        <div class="grid grid-cols-2 gap-1.5 mt-2.5">
             <button id="tab-battle" class="py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 border text-cyan-400 border-cyan-500/30 bg-cyan-950/10">
                 [ 01 // BATTLE DECK ]
             </button>
@@ -83,61 +89,53 @@
         </div>
     </div>
 
-    <!-- 메인 시뮬레이션 영역 (캔버스 크기가 줄어들어 화면에 컴팩트하게 탑재됨) -->
+    <!-- 메인 그래픽 캔버스 영역 -->
     <div id="game-container" class="relative max-w-full">
-        <!-- 경고 알림 바 -->
         <div id="alert-banner" class="absolute top-3 left-1/2 -translate-x-1/2 vector-panel text-red-400 text-[8px] py-1 px-3 opacity-0 pointer-events-none transition-all duration-300 z-10 tracking-widest whitespace-nowrap">
-            WARNING: SHIELD DEPLETED // DAMAGE DETECTED (-1 LIFE)
+            WARNING: SHIELD DEPLETED // DAMAGE DETECTED
         </div>
-        
-        <!-- 실시간 웨이브 연출용 텍스트 가상 HUD -->
-        <div id="wave-banner" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-lg font-bold tracking-[0.2em] pointer-events-none opacity-0 transition-all duration-500 z-10 text-center">
+        <div id="wave-banner" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-lg font-bold tracking-[0.2em] pointer-events-none opacity-0 transition-all duration-500 z-10 text-center whitespace-nowrap">
             SYS_WAVE_01
         </div>
-
-        <!-- 게임 오버 터미널 화면 오버레이 -->
-        <div id="game-over-overlay" class="absolute inset-0 bg-[#060608]/95 flex flex-col items-center justify-center z-20 hidden transition-opacity duration-300">
-            <div class="text-center p-4 vector-panel border-red-500/50 max-w-[280px]">
-                <h2 class="text-red-500 text-lg font-bold tracking-[0.25em] mb-1">SYSTEM FAILURE</h2>
-                <p class="text-zinc-500 text-[8px] tracking-widest mb-4">ALL SHIELD GENERATORS DESTROYED</p>
-                <div class="text-[10px] text-cyan-400 mb-4 font-bold">REACHED WAVE: <span id="final-wave-display" class="text-white">01</span></div>
-                <button id="btn-restart" class="vector-btn w-full py-2 text-[10px] font-bold tracking-widest text-white uppercase border border-red-500/30 hover:border-red-500 hover:text-red-400">
+        
+        <!-- 게임 오버 레이어 -->
+        <div id="game-over-overlay" class="absolute inset-0 bg-[#060608]/95 flex flex-col items-center justify-center z-20 hidden">
+            <div class="text-center p-5 vector-panel border-red-500/50 max-w-[280px]">
+                <h2 class="text-red-500 text-xl font-bold tracking-[0.25em] mb-1">SYSTEM FAILURE</h2>
+                <div class="text-[10px] text-cyan-400 mb-5 font-bold">REACHED WAVE: <span id="final-wave-display" class="text-white">01</span></div>
+                <button id="btn-restart" class="vector-btn w-full py-2.5 text-[10px] font-bold tracking-widest text-white uppercase border border-red-500/30 hover:border-red-500 hover:text-red-400">
                     [ REBOOT SYSTEM ]
                 </button>
             </div>
         </div>
 
-        <!-- 설정 & 일시정지 통합 모달 오버레이 -->
+        <!-- 설정 및 일시정지 오버레이 -->
         <div id="settings-overlay" class="absolute inset-0 bg-[#060608]/90 flex flex-col items-center justify-center z-20 hidden">
-            <div class="w-[280px] p-4 vector-panel border-cyan-500/40">
-                <h2 class="text-cyan-400 text-sm font-bold tracking-widest mb-3 text-center">CORE SETTINGS & PAUSE</h2>
-                
-                <div class="space-y-3 mb-4">
-                    <!-- 사운드 토글 -->
+            <div class="w-[280px] p-5 vector-panel border-cyan-500/40">
+                <h2 class="text-cyan-400 text-sm font-bold tracking-widest mb-3 text-center">SETTINGS</h2>
+                <div class="space-y-3.5 mb-5">
                     <div class="flex justify-between items-center text-[10px]">
                         <span class="text-zinc-400">AUDIO OUTPUT</span>
                         <button id="btn-audio-toggle" class="vector-btn px-2.5 py-0.5 text-[8px] text-emerald-400 border border-emerald-500/30">ENABLED</button>
                     </div>
-
-                    <!-- 플레이 가이드 -->
-                    <div class="pt-2 border-t border-zinc-900 text-[8px] text-zinc-500 leading-relaxed">
-                        * BATTLE DECK: SHIP FOLLOWS MOUSE INSTANTLY FOR PERFECT CONTROL RESPONSE.<br>
-                        * MERGE SYSTEM: ARROW KEYS SLIDE REACTOR TILES. DMG EQUALS HIGHEST SINGLE BLOCK.
+                    <div class="text-[10px] space-y-1">
+                        <div class="flex justify-between">
+                            <span class="text-zinc-400">THRUST SENSITIVITY (KEYBOARD/MOUSE)</span>
+                            <span id="sens-value" class="text-cyan-400 font-bold">5.5</span>
+                        </div>
+                        <input id="range-sens" type="range" min="3.0" max="9.0" step="0.5" value="5.5" class="w-full h-1 bg-zinc-800 rounded outline-none appearance-none cursor-pointer accent-cyan-400">
                     </div>
                 </div>
-
-                <!-- 조작 복귀 -->
                 <button id="btn-settings-close" class="vector-btn w-full py-2 text-[10px] font-bold tracking-widest text-cyan-400 border border-cyan-500/30 uppercase">
-                    [ RESUME SIMULATION ]
+                    [ RESUME ]
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 하단 유동식 컨텍스트 계기판 -->
-    <div id="context-panel" class="w-full max-w-[400px] vector-panel p-2.5 mt-1.5">
-        
-        <!-- 01 // 배틀 덱 계기판 (남은 적, 타이머, 스킵기능 포함) -->
+    <!-- 하단 동적 제어 패널 -->
+    <div id="context-panel" class="w-full max-w-[400px] vector-panel p-3 mt-1.5">
+        <!-- 배틀 탭 활성화 전술 모니터 -->
         <div id="panel-battle" class="flex items-center justify-between gap-3 py-0.5">
             <div class="flex flex-col">
                 <span class="text-[8px] text-zinc-500 tracking-wider">RADAR_TARGETS</span>
@@ -147,61 +145,56 @@
                 <span class="text-[8px] text-zinc-500 tracking-wider">WAVE_STABILITY</span>
                 <span class="text-[11px] font-bold text-white mt-0.5">TIMER: <span id="radar-timer" class="text-yellow-500">45S</span></span>
             </div>
-            <button id="btn-skip-wave" class="vector-btn px-3 py-1.5 text-[9px] font-bold text-cyan-400 tracking-widest uppercase disabled:opacity-20 disabled:pointer-events-none">
-                [ SKIP WAVE ]
+            <button id="btn-skip-wave" class="vector-btn px-3 py-1.5 text-[9px] font-bold text-cyan-400 tracking-widest uppercase disabled:opacity-20">
+                [ SKIP WAIT ]
             </button>
         </div>
 
-        <!-- 02 // 머지 시스템 전용 업그레이드 독 & 실시간 확률 매트릭스 -->
+        <!-- 머지 탭 활성화 업그레이더 및 양자 확률 분석기 -->
         <div id="panel-merge" class="hidden flex flex-col gap-2">
             <div class="grid grid-cols-3 gap-1">
-                <!-- 블록 소환 -->
-                <button id="btn-spawn" class="vector-btn p-2 rounded-none flex flex-col items-center justify-center">
+                <button id="btn-spawn" class="vector-btn p-2 flex flex-col items-center justify-center">
                     <span class="text-[8px] font-bold text-zinc-500 tracking-wider">ALLOCATE BLOCK</span>
-                    <span id="spawn-cost" class="text-[11px] font-bold text-white mt-0.5">10 COIN</span>
+                    <span id="spawn-cost" class="text-[10px] font-bold text-white mt-0.5">10 COIN</span>
                 </button>
-
-                <!-- 확률 강화 -->
-                <button id="btn-up-prob" class="vector-btn p-2 rounded-none flex flex-col items-center justify-center">
+                <button id="btn-up-prob" class="vector-btn p-2 flex flex-col items-center justify-center">
                     <span class="text-[8px] font-bold text-zinc-500 tracking-wider">UP_PROB (Lv.<span id="prob-lv">1</span>)</span>
-                    <span id="prob-cost" class="text-[11px] font-bold text-white mt-0.5">50 COIN</span>
+                    <span id="prob-cost" class="text-[10px] font-bold text-white mt-0.5">50 COIN</span>
                 </button>
-
-                <!-- 보드 확장 -->
-                <button id="btn-up-board" class="vector-btn p-2 rounded-none flex flex-col items-center justify-center">
+                <button id="btn-up-board" class="vector-btn p-2 flex flex-col items-center justify-center">
                     <span class="text-[8px] font-bold text-zinc-500 tracking-wider">GRID_EXPANSION</span>
-                    <span id="board-cost" class="text-[11px] font-bold text-white mt-0.5">500 COIN</span>
+                    <span id="board-cost" class="text-[10px] font-bold text-white mt-0.5">500 COIN</span>
                 </button>
             </div>
 
-            <!-- 실시간 확률 모니터링 테이블 -->
-            <div class="border border-zinc-900 bg-[#08080c] p-2 text-[9px] font-mono">
+            <!-- 하단 실시간 확률 모니터링 테이블 매트릭스 -->
+            <div class="border border-zinc-900 bg-[#07070a] p-1.5 rounded-sm">
                 <div class="text-cyan-400 font-bold mb-1 tracking-widest text-[8px]">// CORE_PROBABILITY_MATRIX</div>
-                <div class="grid grid-cols-5 text-zinc-500 border-b border-zinc-900 pb-1 text-center font-bold text-[8px]">
+                <div class="grid grid-cols-5 text-zinc-500 border-b border-zinc-900 pb-1 text-center font-bold text-[7.5px]">
                     <div>LV</div>
                     <div class="text-sky-400">'2'</div>
                     <div class="text-cyan-400">'4'</div>
                     <div class="text-indigo-400">'8'</div>
                     <div class="text-purple-400">'16'</div>
                 </div>
-                <div class="space-y-0.5 pt-1 text-center font-medium">
-                    <div id="prob-row-1" class="grid grid-cols-5 text-zinc-400 py-0.5">
+                <div class="space-y-0.5 pt-1 text-center font-medium text-[8px]">
+                    <div id="prob-row-1" class="grid grid-cols-5 py-0.5">
                         <span class="text-zinc-500 font-bold">1</span>
                         <span>90%</span><span>10%</span><span>0%</span><span>0%</span>
                     </div>
-                    <div id="prob-row-2" class="grid grid-cols-5 text-zinc-400 py-0.5">
+                    <div id="prob-row-2" class="grid grid-cols-5 py-0.5">
                         <span class="text-zinc-500 font-bold">2</span>
                         <span>70%</span><span>25%</span><span>5%</span><span>0%</span>
                     </div>
-                    <div id="prob-row-3" class="grid grid-cols-5 text-zinc-400 py-0.5">
+                    <div id="prob-row-3" class="grid grid-cols-5 py-0.5">
                         <span class="text-zinc-500 font-bold">3</span>
                         <span>50%</span><span>35%</span><span>12%</span><span>3%</span>
                     </div>
-                    <div id="prob-row-4" class="grid grid-cols-5 text-zinc-400 py-0.5">
+                    <div id="prob-row-4" class="grid grid-cols-5 py-0.5">
                         <span class="text-zinc-500 font-bold">4</span>
                         <span>30%</span><span>40%</span><span>20%</span><span>10%</span>
                     </div>
-                    <div id="prob-row-5" class="grid grid-cols-5 text-zinc-400 py-0.5">
+                    <div id="prob-row-5" class="grid grid-cols-5 py-0.5">
                         <span class="text-zinc-500 font-bold">5</span>
                         <span>10%</span><span>40%</span><span>30%</span><span>20%</span>
                     </div>
@@ -210,27 +203,22 @@
         </div>
     </div>
 
-    <!-- 오프라인 다운로더 -->
+    <!-- 푸터 바 영역 -->
     <div class="w-full max-w-[400px] flex items-center justify-between mt-2 pt-1">
-        <span class="text-[8px] text-zinc-700 tracking-normal">SYS_REF: 2048SHOOTER_V5.EXE</span>
-        <button id="btn-download" class="text-[8px] text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-500 px-2.5 py-0.5 bg-transparent transition-all">
+        <span class="text-[8px] text-zinc-700 font-mono">2048SHOOTER_STRETCHED.EXE</span>
+        <button id="btn-download" class="text-[8px] text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-500 px-2 py-0.5 bg-transparent transition-all">
             DOWNLOAD_SOURCE_FILE
         </button>
     </div>
 
-    <!-- 게임 구동 스크립트 -->
     <script>
-        // ==========================================
-        // 1. CONFIGURATION (게임 캔버스 가로세로 축소 적용)
-        // ==========================================
         const CONFIG = {
-            WIDTH: 400, // 세성 가로 너비 축소 (기존 480)
-            HEIGHT: 440, // 세로 높이 최적화 축소 (기존 500)
-            START_COINS: 100,
-            START_LIVES: 3,
+            WIDTH: 400, HEIGHT: 440,
+            START_COINS: 100, START_LIVES: 3,
             SPAWN_BASE_COST: 10,
             PREPARE_DURATION: 10,
             WAVE_DURATION: 45,
+            INTERMISSION_DURATION: 8, // 정비 시간 (초)
             PROBABILITY_TABLE: {
                 1: { 2: 0.90, 4: 0.10, 8: 0.00, 16: 0.00 },
                 2: { 2: 0.70, 4: 0.25, 8: 0.05, 16: 0.00 },
@@ -238,41 +226,32 @@
                 4: { 2: 0.30, 4: 0.40, 8: 0.20, 16: 0.10 },
                 5: { 2: 0.10, 4: 0.40, 8: 0.30, 16: 0.20 }
             },
-            UPGRADE_COSTS: {
-                PROBABILITY: (level) => Math.round(50 * Math.pow(1.9, level - 1)),
-                BOARD_SIZE: 500
-            },
+            UPGRADE_COSTS: { PROBABILITY: (level) => Math.round(50 * Math.pow(1.9, level - 1)), BOARD_SIZE: 500 },
             BLOCK_COLORS: {
-                2: { bg: 0x1e293b, border: 0x38bdf8, text: '#f8fafc' },
-                4: { bg: 0x0f172a, border: 0x0ea5e9, text: '#f8fafc' },
-                8: { bg: 0x1e1b4b, border: 0x6366f1, text: '#f8fafc' },
-                16: { bg: 0x311042, border: 0xa855f7, text: '#f8fafc' },
-                32: { bg: 0x4c0519, border: 0xf43f5e, text: '#f8fafc' },
-                64: { bg: 0x450a0a, border: 0xef4444, text: '#f8fafc' },
-                128: { bg: 0x3f1d0b, border: 0xf97316, text: '#f8fafc' },
-                256: { bg: 0x362003, border: 0xf59e0b, text: '#f8fafc' },
-                512: { bg: 0x14532d, border: 0x22c55e, text: '#f8fafc' },
-                1024: { bg: 0x064e3b, border: 0x10b981, text: '#f8fafc' },
-                2048: { bg: 0x172554, border: 0x3b82f6, text: '#f8fafc' }
+                2: { bg: 0x14141c, border: 0x3b3b4f, text: '#94a3b8' },
+                4: { bg: 0x1d1d29, border: 0x4f4f70, text: '#cbd5e1' },
+                8: { bg: 0x06283d, border: 0x0099ff, text: '#38bdf8' },
+                16: { bg: 0x03324a, border: 0x00d8ff, text: '#22d3ee' },
+                32: { bg: 0x1c103f, border: 0x6366f1, text: '#a5b4fc' },
+                64: { bg: 0x2e0847, border: 0x8b5cf6, text: '#c084fc' },
+                128: { bg: 0x450345, border: 0xd946ef, text: '#f472b6' },
+                256: { bg: 0x54032d, border: 0xec4899, text: '#f472b6' },
+                512: { bg: 0x5a011d, border: 0xf43f5e, text: '#fda4af' },
+                1024: { bg: 0x574501, border: 0xeab308, text: '#fef08a' },
+                2048: { bg: 0x014524, border: 0x10b981, text: '#34d399' }
             }
         };
 
-        // ==========================================
-        // 2. PARALLAX STARFIELD (기하학 배경)
-        // ==========================================
         class Starfield {
             constructor(app) {
-                this.app = app;
                 this.container = new PIXI.Container();
-                this.app.stage.addChildAt(this.container, 0);
+                app.stage.addChildAt(this.container, 0);
                 this.stars = [];
-
                 for (let i = 0; i < 30; i++) {
                     const star = new PIXI.Graphics();
                     const size = Math.random() < 0.75 ? 1 : 2;
                     star.beginFill(0xffffff, Math.random() * 0.4 + 0.2);
                     star.drawRect(0, 0, size, size);
-                    star.endFill();
                     star.x = Math.random() * CONFIG.WIDTH;
                     star.y = Math.random() * CONFIG.HEIGHT;
                     star.speed = Math.random() * 1.5 + 0.3;
@@ -280,923 +259,328 @@
                     this.stars.push(star);
                 }
             }
-
             update(delta) {
-                for (const star of this.stars) {
-                    star.y += star.speed * delta;
-                    if (star.y > CONFIG.HEIGHT) {
-                        star.y = 0;
-                        star.x = Math.random() * CONFIG.WIDTH;
-                    }
+                for (const s of this.stars) {
+                    s.y += s.speed * delta;
+                    if (s.y > CONFIG.HEIGHT) { s.y = 0; s.x = Math.random() * CONFIG.WIDTH; }
                 }
             }
         }
 
-        // ==========================================
-        // 3. BOARD MODULE (2048 GEOMETRIC REACTOR)
-        // ==========================================
         class Board {
             constructor(app) {
-                this.app = app;
                 this.container = new PIXI.Container();
-                this.app.stage.addChild(this.container);
-
+                app.stage.addChild(this.container);
                 this.size = 4;
-                this.grid = [];
+                this.grid = Array.from({ length: 4 }, () => Array(4).fill(0));
                 this.gridWidth = CONFIG.WIDTH - 40;
                 this.gridHeight = CONFIG.HEIGHT - 100;
-                
-                this.initGrid();
                 this.drawBackground();
             }
-
-            initGrid() {
-                this.grid = Array.from({ length: this.size }, () => Array(this.size).fill(0));
-            }
-
-            upgradeSize() {
-                if (this.size < 5) {
-                    this.size = 5;
-                    this.initGrid();
-                    this.drawBackground();
-                    return true;
-                }
-                return false;
-            }
-
+            initGrid() { this.grid = Array.from({ length: this.size }, () => Array(this.size).fill(0)); }
+            upgradeSize() { if (this.size < 5) { this.size = 5; this.initGrid(); this.drawBackground(); return true; } return false; }
             drawBackground() {
                 this.container.removeChildren();
                 const bg = new PIXI.Graphics();
-                bg.beginFill(0x0d0d15);
-                bg.lineStyle(2.5, 0x1f1f2e, 1);
+                bg.beginFill(0x08080d); bg.lineStyle(2, 0x1f1f2e, 1);
                 bg.drawRect(20, 20, this.gridWidth, this.gridHeight);
-                bg.endFill();
                 this.container.addChild(bg);
                 this.renderBlocks();
             }
-
             spawnBlock(probLevel) {
-                const emptyCells = [];
-                for (let r = 0; r < this.size; r++) {
-                    for (let c = 0; c < this.size; c++) {
-                        if (this.grid[r][c] === 0) emptyCells.push({ r, c });
-                    }
-                }
-                if (emptyCells.length === 0) return false;
-
-                const target = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-                const value = this.getRandomValueByProb(probLevel);
-                this.grid[target.r][target.c] = value;
+                const empty = [];
+                for(let r=0; r<this.size; r++) for(let c=0; c<this.size; c++) if(this.grid[r][c]===0) empty.push({r,c});
+                if(empty.length===0) return false;
+                const t = empty[Math.floor(Math.random()*empty.length)];
+                this.grid[t.r][t.c] = this.getRandomValue(probLevel);
                 this.renderBlocks();
                 return true;
             }
-
-            getRandomValueByProb(level) {
-                const probs = CONFIG.PROBABILITY_TABLE[level];
-                const r = Math.random();
-                let cumulative = 0;
-                for (const [val, p] of Object.entries(probs)) {
-                    cumulative += p;
-                    if (r <= cumulative) return parseInt(val);
-                }
+            getRandomValue(level) {
+                const p = CONFIG.PROBABILITY_TABLE[level];
+                const r = Math.random(); let c = 0;
+                for(const [v, pr] of Object.entries(p)) { c+=pr; if(r<=c) return parseInt(v); }
                 return 2;
             }
-
             getMaxValue() {
-                let max = 2;
-                for (let r = 0; r < this.size; r++) {
-                    for (let c = 0; c < this.size; c++) {
-                        if (this.grid[r][c] > max) {
-                            max = this.grid[r][c];
-                        }
-                    }
-                }
-                return max;
+                let m = 2;
+                for(let r=0; r<this.size; r++) for(let c=0; c<this.size; c++) if(this.grid[r][c]>m) m=this.grid[r][c];
+                return m;
             }
-
-            move(direction) {
+            move(dir) {
                 let moved = false;
-                
-                const rotate = (matrix) => {
-                    const N = matrix.length;
-                    let ret = Array.from({ length: N }, () => Array(N).fill(0));
-                    for (let r = 0; r < N; r++) {
-                        for (let c = 0; c < N; c++) {
-                            ret[c][N - 1 - r] = matrix[r][c];
-                        }
-                    }
-                    return ret;
+                const rotate = (m) => {
+                    const N = m.length; let res = Array.from({length:N},()=>Array(N).fill(0));
+                    for(let r=0;r<N;r++) for(let c=0;c<N;c++) res[c][N-1-r]=m[r][c];
+                    return res;
                 };
-
-                const slideLeft = (row) => {
-                    let arr = row.filter(val => val !== 0);
-                    for (let i = 0; i < arr.length - 1; i++) {
-                        if (arr[i] === arr[i + 1]) {
-                            arr[i] *= 2;
-                            arr[i + 1] = 0;
-                        }
-                    }
-                    arr = arr.filter(val => val !== 0);
-                    while (arr.length < this.size) arr.push(0);
-                    return arr;
+                const slide = (row) => {
+                    let a = row.filter(v=>v!==0);
+                    for(let i=0;i<a.length-1;i++) if(a[i]===a[i+1]) { a[i]*=2; a[i+1]=0; }
+                    a = a.filter(v=>v!==0); while(a.length<this.size) a.push(0);
+                    return a;
                 };
-
-                let rotations = 0;
-                if (direction === 'up') rotations = 3;
-                else if (direction === 'right') rotations = 2;
-                else if (direction === 'down') rotations = 1;
-
-                let tempGrid = JSON.parse(JSON.stringify(this.grid));
-                for (let i = 0; i < rotations; i++) tempGrid = rotate(tempGrid);
-
-                for (let r = 0; r < this.size; r++) {
-                    const original = [...tempGrid[r]];
-                    tempGrid[r] = slideLeft(tempGrid[r]);
-                    if (original.join(',') !== tempGrid[r].join(',')) moved = true;
+                let rots = { 'up':3, 'right':2, 'down':1, 'left':0 }[dir];
+                if (rots === undefined) return false;
+                let temp = JSON.parse(JSON.stringify(this.grid));
+                for(let i=0;i<rots;i++) temp = rotate(temp);
+                for(let r=0;r<this.size;r++) {
+                    const orig = [...temp[r]]; temp[r] = slide(temp[r]);
+                    if(orig.join(',')!==temp[r].join(',')) moved = true;
                 }
-
-                const unRotations = (4 - rotations) % 4;
-                for (let i = 0; i < unRotations; i++) tempGrid = rotate(tempGrid);
-
-                if (moved) {
-                    this.grid = tempGrid;
-                    this.renderBlocks();
-                }
+                for(let i=0;i<(4-rots)%4;i++) temp = rotate(temp);
+                if(moved) { this.grid = temp; this.renderBlocks(); }
                 return moved;
             }
-
             renderBlocks() {
-                if (this.container.children.length === 0) return;
-                const bgGraphic = this.container.getChildAt(0);
+                const bg = this.container.children[0];
                 this.container.removeChildren();
-                if (bgGraphic) this.container.addChild(bgGraphic);
-
+                if(bg) this.container.addChild(bg);
                 const pad = 8;
-                const totalPad = pad * (this.size + 1);
-                const cellW = (this.gridWidth - totalPad) / this.size;
-                const cellH = (this.gridHeight - totalPad) / this.size;
-
-                for (let r = 0; r < this.size; r++) {
-                    for (let c = 0; c < this.size; c++) {
+                const cellW = (this.gridWidth - (pad*(this.size+1))) / this.size;
+                const cellH = (this.gridHeight - (pad*(this.size+1))) / this.size;
+                for(let r=0; r<this.size; r++) {
+                    for(let c=0; c<this.size; c++) {
                         const val = this.grid[r][c];
-                        const x = 20 + pad + c * (cellW + pad);
-                        const y = 20 + pad + r * (cellH + pad);
-
-                        const block = new PIXI.Graphics();
-                        const colorSet = CONFIG.BLOCK_COLORS[val] || { bg: 0x161622, border: 0x2a2a3f, text: '#4b5563' };
-                        
-                        block.beginFill(colorSet.bg);
-                        block.lineStyle(2, colorSet.border, 1);
-                        block.drawRoundedRect(x, y, cellW, cellH, 6);
-                        block.endFill();
-                        this.container.addChild(block);
-
-                        if (val > 0) {
-                            const style = new PIXI.TextStyle({
-                                fill: colorSet.text,
-                                fontSize: this.size === 4 ? 22 : 17,
-                                fontWeight: 'bold',
-                                fontFamily: 'Share Tech Mono',
-                            });
-                            const txt = new PIXI.Text(val.toString(), style);
-                            txt.anchor.set(0.5);
-                            txt.x = x + cellW / 2;
-                            txt.y = y + cellH / 2;
-                            this.container.addChild(txt);
+                        const x = 20+pad+c*(cellW+pad); const y = 20+pad+r*(cellH+pad);
+                        const b = new PIXI.Graphics();
+                        const cs = CONFIG.BLOCK_COLORS[val] || {bg:0x161622, border:0x2a2a3f, text:'#4b5563'};
+                        b.beginFill(cs.bg); b.lineStyle(2, cs.border, 1);
+                        b.drawRoundedRect(x, y, cellW, cellH, 6);
+                        this.container.addChild(b);
+                        if(val > 0) {
+                            const t = new PIXI.Text(val.toString(), {fill:cs.text, fontSize:this.size===4?22:17, fontWeight:'bold', fontFamily:'Share Tech Mono'});
+                            t.anchor.set(0.5); t.x = x+cellW/2; t.y = y+cellH/2;
+                            this.container.addChild(t);
                         }
                     }
                 }
             }
         }
 
-        // ==========================================
-        // 4. GUN MODULE (1:1 즉시 비행 조작 및 기하학 회전 틸팅)
-        // ==========================================
         class Gun {
             constructor(app) {
-                this.app = app;
                 this.container = new PIXI.Container();
-                this.app.stage.addChild(this.container);
-
-                this.x = CONFIG.WIDTH / 2;
-                this.y = CONFIG.HEIGHT - 60;
-                
-                // 마우스 즉시 추적 타겟 좌표
-                this.targetX = this.x;
-                this.targetY = this.y;
-
+                app.stage.addChild(this.container);
+                this.x = CONFIG.WIDTH/2; this.y = CONFIG.HEIGHT-60;
+                this.targetX = this.x; this.targetY = this.y;
+                this.speed = 5.5; // 키보드 조작과 감도 슬라이더 공용 속도 필드
                 this.sprite = new PIXI.Graphics();
-                this.sprite.lineStyle(1.5, 0xffffff, 1);
-                this.sprite.beginFill(0x060608);
-                // 중심점(0,0)을 기준으로 대칭 정렬된 기하학 우주선 모델
-                this.sprite.drawPolygon([
-                    0, -12,   // Nose (앞)
-                    12, 10,   // Right Wingtip (우측 날개)
-                    4, 6,     // Inner Wing (중앙 우측)
-                    -4, 6,    // Inner Wing (중앙 좌측)
-                    -12, 10   // Left Wingtip (좌측 날개)
-                ]);
+                this.sprite.lineStyle(1.5, 0xffffff, 1); this.sprite.beginFill(0x060608);
+                this.sprite.drawPolygon([0,-12, 12,10, 4,6, -4,6, -12,10]);
                 this.sprite.endFill();
-                // 회전 시 정중앙에서 기울어지도록 피벗 세팅
-                this.sprite.pivot.set(0, 0); 
+                this.sprite.pivot.set(0, 0);
                 this.container.addChild(this.sprite);
-
-                this.bullets = [];
-                this.trails = [];
-                this.fireCooldown = 0;
-                this.fireRate = 11;
-
-                this.updateSpritePosition();
+                this.bullets = []; this.trails = [];
+                this.fireCooldown = 0; this.fireRate = 11;
             }
-
-            updateSpritePosition() {
-                this.sprite.x = this.x;
-                this.sprite.y = this.y;
-            }
-
             updatePosition(tx, ty) {
-                const margin = 16;
-                this.targetX = Math.max(margin, Math.min(CONFIG.WIDTH - margin, tx));
-                this.targetY = Math.max(40, Math.min(CONFIG.HEIGHT - margin, ty));
+                this.targetX = Math.max(16, Math.min(CONFIG.WIDTH-16, tx));
+                this.targetY = Math.max(40, Math.min(CONFIG.HEIGHT-20, ty));
             }
-
-            update(delta, damage) {
-                // 회전 틸팅을 계산하기 위한 직전 좌표 저장
+            update(delta, dmg) {
                 const prevX = this.x;
-
-                // [조작감 개선] 물리적 딜레이가 전혀 없는 1:1 즉시 추적 (No Physics, No Lerp Lag)
                 this.x = this.targetX;
                 this.y = this.targetY;
-                this.updateSpritePosition();
+                this.sprite.x = this.x; this.sprite.y = this.y;
 
-                // 수평 이동의 변화량(dx)을 감지하여 자연스러운 기하학 틸팅(회전) 구현
                 const dx = this.x - prevX;
                 let targetRotation = 0;
-                if (dx > 0.5) {
-                    targetRotation = 0.35; // 오른쪽으로 이동 시 부드러운 우측 기울임
-                } else if (dx < -0.5) {
-                    targetRotation = -0.35; // 왼쪽으로 이동 시 부드러운 좌측 기울임
-                }
-
-                // 회전각 보간 (시각적인 연출 요소)
+                if (dx > 0.5) { targetRotation = 0.35; }
+                else if (dx < -0.5) { targetRotation = -0.35; }
                 this.sprite.rotation += (targetRotation - this.sprite.rotation) * 0.25;
 
-                // 공격 루프
                 this.fireCooldown -= delta;
-                if (this.fireCooldown <= 0) {
-                    this.fire(damage);
-                    this.fireCooldown = this.fireRate;
+                if(this.fireCooldown <= 0) { this.fire(dmg); this.fireCooldown = this.fireRate; }
+                if(Math.random()<0.6) {
+                    const j = new PIXI.Graphics(); j.beginFill(0x00ffff, 0.7); j.drawRect(-1,-1,2,2);
+                    j.x = this.x+(Math.random()-0.5)*6; j.y = this.y+8; j.vy = Math.random()*2+1.5; j.alpha=1.0;
+                    this.container.addChild(j); this.trails.push(j);
                 }
-
-                // 엔진 배기 파티클
-                if (Math.random() < 0.6) {
-                    const jet = new PIXI.Graphics();
-                    jet.beginFill(0x00ffff, 0.7);
-                    jet.drawRect(-1, -1, 2, 2);
-                    jet.endFill();
-                    jet.x = this.x + (Math.random() - 0.5) * 6;
-                    jet.y = this.y + 8;
-                    jet.vy = Math.random() * 2 + 1.5;
-                    jet.alpha = 1.0;
-                    this.container.addChild(jet);
-                    this.trails.push(jet);
+                for(let i=this.trails.length-1; i>=0; i--) {
+                    const p = this.trails[i]; p.y += p.vy*delta; p.alpha -= 0.05*delta;
+                    if(p.alpha <= 0) { this.container.removeChild(p); this.trails.splice(i,1); }
                 }
-
-                for (let i = this.trails.length - 1; i >= 0; i--) {
-                    const p = this.trails[i];
-                    p.y += p.vy * delta;
-                    p.alpha -= 0.05 * delta;
-                    if (p.alpha <= 0) {
-                        this.container.removeChild(p);
-                        this.trails.splice(i, 1);
-                    }
-                }
-
-                // 탄환 이동
-                for (let i = this.bullets.length - 1; i >= 0; i--) {
-                    const b = this.bullets[i];
-                    b.y -= 10.5 * delta;
-                    if (b.y < -10) {
-                        this.container.removeChild(b);
-                        this.bullets.splice(i, 1);
-                    }
+                for(let i=this.bullets.length-1; i>=0; i--) {
+                    const b = this.bullets[i]; b.y -= 10.5*delta;
+                    if(b.y < -10) { this.container.removeChild(b); this.bullets.splice(i,1); }
                 }
             }
-
-            fire(damage) {
-                const bullet = new PIXI.Graphics();
-                bullet.beginFill(0x00ffff);
-                bullet.drawRect(-1, -6, 2, 12);
-                bullet.endFill();
-
-                bullet.x = this.sprite.x;
-                bullet.y = this.sprite.y - 12;
-                bullet.damage = damage;
-
-                this.container.addChild(bullet);
-                this.bullets.push(bullet);
+            fire(dmg) {
+                const b = new PIXI.Graphics(); b.beginFill(0x00ffff); b.drawRect(-1,-6,2,12);
+                b.x = this.x; b.y = this.y-12; b.damage = dmg;
+                this.container.addChild(b); this.bullets.push(b);
             }
         }
 
-        // ==========================================
-        // 5. WAVE & ENEMY MANAGER
-        // ==========================================
         class EnemyManager {
-            constructor(app, gun, triggerLifeDeductCallback, triggerAlertCallback, showWaveBannerCallback, updateHUDCallback) {
-                this.app = app;
-                this.gun = gun;
-                this.deductLife = triggerLifeDeductCallback;
-                this.triggerAlert = triggerAlertCallback;
-                this.showWaveBanner = showWaveBannerCallback;
-                this.updateHUD = updateHUDCallback;
-                
-                this.container = new PIXI.Container();
-                this.app.stage.addChild(this.container);
-
-                this.enemies = [];
-                this.enemyBullets = [];
-                this.particles = [];
-                
-                this.currentWave = 1;
-                this.waveProgress = 0;
-                this.waveTargetCount = 10;
-                this.waveDefeatedCount = 0;
-                this.spawnCooldown = 0;
-                
-                this.isFirstCountdown = true;
-                this.firstCountdownTimer = CONFIG.PREPARE_DURATION;
-
-                this.isWaveIntermission = false;
-                this.intermissionTimer = 100;
+            constructor(app, gun, lifeCb, alertCb, bannerCb, hudCb) {
+                this.app = app; this.gun = gun;
+                this.deductLife = lifeCb; this.triggerAlert = alertCb;
+                this.showBanner = bannerCb; this.updateHUD = hudCb;
+                this.container = new PIXI.Container(); app.stage.addChild(this.container);
+                this.enemies = []; this.enemyBullets = []; this.particles = [];
+                this.currentWave = 1; this.waveProgress = 0; this.waveTargetCount = 10;
+                this.waveDefeatedCount = 0; this.spawnCooldown = 0;
+                this.isFirstCountdown = true; this.firstCountdownTimer = CONFIG.PREPARE_DURATION;
+                this.isWaveIntermission = false; this.intermissionTimer = 0;
                 this.waveTimer = CONFIG.WAVE_DURATION;
-
-                this.showWaveBanner(`LAUNCH PREP: ${CONFIG.PREPARE_DURATION}s`);
-                this.updateHUD();
             }
-
-            startWave(waveNum) {
-                this.currentWave = waveNum;
-                this.waveDefeatedCount = 0;
-                this.waveProgress = 0;
-                this.waveTargetCount = 6 + waveNum * 4;
-                this.isWaveIntermission = false;
-                this.isFirstCountdown = false;
+            startWave(num) {
+                this.currentWave = num; this.waveDefeatedCount = 0; this.waveProgress = 0;
+                this.waveTargetCount = 6 + num * 4; this.isWaveIntermission = false;
                 this.waveTimer = CONFIG.WAVE_DURATION;
-                this.showWaveBanner(`WAVE ${String(waveNum).padStart(2, '0')}`);
-                this.updateHUD();
+                this.showBanner(`WAVE ${String(num).padStart(2, '0')}`);
             }
-
             skipIntermissionOrWave() {
-                if (this.isFirstCountdown) {
-                    this.firstCountdownTimer = 0;
-                    return;
-                }
-                if (this.isWaveIntermission) {
-                    this.intermissionTimer = 0;
-                } else {
-                    for (let i = this.enemies.length - 1; i >= 0; i--) {
-                        this.createHitParticles(this.enemies[i].x, this.enemies[i].y, 10, 0xff5555);
-                        this.container.removeChild(this.enemies[i].sprite);
-                    }
-                    this.enemies = [];
-                    this.isWaveIntermission = true;
-                    this.intermissionTimer = 10; 
-                    this.showWaveBanner("WAVE SKIPPED");
+                if (this.isFirstCountdown) { this.firstCountdownTimer = 0; return; }
+                if (this.isWaveIntermission) { this.intermissionTimer = 0; }
+                else {
+                    this.enemies.forEach(e => this.container.removeChild(e.sprite));
+                    this.enemies = []; this.isWaveIntermission = true;
+                    this.intermissionTimer = 10; this.showBanner("WAVE SKIPPED");
                 }
             }
-
             update(delta) {
-                this.updateHUD();
-
                 if (this.isFirstCountdown) {
-                    this.firstCountdownTimer -= (delta / 60);
-                    if (this.firstCountdownTimer <= 0) {
-                        this.firstCountdownTimer = 0;
-                        this.isFirstCountdown = false;
-                        this.startWave(1);
-                    } else {
-                        const bannerText = `LAUNCH PREP: ${Math.ceil(this.firstCountdownTimer)}s`;
-                        const bannerElement = document.getElementById('wave-banner');
-                        if (bannerElement) {
-                            bannerElement.innerText = bannerText;
-                            bannerElement.style.opacity = '1';
-                        }
+                    this.firstCountdownTimer -= (delta/60);
+                    if (this.firstCountdownTimer <= 0) { this.isFirstCountdown = false; this.startWave(1); }
+                    else {
+                        const b = document.getElementById('wave-banner');
+                        b.innerText = `LAUNCH PREP: ${Math.ceil(this.firstCountdownTimer)}s`; b.style.opacity = '1';
                     }
                     return;
                 }
-
                 if (this.isWaveIntermission) {
-                    this.intermissionTimer -= delta;
-                    if (this.intermissionTimer <= 0) {
-                        this.startWave(this.currentWave + 1);
+                    this.intermissionTimer -= (delta/60);
+                    if (this.intermissionTimer <= 0) { this.startWave(this.currentWave + 1); }
+                    else {
+                        const b = document.getElementById('wave-banner');
+                        b.innerText = `NEXT WAVE IN: ${this.intermissionTimer.toFixed(1)}s`; b.style.opacity = '1';
                     }
                     return;
                 }
-
-                this.waveTimer -= (delta / 60);
-                if (this.waveTimer <= 0) {
-                    this.waveTimer = 0;
-                    this.isWaveIntermission = true;
-                    this.intermissionTimer = 120;
-                    for (let i = this.enemies.length - 1; i >= 0; i--) {
-                        this.container.removeChild(this.enemies[i].sprite);
-                    }
-                    this.enemies = [];
-                    this.showWaveBanner("TIME OUT: SURVIVED");
-                    return;
-                }
-
+                this.waveTimer -= (delta/60);
+                if (this.waveTimer <= 0) { this.triggerIntermission("TIME OUT: SURVIVED"); return; }
                 this.spawnCooldown -= delta;
                 if (this.spawnCooldown <= 0 && this.waveProgress < this.waveTargetCount) {
-                    this.spawnEnemy();
-                    this.spawnCooldown = Math.max(25, 90 - this.currentWave * 5);
+                    this.spawnEnemy(); this.spawnCooldown = Math.max(25, 90 - this.currentWave * 5);
                 }
-
-                for (let i = this.enemies.length - 1; i >= 0; i--) {
-                    const e = this.enemies[i];
-                    e.time += delta * 0.03;
-
-                    if (e.pattern === 'zigzag') {
-                        e.x += Math.sin(e.time * 2) * 2.5 * delta;
-                        e.y += 1.8 * delta;
-                    } else if (e.pattern === 'dive') {
-                        e.y += 1.3 * delta;
-                    } else if (e.pattern === 'sine') {
-                        e.x += Math.sin(e.time) * 1.5 * delta;
-                        e.y += 0.9 * delta;
-                    } else if (e.pattern === 'phantom') {
-                        if (Math.sin(e.time * 0.5) > 0.8) {
-                            e.x += (Math.sin(e.time * 5) * 3) * delta;
-                        }
-                        e.y += 1.1 * delta;
-                    }
-
-                    e.sprite.x = e.x;
-                    e.sprite.y = e.y;
-
-                    if (Math.abs(e.x - this.gun.x) < 20 && Math.abs(e.y - this.gun.y) < 20) {
-                        this.deductLife();
-                        this.triggerAlert();
-                        this.destroyEnemy(e, i);
-                        continue;
-                    }
-
-                    if (e.y > CONFIG.HEIGHT + 20) {
-                        this.container.removeChild(e.sprite);
-                        this.enemies.splice(i, 1);
-                        this.checkWaveStatus();
-                        continue;
-                    }
-
-                    e.bulletCooldown -= delta;
-                    if (e.bulletCooldown <= 0) {
-                        this.enemyFire(e);
-                        e.bulletCooldown = e.fireRate;
-                    }
-
-                    const bullets = this.gun.bullets;
-                    for (let j = bullets.length - 1; j >= 0; j--) {
-                        const b = bullets[j];
-                        if (Math.abs(b.x - e.x) < 20 && Math.abs(b.y - e.y) < 18) {
-                            e.hp -= b.damage;
-                            e.updateHpText();
-
-                            this.createHitParticles(b.x, b.y, 3, 0xffffff);
-                            this.gun.container.removeChild(b);
-                            bullets.splice(j, 1);
-
-                            if (e.hp <= 0) {
-                                const reward = Math.round(e.maxHp * 0.4) + 1;
-                                this.app.stage.emit('addCoins', reward);
-                                this.createHitParticles(e.x, e.y, 8, e.color);
-                                this.destroyEnemy(e, i);
-                                break;
-                            }
+                for (let i = this.enemies.length-1; i >= 0; i--) {
+                    const e = this.enemies[i]; e.time += delta * 0.03;
+                    if(e.pattern==='zigzag') { e.x += Math.sin(e.time*2)*2.5*delta; e.y += 1.8*delta; }
+                    else if(e.pattern==='dive') { e.y += 1.3*delta; }
+                    else if(e.pattern==='sine') { e.x += Math.sin(e.time)*1.5*delta; e.y += 0.9*delta; }
+                    else if(e.pattern==='phantom') { if(Math.sin(e.time*0.5)>0.8) e.x += Math.sin(e.time*5)*3*delta; e.y += 1.1*delta; }
+                    e.sprite.x = e.x; e.sprite.y = e.y;
+                    if(Math.hypot(e.x-this.gun.x, e.y-this.gun.y) < 20) { this.deductLife(); this.triggerAlert(); this.destroyEnemy(e, i); continue; }
+                    if(e.y > CONFIG.HEIGHT + 20) { this.container.removeChild(e.sprite); this.enemies.splice(i,1); this.checkWaveStatus(); continue; }
+                    e.bulletCooldown -= delta; if(e.bulletCooldown <= 0) { this.enemyFire(e); e.bulletCooldown = e.fireRate; }
+                    for(let j=this.gun.bullets.length-1; j>=0; j--) {
+                        const b = this.gun.bullets[j];
+                        if(Math.abs(b.x-e.x)<20 && Math.abs(b.y-e.y)<18) {
+                            e.hp -= b.damage; e.hpText.text = Math.max(0, e.hp).toString();
+                            this.gun.container.removeChild(b); this.gun.bullets.splice(j,1);
+                            if(e.hp<=0) { this.app.stage.emit('addCoins', Math.round(e.maxHp*0.4)+1); this.destroyEnemy(e,i); break; }
                         }
                     }
                 }
-
-                for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
-                    const eb = this.enemyBullets[i];
-                    eb.x += eb.vx * delta;
-                    eb.y += eb.vy * delta;
-                    eb.sprite.x = eb.x;
-                    eb.sprite.y = eb.y;
-
-                    if (eb.heavy) {
-                        eb.sprite.scale.x = 1 + Math.abs(Math.sin(eb.time += 0.05)) * 0.3;
-                        eb.sprite.scale.y = 1 + Math.abs(Math.sin(eb.time)) * 0.3;
-                    }
-
-                    if (eb.y > CONFIG.HEIGHT + 15 || eb.y < -15 || eb.x < -15 || eb.x > CONFIG.WIDTH + 15) {
-                        this.container.removeChild(eb.sprite);
-                        this.enemyBullets.splice(i, 1);
-                        continue;
-                    }
-
-                    if (Math.abs(eb.x - this.gun.x) < 13 && Math.abs(eb.y - this.gun.y) < 13) {
-                        this.deductLife();
-                        this.triggerAlert();
-                        this.container.removeChild(eb.sprite);
-                        this.enemyBullets.splice(i, 1);
-                    }
-                }
-
-                for (let i = this.particles.length - 1; i >= 0; i--) {
-                    const p = this.particles[i];
-                    p.x += p.vx * delta;
-                    p.y += p.vy * delta;
-                    p.sprite.x = p.x;
-                    p.sprite.y = p.y;
-                    p.alpha -= 0.05 * delta;
-                    p.sprite.alpha = p.alpha;
-                    if (p.alpha <= 0) {
-                        this.container.removeChild(p.sprite);
-                        this.particles.splice(i, 1);
-                    }
+                for(let i=this.enemyBullets.length-1; i>=0; i--) {
+                    const eb = this.enemyBullets[i]; eb.x += eb.vx*delta; eb.y += eb.vy*delta;
+                    eb.sprite.x = eb.x; eb.sprite.y = eb.y;
+                    if(eb.y > CONFIG.HEIGHT+20 || eb.y < -20) { this.container.removeChild(eb.sprite); this.enemyBullets.splice(i,1); continue; }
+                    if(Math.hypot(eb.x-this.gun.x, eb.y-this.gun.y) < 13) { this.deductLife(); this.triggerAlert(); this.container.removeChild(eb.sprite); this.enemyBullets.splice(i,1); }
                 }
             }
-
+            triggerIntermission(msg) {
+                this.isWaveIntermission = true;
+                this.intermissionTimer = CONFIG.INTERMISSION_DURATION;
+                this.enemies.forEach(e => this.container.removeChild(e.sprite));
+                this.enemies = []; this.showBanner(msg);
+            }
             spawnEnemy() {
                 this.waveProgress++;
                 const types = ['scout', 'fighter', 'bomber', 'phantom'];
-                let selectedType = 'scout';
-                if (this.currentWave >= 2) selectedType = types[Math.floor(Math.random() * 2)];
-                if (this.currentWave >= 4) selectedType = types[Math.floor(Math.random() * 3)];
-                if (this.currentWave >= 6) selectedType = types[Math.floor(Math.random() * 4)];
-
-                let enemy = {
-                    x: Math.random() * (CONFIG.WIDTH - 80) + 40,
-                    y: -20,
-                    hp: 1,
-                    maxHp: 0,
-                    time: Math.random() * 10,
-                    bulletCooldown: Math.random() * 50,
-                    fireRate: 150,
-                    pattern: 'normal',
-                    vx: (Math.random() - 0.5) * 2,
-                    sprite: new PIXI.Container(),
-                    color: 0xff5555,
-                    type: selectedType
-                };
-
-                const shape = new PIXI.Graphics();
-                
-                if (selectedType === 'scout') {
-                    enemy.hp = Math.round(10 + this.currentWave * 7);
-                    enemy.fireRate = Math.max(50, 110 - this.currentWave * 4);
-                    enemy.pattern = 'zigzag';
-                    enemy.color = 0x60a5fa;
-
-                    shape.lineStyle(1.5, enemy.color, 1);
-                    shape.beginFill(0x060608);
-                    shape.drawPolygon([0, -8, 8, 0, 0, 8, -8, 0]);
-                    shape.endFill();
-
-                } else if (selectedType === 'fighter') {
-                    enemy.hp = Math.round(20 + this.currentWave * 15);
-                    enemy.fireRate = Math.max(60, 140 - this.currentWave * 5);
-                    enemy.pattern = 'dive';
-                    enemy.color = 0xf43f5e;
-
-                    shape.lineStyle(1.5, enemy.color, 1);
-                    shape.beginFill(0x060608);
-                    shape.drawPolygon([0, -10, 10, -2, 7, 9, -7, 9, -10, -2]);
-                    shape.endFill();
-
-                } else if (selectedType === 'bomber') {
-                    enemy.hp = Math.round(45 + this.currentWave * 28);
-                    enemy.fireRate = Math.max(90, 180 - this.currentWave * 8);
-                    enemy.pattern = 'sine';
-                    enemy.color = 0xeab308;
-
-                    shape.lineStyle(2.0, enemy.color, 1);
-                    shape.beginFill(0x060608);
-                    shape.drawPolygon([-12, -10, 12, -10, 0, 10]);
-                    shape.endFill();
-
-                } else if (selectedType === 'phantom') {
-                    enemy.hp = Math.round(30 + this.currentWave * 20);
-                    enemy.fireRate = Math.max(70, 150 - this.currentWave * 6);
-                    enemy.pattern = 'phantom';
-                    enemy.color = 0xd946ef;
-
-                    shape.lineStyle(1.5, enemy.color, 1);
-                    shape.beginFill(0x060608);
-                    shape.drawPolygon([0, -12, 4, -4, 12, 0, 4, 4, 0, 12, -4, 4, -12, 0, -4, -4]);
-                    shape.endFill();
-                }
-
-                enemy.maxHp = enemy.hp;
-                enemy.sprite.addChild(shape);
-
-                const style = new PIXI.TextStyle({ 
-                    fill: '#ffffff', 
-                    fontSize: 8, 
-                    fontWeight: 'bold',
-                    fontFamily: 'Share Tech Mono'
-                });
-                const hpText = new PIXI.Text(enemy.hp.toString(), style);
-                hpText.anchor.set(0.5);
-                hpText.y = -1;
-                enemy.sprite.addChild(hpText);
-
-                enemy.updateHpText = () => {
-                    hpText.text = Math.max(0, enemy.hp).toString();
-                };
-
-                this.container.addChild(enemy.sprite);
-                this.enemies.push(enemy);
+                let type = types[0];
+                if(this.currentWave>=2) type = types[Math.floor(Math.random()*2)];
+                if(this.currentWave>=4) type = types[Math.floor(Math.random()*3)];
+                if(this.currentWave>=6) type = types[Math.floor(Math.random()*4)];
+                let e = { x: Math.random()*(CONFIG.WIDTH-80)+40, y: -20, time: Math.random()*10, bulletCooldown: 30, sprite: new PIXI.Container(), type: type };
+                const s = new PIXI.Graphics();
+                if(type==='scout') { e.hp=10+this.currentWave*7; e.fireRate=100; e.pattern='zigzag'; e.color=0x60a5fa; s.lineStyle(1.5,e.color); s.drawPolygon([0,-8,8,0,0,8,-8,0]); }
+                else if(type==='fighter') { e.hp=25+this.currentWave*12; e.fireRate=120; e.pattern='dive'; e.color=0xf43f5e; s.lineStyle(1.5,e.color); s.drawPolygon([0,-10,10,-2,7,9,-7,9,-10,-2]); }
+                else if(type==='bomber') { e.hp=50+this.currentWave*25; e.fireRate=160; e.pattern='sine'; e.color=0xeab308; s.lineStyle(2,e.color); s.drawPolygon([-12,-10,12,-10,0,10]); }
+                else { e.hp=35+this.currentWave*18; e.fireRate=130; e.pattern='phantom'; e.color=0xd946ef; s.lineStyle(1.5,e.color); s.drawPolygon([0,-12,4,-4,12,0,4,4,0,12,-4,4,-12,0,-4,-4]); }
+                e.maxHp = e.hp; e.sprite.addChild(s);
+                e.hpText = new PIXI.Text(e.hp.toString(), {fill:'#fff', fontSize:8, fontFamily:'Share Tech Mono'});
+                e.hpText.anchor.set(0.5); e.sprite.addChild(e.hpText);
+                this.container.addChild(e.sprite); this.enemies.push(e);
             }
-
             enemyFire(e) {
-                const bulletSpeed = 2.4 + this.currentWave * 0.15;
-
-                if (e.type === 'scout') {
-                    const dx = this.gun.x - e.x;
-                    const dy = this.gun.y - e.y;
-                    const dist = Math.hypot(dx, dy);
-                    if (dist === 0) return;
-
-                    const bulletSprite = new PIXI.Graphics();
-                    bulletSprite.lineStyle(1, e.color, 1);
-                    bulletSprite.beginFill(0x060608);
-                    bulletSprite.drawCircle(0, 0, 2.5); 
-                    bulletSprite.endFill();
-
-                    const eb = { x: e.x, y: e.y + 10, vx: (dx / dist) * bulletSpeed, vy: (dy / dist) * bulletSpeed, sprite: bulletSprite, heavy: false };
-                    bulletSprite.x = eb.x; bulletSprite.y = eb.y;
-                    this.container.addChild(bulletSprite);
-                    this.enemyBullets.push(eb);
-
-                } else if (e.type === 'fighter') {
-                    const dx = this.gun.x - e.x;
-                    const dy = this.gun.y - e.y;
-                    const dist = Math.hypot(dx, dy);
-                    if (dist === 0) return;
-
-                    const offsets = [-6, 6];
-                    offsets.forEach(offset => {
-                        const bulletSprite = new PIXI.Graphics();
-                        bulletSprite.lineStyle(1, e.color, 1);
-                        bulletSprite.beginFill(0x060608);
-                        bulletSprite.drawRect(-1, -2.5, 2, 5);
-                        bulletSprite.endFill();
-
-                        const eb = { x: e.x + offset, y: e.y + 6, vx: (dx / dist) * (bulletSpeed * 0.95), vy: (dy / dist) * (bulletSpeed * 0.95), sprite: bulletSprite, heavy: false };
-                        bulletSprite.x = eb.x; bulletSprite.y = eb.y;
-                        this.container.addChild(bulletSprite);
-                        this.enemyBullets.push(eb);
-                    });
-
-                } else if (e.type === 'bomber') {
-                    const bulletSprite = new PIXI.Graphics();
-                    bulletSprite.lineStyle(1.5, e.color, 1);
-                    bulletSprite.beginFill(0x060608);
-                    bulletSprite.drawCircle(0, 0, 5.5); 
-                    bulletSprite.endFill();
-
-                    const eb = { x: e.x, y: e.y + 12, vx: 0, vy: bulletSpeed * 0.7, sprite: bulletSprite, heavy: true, time: 0 };
-                    bulletSprite.x = eb.x; bulletSprite.y = eb.y;
-                    this.container.addChild(bulletSprite);
-                    this.enemyBullets.push(eb);
-
-                } else if (e.type === 'phantom') {
-                    const bulletSprite = new PIXI.Graphics();
-                    bulletSprite.lineStyle(1, e.color, 1);
-                    bulletSprite.beginFill(0x060608);
-                    bulletSprite.drawRect(-2.5, -2.5, 5, 5);
-                    bulletSprite.endFill();
-
-                    const eb = { x: e.x, y: e.y + 10, vx: 0, vy: 0.35, sprite: bulletSprite, heavy: false };
-                    bulletSprite.x = eb.x; bulletSprite.y = eb.y;
-                    this.container.addChild(bulletSprite);
-                    this.enemyBullets.push(eb);
-                }
+                const b = new PIXI.Graphics(); b.beginFill(0xffffff, 0.8); b.drawCircle(0,0,2.5);
+                const dx = this.gun.x - e.x; const dy = this.gun.y - e.y; const d = Math.hypot(dx,dy);
+                const spd = 2.4 + this.currentWave*0.1;
+                const eb = { x: e.x, y: e.y+10, vx: (dx/d)*spd, vy: (dy/d)*spd, sprite: b };
+                this.container.addChild(b); this.enemyBullets.push(eb);
             }
-
-            destroyEnemy(enemy, index) {
-                this.container.removeChild(enemy.sprite);
-                this.enemies.splice(index, 1);
-                this.checkWaveStatus();
-            }
-
-            checkWaveStatus() {
-                this.waveDefeatedCount++;
-                if (this.waveDefeatedCount >= this.waveTargetCount && this.enemies.length === 0) {
-                    this.isWaveIntermission = true;
-                    this.intermissionTimer = 110; 
-                    this.showWaveBanner("WAVE CLEARED");
-                }
-            }
-
-            createHitParticles(x, y, count, color) {
-                for (let i = 0; i < count; i++) {
-                    const g = new PIXI.Graphics();
-                    g.beginFill(color);
-                    g.drawRect(-1, -1, 2, 2);
-                    g.endFill();
-
-                    const p = {
-                        x: x,
-                        y: y,
-                        vx: (Math.random() - 0.5) * 5,
-                        vy: (Math.random() - 0.5) * 5,
-                        alpha: 1.0,
-                        sprite: g
-                    };
-                    g.x = p.x;
-                    g.y = p.y;
-
-                    this.container.addChild(g);
-                    this.particles.push(p);
-                }
-            }
+            destroyEnemy(e, i) { this.container.removeChild(e.sprite); this.enemies.splice(i, 1); this.checkWaveStatus(); }
+            checkWaveStatus() { if (this.waveDefeatedCount >= this.waveTargetCount && this.enemies.length === 0) this.triggerIntermission("WAVE CLEARED"); }
         }
 
-        // ==========================================
-        // 6. UI MANAGER
-        // ==========================================
         class UIManager {
             constructor(game) {
                 this.game = game;
-
-                this.coinText = document.getElementById('coin-display');
-                this.dmgText = document.getElementById('dmg-display');
-                this.livesText = document.getElementById('lives-display');
-                
-                this.panelBattle = document.getElementById('panel-battle');
-                this.panelMerge = document.getElementById('panel-merge');
-
-                this.radarEnemies = document.getElementById('radar-enemies');
-                this.radarTimer = document.getElementById('radar-timer');
-                this.btnSkipWave = document.getElementById('btn-skip-wave');
-
-                this.btnSpawn = document.getElementById('btn-spawn');
-                this.spawnCostText = document.getElementById('spawn-cost');
-
-                this.btnProb = document.getElementById('btn-up-prob');
-                this.probLvText = document.getElementById('prob-lv');
-                this.probCostText = document.getElementById('prob-cost');
-
-                this.btnBoard = document.getElementById('btn-up-board');
-                this.boardCostText = document.getElementById('board-cost');
-
-                this.tabBattle = document.getElementById('tab-battle');
-                this.tabMerge = document.getElementById('tab-merge');
-
-                this.btnRestart = document.getElementById('btn-restart');
-
-                this.btnSettingsToggle = document.getElementById('btn-settings-toggle');
-                this.settingsOverlay = document.getElementById('settings-overlay');
-                this.btnSettingsClose = document.getElementById('btn-settings-close');
-                this.btnAudioToggle = document.getElementById('btn-audio-toggle');
-
-                this.audioEnabled = true;
-
-                this.initEvents();
+                this.initEvents(); this.updateUI();
+            }
+            initEvents() {
+                document.getElementById('tab-battle').onclick = () => this.switchTab('battle');
+                document.getElementById('tab-merge').onclick = () => this.switchTab('merge');
+                document.getElementById('btn-skip-wave').onclick = () => this.game.enemyManager.skipIntermissionOrWave();
+                document.getElementById('btn-spawn').onclick = () => {
+                    if (this.game.coins >= CONFIG.SPAWN_BASE_COST && this.game.board.spawnBlock(this.game.probLevel)) {
+                        this.game.coins -= CONFIG.SPAWN_BASE_COST; this.updateUI();
+                    }
+                };
+                document.getElementById('btn-up-prob').onclick = () => {
+                    const c = CONFIG.UPGRADE_COSTS.PROBABILITY(this.game.probLevel);
+                    if (this.game.coins >= c && this.game.probLevel < 5) {
+                        this.game.coins -= c; this.game.probLevel++; this.updateUI();
+                    }
+                };
+                document.getElementById('btn-up-board').onclick = () => {
+                    if (this.game.coins >= CONFIG.UPGRADE_COSTS.BOARD_SIZE && this.game.board.upgradeSize()) {
+                        this.game.coins -= CONFIG.UPGRADE_COSTS.BOARD_SIZE; this.updateUI();
+                    }
+                };
+                document.getElementById('btn-settings-toggle').onclick = () => this.game.togglePause();
+                document.getElementById('btn-settings-close').onclick = () => this.game.togglePause();
+                document.getElementById('btn-restart').onclick = () => this.game.restart();
+                document.getElementById('range-sens').oninput = (e) => {
+                    this.game.gun.speed = parseFloat(e.target.value);
+                    document.getElementById('sens-value').innerText = this.game.gun.speed.toFixed(1);
+                };
+            }
+            switchTab(t) {
+                this.game.activeTab = t;
+                const isB = t === 'battle';
+                document.getElementById('tab-battle').className = isB ? "py-1.5 text-[10px] font-bold text-cyan-400 border border-cyan-500/30 bg-cyan-950/10" : "py-1.5 text-[10px] font-bold text-zinc-500 border border-zinc-800";
+                document.getElementById('tab-merge').className = !isB ? "py-1.5 text-[10px] font-bold text-indigo-400 border border-indigo-500/30 bg-indigo-950/10" : "py-1.5 text-[10px] font-bold text-zinc-500 border border-zinc-800";
+                document.getElementById('panel-battle').classList.toggle('hidden', !isB);
+                document.getElementById('panel-merge').classList.toggle('hidden', isB);
+                this.game.board.container.visible = !isB;
+                this.game.gun.container.visible = isB;
+                this.game.enemyManager.container.visible = isB;
                 this.updateUI();
             }
-
-            initEvents() {
-                this.tabBattle.addEventListener('click', () => this.switchTab('battle'));
-                this.tabMerge.addEventListener('click', () => this.switchTab('merge'));
-
-                this.btnSkipWave.addEventListener('click', () => {
-                    this.game.enemyManager.skipIntermissionOrWave();
-                });
-
-                this.btnSpawn.addEventListener('click', () => {
-                    if (this.game.isGameOver) return;
-                    if (this.game.coins >= CONFIG.SPAWN_BASE_COST) {
-                        const success = this.game.board.spawnBlock(this.game.probLevel);
-                        if (success) {
-                            this.game.coins -= CONFIG.SPAWN_BASE_COST;
-                            this.updateUI();
-                        }
-                    }
-                });
-
-                this.btnProb.addEventListener('click', () => {
-                    if (this.game.isGameOver) return;
-                    const cost = CONFIG.UPGRADE_COSTS.PROBABILITY(this.game.probLevel);
-                    if (this.game.coins >= cost && this.game.probLevel < 5) {
-                        this.game.coins -= cost;
-                        this.game.probLevel++;
-                        this.updateUI();
-                    }
-                });
-
-                this.btnBoard.addEventListener('click', () => {
-                    if (this.game.isGameOver) return;
-                    const cost = CONFIG.UPGRADE_COSTS.BOARD_SIZE;
-                    if (this.game.coins >= cost && this.game.board.size === 4) {
-                        const success = this.game.board.upgradeSize();
-                        if (success) {
-                            this.game.coins -= cost;
-                            this.updateUI();
-                        }
-                    }
-                });
-
-                this.btnRestart.addEventListener('click', () => {
-                    this.game.restart();
-                });
-
-                this.btnSettingsToggle.addEventListener('click', () => {
-                    this.game.togglePause();
-                });
-
-                this.btnSettingsClose.addEventListener('click', () => {
-                    this.game.togglePause();
-                });
-
-                this.btnAudioToggle.addEventListener('click', () => {
-                    this.audioEnabled = !this.audioEnabled;
-                    if (this.audioEnabled) {
-                        this.btnAudioToggle.innerText = "ENABLED";
-                        this.btnAudioToggle.className = "vector-btn px-2.5 py-0.5 text-[8px] text-emerald-400 border border-emerald-500/30";
-                    } else {
-                        this.btnAudioToggle.innerText = "DISABLED";
-                        this.btnAudioToggle.className = "vector-btn px-2.5 py-0.5 text-[8px] text-red-400 border border-red-500/30";
-                    }
-                });
-            }
-
-            switchTab(activeTab) {
-                if (activeTab === 'battle') {
-                    this.tabBattle.className = "py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 border text-cyan-400 border-cyan-500/40 bg-cyan-950/10";
-                    this.tabMerge.className = "py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 border text-zinc-500 border-zinc-800";
-                    
-                    this.panelBattle.classList.remove('hidden');
-                    this.panelMerge.classList.add('hidden');
-
-                    this.game.board.container.visible = false;
-                    this.game.gun.container.visible = true;
-                    this.game.enemyManager.container.visible = true;
-                } else {
-                    this.tabMerge.className = "py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 border text-indigo-400 border-indigo-500/40 bg-indigo-950/10";
-                    this.tabBattle.className = "py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 border text-zinc-500 border-zinc-800";
-                    
-                    this.panelBattle.classList.add('hidden');
-                    this.panelMerge.classList.remove('hidden');
-
-                    this.game.board.container.visible = true;
-                    this.game.gun.container.visible = false;
-                    this.game.enemyManager.container.visible = false;
-                }
-                this.game.activeTab = activeTab;
-            }
-
             updateUI() {
-                if (this.coinText) this.coinText.innerText = this.game.coins;
-                
-                const maxDamage = this.game.board.getMaxValue();
-                if (this.dmgText) this.dmgText.innerText = maxDamage;
+                document.getElementById('coin-display').innerText = this.game.coins;
+                document.getElementById('dmg-display').innerText = this.game.board.getMaxValue();
+                document.getElementById('lives-display').innerText = '|'.repeat(this.game.lives);
+                const pCost = CONFIG.UPGRADE_COSTS.PROBABILITY(this.game.probLevel);
+                document.getElementById('prob-lv').innerText = this.game.probLevel === 5 ? "MAX" : this.game.probLevel;
+                document.getElementById('prob-cost').innerText = this.game.probLevel === 5 ? "DONE" : `${pCost} COIN`;
+                document.getElementById('board-cost').innerText = this.game.board.size === 5 ? "DONE" : `${CONFIG.UPGRADE_COSTS.BOARD_SIZE} COIN`;
 
-                if (this.livesText) {
-                    this.livesText.innerText = this.game.lives > 0 ? '|'.repeat(this.game.lives) : 'OUT';
-                }
-
-                const probCost = CONFIG.UPGRADE_COSTS.PROBABILITY(this.game.probLevel);
-                if (this.game.probLevel >= 5) {
-                    if (this.probLvText) this.probLvText.innerText = "MAX";
-                    if (this.probCostText) this.probCostText.innerText = "DISABLED";
-                    this.btnProb.disabled = true;
-                } else {
-                    if (this.probLvText) this.probLvText.innerText = this.game.probLevel;
-                    if (this.probCostText) this.probCostText.innerText = `${probCost} COIN`;
-                    this.btnProb.disabled = false;
-                }
-
-                if (this.game.board.size === 5) {
-                    if (this.boardCostText) this.boardCostText.innerText = "MAX";
-                    this.btnBoard.disabled = true;
-                } else {
-                    if (this.boardCostText) this.boardCostText.innerText = `${CONFIG.UPGRADE_COSTS.BOARD_SIZE} COIN`;
-                    this.btnBoard.disabled = false;
-                }
-
-                if (this.radarEnemies) {
-                    const em = this.game.enemyManager;
-                    const activeCount = em.enemies.length;
-                    const spawnQueue = Math.max(0, em.waveTargetCount - em.waveProgress);
-                    this.radarEnemies.innerText = activeCount + spawnQueue;
-                }
-
-                if (this.radarTimer) {
-                    if (this.game.enemyManager.isFirstCountdown) {
-                        this.radarTimer.innerText = "PREP";
-                    } else {
-                        this.radarTimer.innerText = `${Math.ceil(this.game.enemyManager.waveTimer)}S`;
-                    }
-                }
-
-                if (this.btnSkipWave) {
-                    this.btnSkipWave.disabled = this.game.isGameOver;
-                }
-
-                // [확률 행 모니터링 실시간 동적 하이라이팅]
                 for (let i = 1; i <= 5; i++) {
                     const row = document.getElementById(`prob-row-${i}`);
                     if (row) {
@@ -1210,277 +594,107 @@
             }
         }
 
-        // ==========================================
-        // 7. MAIN ENGINE (KEYBOARD INPUT & ENGINE CORE)
-        // ==========================================
         class Game {
             constructor() {
-                this.coins = CONFIG.START_COINS;
-                this.lives = CONFIG.START_LIVES;
-                this.probLevel = 1;
-                this.activeTab = 'battle';
+                this.coins = CONFIG.START_COINS; this.lives = CONFIG.START_LIVES;
+                this.probLevel = 1; this.activeTab = 'battle'; this.isGameOver = false; this.isPaused = false;
                 
-                this.isGameOver = false;
-                this.isPaused = false;
-
-                this.shakeAmount = 0;
+                // 실시간 키보드 키 입력을 추적하기 위한 버퍼 딕셔너리
                 this.keys = {};
 
-                this.app = new PIXI.Application({
-                    width: CONFIG.WIDTH,
-                    height: CONFIG.HEIGHT,
-                    backgroundColor: 0x060608,
-                    antialias: true
-                });
+                this.app = new PIXI.Application({ width: CONFIG.WIDTH, height: CONFIG.HEIGHT, backgroundColor: 0x060608, antialias: true });
                 document.getElementById('game-container').appendChild(this.app.view);
-
                 this.starfield = new Starfield(this.app);
                 this.board = new Board(this.app);
                 this.gun = new Gun(this.app);
-                
-                this.enemyManager = new EnemyManager(
-                    this.app, 
-                    this.gun, 
-                    () => this.deductLife(),
-                    () => this.showPenaltyAlert(),
-                    (bannerText) => this.showWaveBanner(bannerText),
-                    () => { if (this.ui) this.ui.updateUI(); }
-                );
-
+                this.enemyManager = new EnemyManager(this.app, this.gun, ()=>this.deductLife(), ()=>this.showAlert(), (txt)=>this.showBanner(txt), ()=>this.ui.updateUI());
                 this.ui = new UIManager(this);
-
-                this.bindControls();
+                this.bindInput();
+                this.app.stage.on('addCoins', (a) => { this.coins += a; this.ui.updateUI(); });
+                this.app.ticker.add((d) => this.update(d));
                 this.ui.switchTab('battle');
-
-                this.app.stage.on('addCoins', (amount) => {
-                    this.coins += amount;
-                    this.ui.updateUI();
-                });
-
-                this.app.ticker.add((delta) => this.update(delta));
             }
-
-            bindControls() {
+            bindInput() {
+                this.app.stage.eventMode = 'static'; this.app.stage.hitArea = this.app.screen;
+                this.app.stage.on('pointermove', (e) => { if(!this.isPaused && this.activeTab==='battle') this.gun.updatePosition(e.global.x, e.global.y); });
+                
+                // 전역 키 뉨 이벤트 바인딩
                 window.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' || e.key.toLowerCase() === 'p') {
+                    const key = e.key.toLowerCase();
+                    this.keys[key] = true;
+
+                    if(e.key==='Escape') {
                         this.togglePause();
-                        return;
                     }
 
-                    if (this.isGameOver || this.isPaused) return;
-                    this.keys[e.key.toLowerCase()] = true;
-
-                    let moved = false;
-                    switch (e.key) {
-                        case 'ArrowUp':
-                        case 'w': case 'W':
-                            if (this.activeTab === 'merge') moved = this.board.move('up');
-                            break;
-                        case 'ArrowDown':
-                        case 's': case 'S':
-                            if (this.activeTab === 'merge') moved = this.board.move('down');
-                            break;
-                        case 'ArrowLeft':
-                        case 'a': case 'A':
-                            if (this.activeTab === 'merge') moved = this.board.move('left');
-                            break;
-                        case 'ArrowRight':
-                        case 'd': case 'D':
-                            if (this.activeTab === 'merge') moved = this.board.move('right');
-                            break;
+                    // 머지 모드 (2048 블록 합치기) 시 조작 지원 (WASD / 화살표 키 대응 완벽 수리)
+                    if(this.activeTab==='merge') {
+                        const keyMap = {
+                            'arrowup': 'up', 'w': 'up',
+                            'arrowdown': 'down', 's': 'down',
+                            'arrowleft': 'left', 'a': 'left',
+                            'arrowright': 'right', 'd': 'right'
+                        };
+                        const dir = keyMap[key];
+                        if (dir) {
+                            e.preventDefault(); // 스크롤 이동 방지
+                            this.board.move(dir) && this.ui.updateUI();
+                        }
                     }
-                    if (moved) {
-                        this.ui.updateUI();
+
+                    // 배틀 모드 조작키 입력 시 화면이 밀리는 브라우저 스크롤 바인딩 현상 가드
+                    if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
+                        e.preventDefault();
                     }
                 });
 
+                // 전역 키 땜 이벤트 바인딩
                 window.addEventListener('keyup', (e) => {
-                    this.keys[e.key.toLowerCase()] = false;
-                });
-
-                this.app.stage.eventMode = 'static';
-                this.app.stage.hitArea = this.app.screen;
-                this.app.stage.on('pointermove', (event) => {
-                    if (!this.isGameOver && !this.isPaused && this.activeTab === 'battle') {
-                        // 1:1 즉각 조종을 위해 마우스 타겟 위치 바로 세팅
-                        this.gun.updatePosition(event.global.x, event.global.y);
-                    }
+                    const key = e.key.toLowerCase();
+                    this.keys[key] = false;
                 });
             }
-
             togglePause() {
-                if (this.isGameOver) return;
                 this.isPaused = !this.isPaused;
-
-                const overlay = document.getElementById('settings-overlay');
-                if (this.isPaused) {
-                    overlay.classList.remove('hidden');
-                    this.app.ticker.stop();
-                } else {
-                    overlay.classList.add('hidden');
-                    this.app.ticker.start();
-                }
+                document.getElementById('settings-overlay').classList.toggle('hidden', !this.isPaused);
+                this.isPaused ? this.app.ticker.stop() : this.app.ticker.start();
             }
-
             deductLife() {
-                if (this.isGameOver) return;
-                this.lives = Math.max(0, this.lives - 1);
-                
-                this.shakeAmount = 10;
-
-                this.ui.updateUI();
-                if (this.lives <= 0) {
-                    this.triggerGameOver();
-                }
+                this.lives--; this.ui.updateUI();
+                if(this.lives <= 0) { this.isGameOver = true; document.getElementById('game-over-overlay').classList.remove('hidden'); document.getElementById('final-wave-display').innerText = this.enemyManager.currentWave; this.app.ticker.stop(); }
             }
-
-            triggerGameOver() {
-                this.isGameOver = true;
-                const overlay = document.getElementById('game-over-overlay');
-                const finalWaveDisplay = document.getElementById('final-wave-display');
-                if (finalWaveDisplay) {
-                    finalWaveDisplay.innerText = String(this.enemyManager.currentWave).padStart(2, '0');
-                }
-                if (overlay) {
-                    overlay.classList.remove('hidden');
-                }
-                this.app.ticker.stop();
-            }
-
-            restart() {
-                this.coins = CONFIG.START_COINS;
-                this.lives = CONFIG.START_LIVES;
-                this.probLevel = 1;
-                this.isGameOver = false;
-                this.isPaused = false;
-                this.shakeAmount = 0;
-
-                this.board.initGrid();
-                this.board.size = 4;
-                this.board.drawBackground();
-
-                this.gun.x = CONFIG.WIDTH / 2;
-                this.gun.y = CONFIG.HEIGHT - 60;
-                this.gun.updatePosition(this.gun.x, this.gun.y);
-                
-                for (const b of this.gun.bullets) {
-                    this.gun.container.removeChild(b);
-                }
-                this.gun.bullets = [];
-
-                for (const e of this.enemyManager.enemies) {
-                    this.enemyManager.container.removeChild(e.sprite);
-                }
-                this.enemyManager.enemies = [];
-
-                for (const eb of this.enemyManager.enemyBullets) {
-                    this.enemyManager.container.removeChild(eb.sprite);
-                }
-                this.enemyManager.enemyBullets = [];
-
-                for (const p of this.enemyManager.particles) {
-                    this.enemyManager.container.removeChild(p.sprite);
-                }
-                this.enemyManager.particles = [];
-
-                this.enemyManager.isFirstCountdown = true;
-                this.enemyManager.firstCountdownTimer = CONFIG.PREPARE_DURATION;
-                this.showWaveBanner(`LAUNCH PREP: ${CONFIG.PREPARE_DURATION}s`);
-
-                const overlay = document.getElementById('game-over-overlay');
-                if (overlay) {
-                    overlay.classList.add('hidden');
-                }
-
-                const setOverlay = document.getElementById('settings-overlay');
-                if (setOverlay) {
-                    setOverlay.classList.add('hidden');
-                }
-
-                this.ui.updateUI();
-                this.ui.switchTab('battle');
-                
-                this.app.ticker.start();
-            }
-
-            showPenaltyAlert() {
-                const banner = document.getElementById('alert-banner');
-                if (banner) {
-                    banner.style.opacity = '1';
-                    setTimeout(() => {
-                        banner.style.opacity = '0';
-                    }, 1300);
-                }
-            }
-
-            showWaveBanner(text) {
-                const banner = document.getElementById('wave-banner');
-                if (banner) {
-                    banner.innerText = text;
-                    banner.style.opacity = '1';
-                    setTimeout(() => {
-                        banner.style.opacity = '0';
-                    }, 1800);
-                }
-            }
-
+            showAlert() { const b = document.getElementById('alert-banner'); b.style.opacity = '1'; setTimeout(()=>b.style.opacity='0', 1000); }
+            showBanner(t) { const b = document.getElementById('wave-banner'); b.innerText = t; b.style.opacity = '1'; setTimeout(()=> { if(!this.enemyManager.isWaveIntermission) b.style.opacity='0'; }, 2000); }
+            restart() { location.reload(); }
             update(delta) {
-                if (this.isGameOver || this.isPaused) return;
-
                 this.starfield.update(delta);
 
-                if (this.shakeAmount > 0) {
-                    this.app.stage.x = (Math.random() - 0.5) * this.shakeAmount;
-                    this.app.stage.y = (Math.random() - 0.5) * this.shakeAmount;
-                    this.shakeAmount -= 0.6 * delta;
-                    if (this.shakeAmount <= 0) {
-                        this.shakeAmount = 0;
-                        this.app.stage.x = 0;
-                        this.app.stage.y = 0;
+                // 배틀 모드: 실시간 키보드 입력 상태를 추적하여 전투기 가속 이동 업데이트
+                if (!this.isPaused && this.activeTab === 'battle') {
+                    let moveX = 0;
+                    let moveY = 0;
+                    if (this.keys['w'] || this.keys['arrowup']) moveY -= 1;
+                    if (this.keys['s'] || this.keys['arrowdown']) moveY += 1;
+                    if (this.keys['a'] || this.keys['arrowleft']) moveX -= 1;
+                    if (this.keys['d'] || this.keys['arrowright']) moveX += 1;
+
+                    if (moveX !== 0 || moveY !== 0) {
+                        // 대각선 이동 시에도 동일한 속도를 유지하도록 정규화(Normalize) 적용
+                        const length = Math.hypot(moveX, moveY);
+                        const speedMultiplier = this.gun.speed; // 감도 조절값 연동
+                        const tx = this.gun.targetX + (moveX / length) * speedMultiplier * delta;
+                        const ty = this.gun.targetY + (moveY / length) * speedMultiplier * delta;
+                        this.gun.updatePosition(tx, ty);
                     }
                 }
 
-                const maxDamage = this.board.getMaxValue();
-
-                // 배틀덱 기체 수동 8방향 비행 조작 (가감속 및 마찰 슬라이딩 없는 순수 등속도 이동)
-                if (this.activeTab === 'battle') {
-                    let moveX = this.gun.targetX;
-                    let moveY = this.gun.targetY;
-                    const step = 5 * delta; // 등속 고정 속도
-
-                    if (this.keys['a'] || this.keys['arrowleft']) moveX -= step;
-                    if (this.keys['d'] || this.keys['arrowright']) moveX += step;
-                    if (this.keys['w'] || this.keys['arrowup']) moveY -= step;
-                    if (this.keys['s'] || this.keys['arrowdown']) moveY += step;
-
-                    this.gun.updatePosition(moveX, moveY);
-                }
-
-                this.gun.update(delta, maxDamage);
+                this.gun.update(delta, this.board.getMaxValue());
                 this.enemyManager.update(delta);
+                document.getElementById('radar-enemies').innerText = this.enemyManager.enemies.length + (this.enemyManager.waveTargetCount - this.enemyManager.waveProgress);
+                document.getElementById('radar-timer').innerText = `${Math.ceil(this.enemyManager.waveTimer)}S`;
             }
         }
-
-        window.onload = () => {
-            new Game();
-        };
-
-        // ==========================================
-        // 8. FILE DOWNLOAD UTILITY
-        // ==========================================
-        document.getElementById('btn-download').addEventListener('click', () => {
-            const htmlContent = document.documentElement.outerHTML;
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = '2048shooter.html';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        });
+        window.onload = () => new Game();
     </script>
 </body>
 </html>
