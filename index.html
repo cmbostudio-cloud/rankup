@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2048 Shooter - Minimalist Arcade</title>
+    <title>2048 Shooter - Wave & Ability Vanguard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PixiJS CDN (Stable v7) -->
@@ -21,199 +21,283 @@
             overflow: hidden;
             touch-action: none;
         }
-        /* 타일 애니메이션 효과 */
+        .neon-glow {
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.08);
+        }
+        .canvas-container {
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        .tab-content {
+            transition: opacity 0.15s ease-in-out;
+        }
         .tile-pop {
             animation: pop 0.15s ease-out;
         }
         @keyframes pop {
-            0 { transform: scale(0.8); opacity: 0; }
+            0 { transform: scale(0.85); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-        /* 미니멀 네온 글로우 효과 */
-        .neon-glow {
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
-        }
-        .canvas-container {
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        /* 스크롤바 방지 */
-        ::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* 세로 높이가 낮은 화면/아이프레임 뷰포트 대응 반응형 레이아웃 */
-        @media (max-height: 780px) {
-            .card-wrapper {
-                padding: 0.75rem !important; /* p-3 */
-                gap: 0.75rem !important;
-            }
-            .canvas-container {
-                height: 140px !important;
-            }
-            #grid-container {
-                gap: 6px !important;
-                padding: 6px !important;
-            }
-            .upgrade-btn {
-                padding: 0.5rem !important; /* p-2 */
-            }
-        }
-
-        @media (max-height: 680px) {
-            .card-wrapper {
-                padding: 0.5rem !important; /* p-2 */
-                gap: 0.5rem !important;
-            }
-            .canvas-container {
-                height: 110px !important;
-            }
-            #grid-container {
-                gap: 4px !important;
-                padding: 4px !important;
-            }
-            .upgrade-btn {
-                padding: 0.375rem !important; /* p-1.5 */
-            }
-            .upgrade-btn span {
-                font-size: 9px !important;
-            }
-            .upgrade-btn div {
-                margin-top: 0.25rem !important;
-                margin-bottom: 0.25rem !important;
-                padding: 2px !important;
-            }
-            .upgrade-btn i {
-                width: 16px !important;
-                height: 16px !important;
-            }
-            .header-container {
-                padding-bottom: 0.5rem !important;
-            }
-        }
-
-        @media (max-height: 565px) {
-            .card-wrapper {
-                max-height: 100vh !important;
-                border-radius: 0px !important;
-                border: none !important;
-            }
-            .canvas-container {
-                height: 85px !important;
-            }
+        /* 능력 쿨타임 애니메이션 오버레이용 */
+        .cooldown-overlay {
+            transition: height 0.1s linear;
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-2 sm:p-4 select-none">
 
-<div class="card-wrapper w-full max-w-md bg-zinc-950 rounded-3xl p-4 sm:p-6 border border-zinc-900 flex flex-col gap-4 max-h-[96vh] justify-between shadow-2xl relative overflow-hidden">
+<div class="card-wrapper w-full max-w-md bg-zinc-950 rounded-3xl p-4 sm:p-5 border border-zinc-900 flex flex-col gap-3.5 max-h-[96vh] justify-between shadow-2xl relative overflow-hidden">
     
-    <!-- 상단 헤더: 코인 및 총 데미지 정보 -->
+    <!-- === [SCREEN 1] 메인 타이틀 스크린 오버레이 === -->
+    <div id="main-screen" class="absolute inset-0 bg-zinc-950 z-50 flex flex-col items-center justify-between p-8 text-center">
+        <div class="my-auto flex flex-col items-center gap-6">
+            <div class="w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/5">
+                <i data-lucide="shield" class="w-8 h-8 text-red-500"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black tracking-widest text-zinc-100">2048 SHOOTER</h1>
+                <p class="text-xs text-zinc-500 uppercase tracking-widest mt-1 font-mono">Wave &amp; Ability Edition</p>
+            </div>
+            <div class="bg-zinc-900/40 border border-zinc-800/80 px-4 py-2.5 rounded-xl flex flex-col gap-0.5">
+                <span class="text-[9px] text-zinc-500 uppercase tracking-wider font-semibold">Tactical Record</span>
+                <span id="main-high-wave" class="text-sm font-bold text-amber-400">BEST WAVE: 1</span>
+            </div>
+        </div>
+        <button id="btn-start-game" class="w-full py-4 bg-zinc-100 hover:bg-white text-zinc-950 font-black tracking-wider rounded-2xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2">
+            <i data-lucide="play" class="w-5 h-5 fill-zinc-950 text-zinc-950"></i>
+            <span>START DEFENSE SYSTEM</span>
+        </button>
+    </div>
+
+    <!-- === [SCREEN 2] 게임 오버 스크린 오버레이 === -->
+    <div id="game-over-screen" class="hidden absolute inset-0 bg-black/95 z-50 flex flex-col items-center justify-between p-8 text-center backdrop-blur-sm">
+        <div class="my-auto flex flex-col items-center gap-5">
+            <div class="w-16 h-16 bg-red-600/20 border border-red-500 rounded-full flex items-center justify-center animate-pulse">
+                <i data-lucide="skull" class="w-8 h-8 text-red-500"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black tracking-wider text-red-500 uppercase">SYSTEM SHUTDOWN</h2>
+                <p class="text-xs text-zinc-500 mt-1">Our frontlines were breached by numerical entities.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 w-full max-w-[240px] mt-2">
+                <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/50">
+                    <span class="text-[9px] text-zinc-500 uppercase block">REACHED</span>
+                    <span id="go-wave-label" class="text-lg font-black text-white">Wave 12</span>
+                </div>
+                <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/50">
+                    <span class="text-[9px] text-zinc-500 uppercase block">BEST RECORD</span>
+                    <span id="go-high-wave" class="text-lg font-black text-amber-400">Wave 15</span>
+                </div>
+            </div>
+        </div>
+        <button id="btn-retry-game" class="w-full py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-black tracking-wider rounded-2xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            <span>RESTART DEFENSE</span>
+        </button>
+    </div>
+
+    <!-- 상단 인터랙티브 HUD 헤더 -->
     <div class="header-container flex items-center justify-between border-b border-zinc-900 pb-3 flex-shrink-0">
+        <!-- 지갑 영역 -->
         <div class="flex flex-col">
-            <span class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Wallet</span>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Wallet</span>
             <div class="flex items-center gap-1.5 mt-0.5">
-                <i data-lucide="coins" class="w-5 h-5 text-amber-500 animate-pulse"></i>
-                <span id="coin-counter" class="text-xl sm:text-2xl font-black text-amber-400">100</span>
-                <span class="text-xs text-amber-500/80 font-bold font-mono">G</span>
+                <i data-lucide="coins" class="w-4 h-4 text-amber-500"></i>
+                <span id="coin-counter" class="text-lg sm:text-xl font-black text-amber-400">100</span>
+                <span class="text-[10px] text-amber-500/80 font-bold font-mono">G</span>
             </div>
         </div>
         
-        <div class="text-center">
-            <h1 class="text-base sm:text-lg font-black tracking-tighter text-zinc-300">2048 SHOOTER</h1>
-            <span class="text-[10px] text-zinc-600 font-mono">MINIMALIST HYBRID v1.1</span>
+        <!-- 실시간 웨이브 / 정비 알림 -->
+        <div class="text-center flex flex-col items-center">
+            <span id="wave-state-tag" class="text-[9px] text-zinc-500 font-bold tracking-wider uppercase">PREPARING</span>
+            <div class="flex items-center gap-1.5">
+                <h1 id="wave-title" class="text-sm sm:text-base font-black tracking-widest text-zinc-200">WAVE 1</h1>
+                <button id="btn-skip-rest" class="hidden px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-zinc-300 text-[8px] font-black rounded-md active:scale-95 transition-all">SKIP</button>
+            </div>
+            <span id="wave-countdown" class="text-[9px] text-emerald-400 font-mono tracking-widest mt-0.5">NEXT IN 10.0s</span>
         </div>
 
+        <!-- 목숨 및 총 데미지 표시구역 -->
         <div class="flex flex-col items-end">
-            <span class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Gun DMG</span>
-            <div class="flex items-center gap-1.5 mt-0.5">
-                <span id="damage-counter" class="text-xl sm:text-2xl font-black text-white">0</span>
-                <i data-lucide="zap" class="w-5 h-5 text-zinc-200 fill-zinc-200"></i>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">LIVES &amp; FIREPOWER</span>
+            <div class="flex items-center gap-2 mt-0.5">
+                <!-- 하트 컨테이너 -->
+                <div id="lives-container" class="flex items-center gap-0.5 text-red-500">
+                    <i data-lucide="heart" class="w-4 h-4 fill-red-500/30"></i>
+                    <i data-lucide="heart" class="w-4 h-4 fill-red-500/30"></i>
+                    <i data-lucide="heart" class="w-4 h-4 fill-red-500/30"></i>
+                </div>
+                <div class="h-4 w-px bg-zinc-800"></div>
+                <div class="flex items-center gap-1">
+                    <span id="damage-counter" class="text-lg sm:text-xl font-black text-white">0</span>
+                    <i data-lucide="zap" class="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 상단 슈팅 게임 영역 (PixiJS가 주입됨, flex-shrink-0 적용으로 소형 디바이스 찌그러짐 현상 해결) -->
-    <div class="relative w-full h-[180px] sm:h-[220px] flex-shrink-0 bg-zinc-900/60 rounded-2xl overflow-hidden canvas-container neon-glow">
-        <div id="pixi-canvas-holder" class="w-full h-full"></div>
+    <!-- 탭 선택 패널 -->
+    <div class="bg-zinc-900/60 p-1 rounded-2xl flex gap-1 border border-zinc-900 flex-shrink-0">
+        <button id="tab-btn-shooter" class="flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden bg-zinc-800 text-white shadow-lg">
+            <i data-lucide="crosshair" class="w-4 h-4"></i>
+            <span>BATTLE ARENA</span>
+            <!-- 침공 위기 배지 -->
+            <span id="danger-badge" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full hidden animate-ping"></span>
+        </button>
         
-        <!-- 오버레이: 적 침공 경고 및 안내 메시지 -->
-        <div id="damage-flash" class="absolute inset-0 bg-red-950/40 pointer-events-none opacity-0 transition-opacity duration-150"></div>
-        <div id="ui-alert" class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white text-[10px] font-bold px-3 py-1 rounded-full opacity-0 transition-opacity duration-300 shadow-md flex items-center gap-1">
-            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
-            <span>BREACH PENALTY! -15 COINS</span>
+        <button id="tab-btn-board" class="flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300">
+            <i data-lucide="grid-3x3" class="w-4 h-4"></i>
+            <span>COMMAND GRID (2048)</span>
+        </button>
+    </div>
+
+    <!-- 탭별 중심 뷰포트 영역 -->
+    <div class="flex-1 flex flex-col justify-center min-h-[350px] sm:min-h-[390px]">
+        
+        <!-- === [TAB 1] 배틀 아레나 (슈터 전용 + 전술 능력) === -->
+        <div id="tab-view-shooter" class="tab-content flex flex-col gap-3.5 h-full">
+            <div id="canvas-wrapper-holder" class="relative w-full h-[230px] sm:h-[260px] bg-zinc-900/40 rounded-2xl overflow-hidden canvas-container neon-glow">
+                <div id="pixi-canvas-holder" class="w-full h-full"></div>
+                
+                <!-- 물리 효과 레이어 -->
+                <div id="damage-flash" class="absolute inset-0 bg-red-950/40 pointer-events-none opacity-0 transition-opacity duration-150"></div>
+                <div id="freeze-overlay" class="absolute inset-0 border-[3px] border-blue-500/0 pointer-events-none rounded-2xl transition-all duration-300"></div>
+                <div id="overcharge-overlay" class="absolute inset-0 border-[3px] border-amber-400/0 pointer-events-none rounded-2xl transition-all duration-300"></div>
+                
+                <!-- 브리치 경보 오버레이 -->
+                <div id="ui-alert" class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full opacity-0 transition-opacity duration-300 shadow-md flex items-center gap-1 z-10 font-mono uppercase tracking-wider">
+                    <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                    <span>DEFENSE LINE BREACHED! -1 LIFE</span>
+                </div>
+            </div>
+
+            <!-- 전술적 사용 능력 (Active Abilities) 시스템 -->
+            <div class="flex flex-col gap-1.5 bg-zinc-900/30 p-2.5 rounded-2xl border border-zinc-900">
+                <div class="flex justify-between items-center px-1">
+                    <span class="text-[9px] text-zinc-500 uppercase tracking-widest font-black flex items-center gap-1">
+                        <i data-lucide="cpu" class="w-3 h-3 text-red-500"></i> ACTIVE VANGUARD ABILITIES
+                    </span>
+                    <span class="text-[8px] font-mono text-zinc-500">READY ON DEMAND</span>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-2">
+                    <!-- 능력 1: 프리즈 -->
+                    <button id="ability-btn-freeze" class="relative overflow-hidden group flex flex-col items-center justify-between p-2 bg-zinc-950 border border-zinc-800 rounded-xl active:scale-95 transition-all disabled:opacity-50">
+                        <div class="cooldown-overlay absolute bottom-0 left-0 w-full bg-blue-500/20 h-0 pointer-events-none"></div>
+                        <i data-lucide="snowflake" class="w-4 h-4 text-blue-400 mb-1 z-10"></i>
+                        <span class="text-[9px] font-bold text-zinc-300 z-10">EMP FREEZE</span>
+                        <span id="freeze-cd-text" class="text-[8px] font-mono text-blue-400 font-bold mt-0.5 z-10">READY</span>
+                    </button>
+
+                    <!-- 능력 2: 오버차지 -->
+                    <button id="ability-btn-overcharge" class="relative overflow-hidden group flex flex-col items-center justify-between p-2 bg-zinc-950 border border-zinc-800 rounded-xl active:scale-95 transition-all disabled:opacity-50">
+                        <div class="cooldown-overlay absolute bottom-0 left-0 w-full bg-amber-500/20 h-0 pointer-events-none"></div>
+                        <i data-lucide="flame" class="w-4 h-4 text-amber-500 mb-1 z-10"></i>
+                        <span class="text-[9px] font-bold text-zinc-300 z-10">OVERCHARGE</span>
+                        <span id="overcharge-cd-text" class="text-[8px] font-mono text-amber-400 font-bold mt-0.5 z-10">READY</span>
+                    </button>
+
+                    <!-- 능력 3: 전술 핵/스트라이크 -->
+                    <button id="ability-btn-strike" class="relative overflow-hidden group flex flex-col items-center justify-between p-2 bg-zinc-950 border border-zinc-800 rounded-xl active:scale-95 transition-all disabled:opacity-50">
+                        <div class="cooldown-overlay absolute bottom-0 left-0 w-full bg-rose-500/20 h-0 pointer-events-none"></div>
+                        <i data-lucide="bomb" class="w-4 h-4 text-rose-500 mb-1 z-10"></i>
+                        <span class="text-[9px] font-bold text-zinc-300 z-10">TACTICAL STRIKE</span>
+                        <span id="strike-cd-text" class="text-[8px] font-mono text-rose-500 font-bold mt-0.5 z-10">READY</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 아레나 미니 컨트롤 -->
+            <div class="flex items-center justify-between px-1">
+                <span class="text-[9px] text-zinc-500 flex items-center gap-1 font-mono">
+                    <i data-lucide="info" class="w-3 h-3 text-zinc-500"></i>
+                    <span>Drag screen to slide Gun & Auto fire</span>
+                </span>
+                
+                <button id="btn-quick-spawn" class="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-full text-[9px] font-black active:scale-95 transition-all flex items-center gap-1.5 shadow-md">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-amber-500"></i>
+                    <span>Quick Spawn (<span class="text-amber-500 font-mono">10G</span>)</span>
+                </button>
+            </div>
         </div>
-    </div>
 
-    <!-- 2048 보드판 영역 (flex-shrink-0 적용으로 무조건적인 레이아웃 유지) -->
-    <div class="relative flex flex-col items-center flex-shrink-0">
-        <!-- 스와이프 및 상호작용 가능한 보드 컨테이너 -->
-        <div id="grid-container" class="w-full bg-zinc-900 rounded-2xl p-2 border border-zinc-800/80 transition-all duration-300 aspect-square flex flex-col justify-between">
-            <!-- JS를 통해 동적 생성됨 (4x4 또는 5x5) -->
+        <!-- === [TAB 2] 커맨드 그리드 (2048 전용) === -->
+        <div id="tab-view-board" class="tab-content hidden flex-col gap-3">
+            <!-- 2048 보드판 -->
+            <div class="relative flex flex-col items-center">
+                <div id="grid-container" class="w-full max-w-[310px] aspect-square bg-zinc-900 rounded-2xl p-2 border border-zinc-800/80 grid grid-cols-4 grid-rows-4 gap-2">
+                    <!-- JS에 의해 동적으로 격자 로딩 -->
+                </div>
+            </div>
+
+            <!-- 하단 업그레이드 패널 -->
+            <div class="grid grid-cols-3 gap-2 flex-shrink-0">
+                <!-- 1. 타일 소환 버튼 -->
+                <button id="btn-spawn" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+                    <span class="text-[9px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Spawn Tile</span>
+                    <div class="my-1.5 p-1 bg-zinc-800/80 rounded-lg">
+                        <i data-lucide="plus" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <span class="text-xs font-black text-amber-400 font-mono" id="spawn-cost-label">10 G</span>
+                </button>
+
+                <!-- 2. 소환 확률 강화 버튼 -->
+                <button id="btn-upgrade-prob" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[9px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Upgrade Prob</span>
+                        <span id="prob-lvl-tag" class="text-[8px] bg-zinc-800 text-zinc-300 px-1 py-0.2 rounded font-mono font-bold">Lv.1</span>
+                    </div>
+                    <div class="my-1.5 p-1 bg-zinc-800/80 rounded-lg">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+                    </div>
+                    <span class="text-xs font-black text-amber-400 font-mono" id="prob-upgrade-cost">150 G</span>
+                </button>
+
+                <!-- 3. 그리드 확장 버튼 -->
+                <button id="btn-upgrade-grid" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[9px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Expand Grid</span>
+                        <span id="grid-lvl-tag" class="text-[8px] bg-zinc-800 text-zinc-300 px-1 py-0.2 rounded font-mono font-bold">4x4</span>
+                    </div>
+                    <div class="my-1.5 p-1 bg-zinc-800/80 rounded-lg">
+                        <i data-lucide="maximize" class="w-4 h-4 text-blue-400"></i>
+                    </div>
+                    <span class="text-xs font-black text-amber-400 font-mono" id="grid-upgrade-cost">1000 G</span>
+                </button>
+            </div>
         </div>
+
     </div>
 
-    <!-- 하단 조작 및 업그레이드 패널 -->
-    <div class="grid grid-cols-3 gap-2.5 flex-shrink-0">
-        <!-- 1. 타일 소환 버튼 -->
-        <button id="btn-spawn" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
-            <span class="text-[10px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Spawn Tile</span>
-            <div class="my-1.5 p-1 bg-zinc-800/80 rounded-lg">
-                <i data-lucide="plus-square" class="w-5 h-5 text-white"></i>
-            </div>
-            <span class="text-xs font-black text-amber-400" id="spawn-cost-label">10 G</span>
-        </button>
-
-        <!-- 2. 확률 강화 버튼 -->
-        <button id="btn-upgrade-prob" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
-            <div class="flex items-center gap-1">
-                <span class="text-[10px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Upgrade Prob</span>
-                <span id="prob-lvl-tag" class="text-[9px] bg-zinc-800 text-zinc-300 px-1 py-0.5 rounded font-mono">Lv.1</span>
-            </div>
-            <div class="my-1.5 p-1 bg-zinc-800/80 rounded-lg">
-                <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>
-            </div>
-            <span class="text-xs font-black text-amber-400" id="prob-upgrade-cost">150 G</span>
-        </button>
-
-        <!-- 3. 그리드 확장 버튼 -->
-        <button id="btn-upgrade-grid" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
-            <div class="flex items-center gap-1">
-                <span class="text-[10px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Expand Grid</span>
-                <span id="grid-lvl-tag" class="text-[9px] bg-zinc-800 text-zinc-300 px-1 py-0.5 rounded font-mono">4x4</span>
-            </div>
-            <div class="my-1.5 p-1 bg-zinc-800/80 rounded-lg">
-                <i data-lucide="maximize" class="w-5 h-5 text-blue-400"></i>
-            </div>
-            <span class="text-xs font-black text-amber-400" id="grid-upgrade-cost">1000 G</span>
-        </button>
-    </div>
-
-    <!-- 확률표 및 터치 조작 안내 -->
-    <div class="flex items-center justify-between text-[11px] text-zinc-600 px-1 pt-2 border-t border-zinc-900 flex-shrink-0">
+    <!-- 하단 부가 정보 유틸리티 정보 -->
+    <div class="flex items-center justify-between text-[10px] text-zinc-600 px-1 pt-1.5 border-t border-zinc-900 flex-shrink-0">
         <span class="flex items-center gap-1">
-            <i data-lucide="info" class="w-3.5 h-3.5"></i>
-            <span>Drag mouse/touch top screen to aim</span>
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-zinc-500"></i>
+            <span>Swipe 2048 to merge grid numbers</span>
         </span>
-        <button id="btn-show-prob" class="hover:text-zinc-400 underline decoration-dotted transition-colors flex items-center gap-1">
-            <i data-lucide="percent" class="w-3 h-3"></i> 확률표 보기
+        <button id="btn-show-prob" class="hover:text-zinc-400 underline decoration-dotted transition-colors flex items-center gap-1 font-semibold">
+            <i data-lucide="bar-chart-3" class="w-3 h-3 text-emerald-400"></i> 소환 확률표 보기
         </button>
     </div>
 
 </div>
 
-<!-- 확률 정보 팝업 모달 -->
-<div id="prob-modal" class="hidden absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 max-w-xs w-full shadow-2xl flex flex-col gap-3">
+<!-- 확률 정보 모달 레이어 -->
+<div id="prob-modal" class="hidden absolute inset-0 bg-black/85 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 max-w-xs w-full shadow-2xl flex flex-col gap-3 animate-pop">
         <div class="flex justify-between items-center pb-2 border-b border-zinc-800">
-            <h3 class="text-sm font-black text-zinc-100 flex items-center gap-1">
+            <h3 class="text-sm font-black text-zinc-100 flex items-center gap-1.5">
                 <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-400"></i> 소환 숫자 확률 정보
             </h3>
             <button id="btn-close-prob" class="text-zinc-500 hover:text-zinc-200">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
         </div>
-        <div class="space-y-2 text-xs text-zinc-400" id="prob-details-content">
-            <!-- 확률 정보가 JS를 통해 동적 생성됨 -->
+        <div class="space-y-2 text-xs text-zinc-400 font-mono" id="prob-details-content">
+            <!-- 확률 데이터 주입구 -->
         </div>
         <button id="btn-close-prob-ok" class="mt-2 w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold rounded-xl transition-all">
             확인
@@ -225,27 +309,46 @@
 // Lucide 아이콘 초기화
 lucide.createIcons();
 
-// --- GAME CONFIG & STATE ---
+// --- GAME CONFIG & STATES ---
 const CONFIG = {
     baseSpawnCost: 10,
-    upgradeProbCosts: [150, 400, 1000, 2500], // 레벨별 비용
-    upgradeGridCosts: [1000, 3000], // 4x4->5x5, 5x5->6x6
+    upgradeProbCosts: [150, 400, 1000, 2500], 
+    upgradeGridCosts: [1000, 3000], 
     probTables: {
         1: { 2: 0.90, 4: 0.10 },
         2: { 2: 0.65, 4: 0.25, 8: 0.10 },
         3: { 2: 0.45, 4: 0.35, 8: 0.15, 16: 0.05 },
         4: { 2: 0.30, 4: 0.35, 8: 0.20, 16: 0.10, 32: 0.05 },
         5: { 2: 0.15, 4: 0.25, 8: 0.25, 16: 0.20, 32: 0.10, 64: 0.05 }
-    }
+    },
+    // 웨이브당 최대 준비 기간 (초)
+    prepTime: 12
 };
 
 const State = {
     coins: 100,
-    gridSize: 4, // 4 = 4x4, 5 = 5x5
+    gridSize: 4, 
     spawnProbLevel: 1,
-    board: [], // NxN Grid
-    score: 0,
-    totalDamage: 0
+    board: [], 
+    totalDamage: 0,
+    activeTab: 'shooter',
+    highWave: 1,
+    
+    // 웨이브 / 목숨 변수군
+    lives: 3,
+    maxLives: 3,
+    wave: 1,
+    waveState: 'preparing', // 'preparing' or 'active'
+    restTimeRemaining: CONFIG.prepTime, // 남은 휴식초
+    enemiesToSpawn: 0,
+    enemiesTotalInWave: 0,
+    
+    // 특수 능력 상태군
+    abilities: {
+        freeze: { duration: 0, maxDuration: 5, cd: 0, maxCd: 18 },
+        overcharge: { duration: 0, maxDuration: 6, cd: 0, maxCd: 22 },
+        strike: { cd: 0, maxCd: 30 }
+    }
 };
 
 // --- DOM ELEMENTS ---
@@ -253,6 +356,7 @@ const coinCounter = document.getElementById('coin-counter');
 const damageCounter = document.getElementById('damage-counter');
 const gridContainer = document.getElementById('grid-container');
 const btnSpawn = document.getElementById('btn-spawn');
+const btnQuickSpawn = document.getElementById('btn-quick-spawn');
 const spawnCostLabel = document.getElementById('spawn-cost-label');
 const btnUpgradeProb = document.getElementById('btn-upgrade-prob');
 const probLvlTag = document.getElementById('prob-lvl-tag');
@@ -268,24 +372,87 @@ const btnCloseProbOk = document.getElementById('btn-close-prob-ok');
 const probModal = document.getElementById('prob-modal');
 const probDetailsContent = document.getElementById('prob-details-content');
 
-// --- 2048 GRID LOGIC ---
+const tabBtnShooter = document.getElementById('tab-btn-shooter');
+const tabBtnBoard = document.getElementById('tab-btn-board');
+const tabViewShooter = document.getElementById('tab-view-shooter');
+const tabViewBoard = document.getElementById('tab-view-board');
+const dangerBadge = document.getElementById('danger-badge');
 
-// 2048 격자 초기 생성
+// 신규 추가 요소
+const mainScreen = document.getElementById('main-screen');
+const gameOverScreen = document.getElementById('game-over-screen');
+const mainHighWave = document.getElementById('main-high-wave');
+const goWaveLabel = document.getElementById('go-wave-label');
+const goHighWave = document.getElementById('go-high-wave');
+const btnStartGame = document.getElementById('btn-start-game');
+const btnRetryGame = document.getElementById('btn-retry-game');
+const waveTitle = document.getElementById('wave-title');
+const waveStateTag = document.getElementById('wave-state-tag');
+const waveCountdown = document.getElementById('wave-countdown');
+const btnSkipRest = document.getElementById('btn-skip-rest');
+const livesContainer = document.getElementById('lives-container');
+
+// 능력 오버레이 & 쿨타임 버튼
+const btnFreeze = document.getElementById('ability-btn-freeze');
+const btnOvercharge = document.getElementById('ability-btn-overcharge');
+const btnStrike = document.getElementById('ability-btn-strike');
+const txtFreezeCd = document.getElementById('freeze-cd-text');
+const txtOverchargeCd = document.getElementById('overcharge-cd-text');
+const txtStrikeCd = document.getElementById('strike-cd-text');
+const freezeOverlay = document.getElementById('freeze-overlay');
+const overchargeOverlay = document.getElementById('overcharge-overlay');
+
+// --- STREAMING_CHUNK: Implementing local storage load... -->
+// 로컬 스토리지 하이스코어 동기화
+function loadHighScore() {
+    const saved = localStorage.getItem('2048shooter_highwave');
+    if (saved) {
+        State.highWave = parseInt(saved);
+    } else {
+        State.highWave = 1;
+    }
+    mainHighWave.textContent = `BEST WAVE: ${State.highWave}`;
+    goHighWave.textContent = `Wave ${State.highWave}`;
+}
+
+function saveHighScore() {
+    if (State.wave > State.highWave) {
+        State.highWave = State.wave;
+        localStorage.setItem('2048shooter_highwave', State.highWave);
+    }
+}
+
+// 하트(목숨) HUD 갱신
+function renderLives() {
+    livesContainer.innerHTML = '';
+    for (let i = 0; i < State.maxLives; i++) {
+        const heartIcon = document.createElement('i');
+        heartIcon.setAttribute('data-lucide', 'heart');
+        if (i < State.lives) {
+            heartIcon.className = 'w-4 h-4 fill-red-500 text-red-500 transition-all';
+        } else {
+            heartIcon.className = 'w-4 h-4 fill-zinc-950 text-zinc-800 transition-all scale-90 opacity-40';
+        }
+        livesContainer.appendChild(heartIcon);
+    }
+    lucide.createIcons();
+}
+
+// 2048 그리드 초기화
 function initGrid() {
     State.board = Array.from({ length: State.gridSize }, () => Array(State.gridSize).fill(0));
     renderGrid();
-    updateDamage();
 }
 
-// UI 갱신 및 보드 렌더링
+// --- STREAMING_CHUNK: Rendering the 2048 core layout... -->
+// 2048 격자 UI 업데이트
 function renderGrid() {
     gridContainer.innerHTML = '';
     
-    // CSS Grid Column 개수 동적 적용
     if (State.gridSize === 4) {
-        gridContainer.className = 'w-full bg-zinc-900 rounded-2xl p-2 border border-zinc-800/80 transition-all duration-300 aspect-square grid grid-cols-4 grid-rows-4 gap-2';
+        gridContainer.className = 'w-full max-w-[310px] aspect-square bg-zinc-900 rounded-2xl p-2 border border-zinc-800/80 grid grid-cols-4 grid-rows-4 gap-2';
     } else {
-        gridContainer.className = 'w-full bg-zinc-900 rounded-2xl p-2 border border-zinc-800/80 transition-all duration-300 aspect-square grid grid-cols-5 grid-rows-5 gap-1.5';
+        gridContainer.className = 'w-full max-w-[310px] aspect-square bg-zinc-900 rounded-2xl p-2 border border-zinc-800/80 grid grid-cols-5 grid-rows-5 gap-1.5';
     }
 
     const tileStyleMap = {
@@ -300,7 +467,7 @@ function renderGrid() {
         256: { bg: 'bg-zinc-100 text-zinc-950 shadow-lg', text: 'text-base sm:text-lg font-black' },
         512: { bg: 'bg-white text-zinc-950 shadow-xl ring-2 ring-white/20', text: 'text-base sm:text-lg font-black' },
         1024: { bg: 'bg-amber-400 text-amber-950 shadow-xl ring-4 ring-amber-400/30', text: 'text-sm sm:text-base font-black' },
-        2048: { bg: 'bg-yellow-300 text-yellow-950 shadow-2xl ring-4 ring-yellow-300/50 animate-bounce', text: 'text-sm sm:text-base font-black' }
+        2048: { bg: 'bg-yellow-300 text-yellow-950 shadow-2xl ring-4 ring-yellow-300/50', text: 'text-sm sm:text-base font-black' }
     };
 
     for (let r = 0; r < State.gridSize; r++) {
@@ -308,9 +475,7 @@ function renderGrid() {
             const val = State.board[r][c];
             const cell = document.createElement('div');
             
-            // 기본 빈칸과 채워진 칸에 맞춘 색상/스타일 할당
             const style = tileStyleMap[val] || { bg: 'bg-yellow-300 text-yellow-950 shadow-2xl ring-4 ring-yellow-300/60', text: 'text-xs sm:text-sm font-black' };
-            
             cell.className = `flex items-center justify-center rounded-xl transition-all duration-100 ${style.bg}`;
             
             if (val > 0) {
@@ -326,7 +491,6 @@ function renderGrid() {
     updateUIButtons();
 }
 
-// 2048 폰 방향 및 슬라이드 알고리즘
 function transpose(matrix) {
     const n = matrix.length;
     const res = Array.from({ length: n }, () => Array(n).fill(0));
@@ -342,34 +506,31 @@ function reverseRows(matrix) {
     return matrix.map(row => [...row].reverse());
 }
 
+// --- STREAMING_CHUNK: Designing 2048 physics merge... -->
 function slideLeft(matrix) {
     const n = matrix.length;
     let moved = false;
     const nextMatrix = Array.from({ length: n }, () => Array(n).fill(0));
 
     for (let r = 0; r < n; r++) {
-        // 0이 아닌 타일만 추출
         let row = matrix[r].filter(val => val !== 0);
         const nextRow = [];
         
-        // 인접 동일 타일 병합
         for (let i = 0; i < row.length; i++) {
             if (i < row.length - 1 && row[i] === row[i+1]) {
                 const combined = row[i] * 2;
                 nextRow.push(combined);
                 
-                // 병합 시 작게나마 골드 보상 추가
                 const bonusCoins = Math.max(1, Math.floor(Math.log2(combined)));
                 addCoins(bonusCoins);
                 
-                i++; // 다음 타일 건너뜀
+                i++;
                 moved = true;
             } else {
                 nextRow.push(row[i]);
             }
         }
         
-        // 빈자리 채우기
         while (nextRow.length < n) {
             nextRow.push(0);
         }
@@ -383,6 +544,7 @@ function slideLeft(matrix) {
 }
 
 function handleMove(direction) {
+    if (State.isGameOver) return;
     let current = State.board;
     let result;
     
@@ -410,9 +572,9 @@ function handleMove(direction) {
     }
 }
 
-// 타일 소환 처리
+// 타일 소환
 function summonTile() {
-    if (State.coins < CONFIG.baseSpawnCost) return;
+    if (State.coins < CONFIG.baseSpawnCost || State.isGameOver) return;
     
     const empties = [];
     for (let r = 0; r < State.gridSize; r++) {
@@ -421,18 +583,11 @@ function summonTile() {
         }
     }
     
-    if (empties.length === 0) {
-        // 격자가 가득 참
-        return;
-    }
+    if (empties.length === 0) return;
     
-    // 코인 소비
     addCoins(-CONFIG.baseSpawnCost);
     
-    // 빈 위치 하나 선정
     const target = empties[Math.floor(Math.random() * empties.length)];
-    
-    // 현재 확률 설정 기준 수치 할당
     State.board[target.r][target.c] = getRandomSummonValue();
     renderGrid();
 }
@@ -441,17 +596,13 @@ function getRandomSummonValue() {
     const roll = Math.random();
     const table = CONFIG.probTables[State.spawnProbLevel];
     let sum = 0;
-    
     for (const [val, prob] of Object.entries(table)) {
         sum += prob;
-        if (roll <= sum) {
-            return parseInt(val);
-        }
+        if (roll <= sum) return parseInt(val);
     }
-    return 2; // 안전대책
+    return 2;
 }
 
-// 코인 변경 유틸리티
 function addCoins(amount) {
     State.coins += amount;
     if (State.coins < 0) State.coins = 0;
@@ -459,14 +610,13 @@ function addCoins(amount) {
     updateUIButtons();
 }
 
-// 총 공격력 업데이트
 function updateDamage() {
     const sum = State.board.flat().reduce((a, b) => a + b, 0);
     State.totalDamage = sum;
     damageCounter.textContent = sum;
 }
 
-// 업그레이드 핸들러
+// --- STREAMING_CHUNK: Processing standard grid upgrades... -->
 function upgradeProb() {
     const cost = CONFIG.upgradeProbCosts[State.spawnProbLevel - 1];
     if (State.coins >= cost && State.spawnProbLevel < 5) {
@@ -483,12 +633,10 @@ function upgradeGrid() {
 
     if (cost > 0 && State.coins >= cost) {
         addCoins(-cost);
-        // 기존 타일 유지하며 맵 확장
         const oldBoard = State.board;
         State.gridSize++;
         State.board = Array.from({ length: State.gridSize }, () => Array(State.gridSize).fill(0));
         
-        // 이전 데이터 복사
         for (let r = 0; r < oldBoard.length; r++) {
             for (let c = 0; c < oldBoard[r].length; c++) {
                 State.board[r][c] = oldBoard[r][c];
@@ -498,20 +646,21 @@ function upgradeGrid() {
     }
 }
 
-// UI 버튼 활성화 유무 제어
 function updateUIButtons() {
-    // 1. 소환 버튼 제어
     const empties = State.board.flat().filter(val => val === 0).length;
-    btnSpawn.disabled = (State.coins < CONFIG.baseSpawnCost || empties === 0);
+    const isAffordable = State.coins >= CONFIG.baseSpawnCost;
     
-    // UX 폴리시: 데미지가 0일 때 (게임 초기 시작 상태), 첫 스폰을 유도하기 위해 소환 버튼이 빛나도록 스타일 추가
-    if (State.totalDamage === 0 && State.coins >= CONFIG.baseSpawnCost) {
+    btnSpawn.disabled = (State.coins < CONFIG.baseSpawnCost || empties === 0);
+    btnQuickSpawn.disabled = (State.coins < CONFIG.baseSpawnCost || empties === 0);
+    
+    if (State.totalDamage === 0 && isAffordable) {
         btnSpawn.classList.add('ring-2', 'ring-amber-400', 'animate-pulse');
+        btnQuickSpawn.classList.add('ring-2', 'ring-amber-400', 'animate-pulse');
     } else {
         btnSpawn.classList.remove('ring-2', 'ring-amber-400', 'animate-pulse');
+        btnQuickSpawn.classList.remove('ring-2', 'ring-amber-400', 'animate-pulse');
     }
     
-    // 2. 확률 강화 제어
     if (State.spawnProbLevel >= 5) {
         probLvlTag.textContent = "Lv.MAX";
         probUpgradeCost.textContent = "MAXED";
@@ -523,13 +672,12 @@ function updateUIButtons() {
         btnUpgradeProb.disabled = (State.coins < nextCost);
     }
     
-    // 3. 그리드 확장 제어
-    if (State.gridSize === 6) {
-        gridLvlTag.textContent = "6x6 MAX";
+    if (State.gridSize === 5) {
+        gridLvlTag.textContent = "5x5 MAX";
         gridUpgradeCost.textContent = "MAXED";
         btnUpgradeGrid.disabled = true;
     } else {
-        const costIndex = State.gridSize - 4; // 0 for 4x4 -> 5x5, 1 for 5x5 -> 6x6
+        const costIndex = State.gridSize - 4;
         const nextCost = CONFIG.upgradeGridCosts[costIndex];
         gridLvlTag.textContent = `${State.gridSize}x${State.gridSize}`;
         gridUpgradeCost.textContent = `${nextCost} G`;
@@ -537,7 +685,223 @@ function updateUIButtons() {
     }
 }
 
-// 키보드 방향키 바인딩
+// --- WAVE SYSTEM CONTROLLERS ---
+function initWaveController() {
+    State.wave = 1;
+    State.waveState = 'preparing';
+    State.restTimeRemaining = CONFIG.prepTime;
+    
+    // 첫 소환 유도용 알림 유지
+    updateWaveDisplay();
+}
+
+function updateWaveDisplay() {
+    waveTitle.textContent = `WAVE ${State.wave}`;
+    
+    if (State.waveState === 'preparing') {
+        waveStateTag.textContent = 'PREPARING';
+        waveStateTag.className = 'text-[9px] text-emerald-400 font-bold tracking-wider uppercase';
+        btnSkipRest.classList.remove('hidden');
+        waveCountdown.classList.remove('hidden');
+        waveCountdown.textContent = `NEXT IN ${State.restTimeRemaining.toFixed(1)}s`;
+    } else {
+        waveStateTag.textContent = 'BATTLE ACTIVE';
+        waveStateTag.className = 'text-[9px] text-red-500 font-bold tracking-wider uppercase animate-pulse';
+        btnSkipRest.classList.add('hidden');
+        waveCountdown.textContent = `ENEMIES: ${State.enemiesToSpawn + enemies.length}`;
+        waveCountdown.classList.remove('hidden');
+    }
+}
+
+function startActiveWave() {
+    State.waveState = 'active';
+    
+    // 웨이브 당 적 물량 설정
+    State.enemiesTotalInWave = 8 + State.wave * 2;
+    State.enemiesToSpawn = State.enemiesTotalInWave;
+    
+    updateWaveDisplay();
+    
+    // 웨이브 전환 알림 이펙트 (임시)
+    triggerWaveAlert(`WAVE ${State.wave} START!`);
+}
+
+function finishActiveWave() {
+    // 골드 보너스 수여
+    const completionBonus = 50 + State.wave * 10;
+    addCoins(completionBonus);
+    
+    // 상태 전환
+    State.wave++;
+    saveHighScore();
+    State.waveState = 'preparing';
+    State.restTimeRemaining = CONFIG.prepTime;
+    
+    updateWaveDisplay();
+    triggerWaveAlert(`WAVE CLEARED! +${completionBonus}G`);
+}
+
+function triggerWaveAlert(msg) {
+    uiAlert.querySelector('span').textContent = msg;
+    uiAlert.classList.remove('bg-red-500');
+    uiAlert.classList.add('bg-zinc-100', 'text-zinc-950');
+    uiAlert.classList.remove('opacity-0');
+    uiAlert.classList.add('opacity-100');
+    
+    setTimeout(() => {
+        uiAlert.classList.remove('opacity-100');
+        uiAlert.classList.add('opacity-0');
+        // 복귀
+        setTimeout(() => {
+            uiAlert.classList.remove('bg-zinc-100', 'text-zinc-950');
+            uiAlert.classList.add('bg-red-500', 'text-white');
+        }, 300);
+    }, 2000);
+}
+
+// --- ACTIVE ABILITY CONTROLLERS ---
+function setupAbilities() {
+    btnFreeze.addEventListener('click', () => {
+        if (State.abilities.freeze.cd > 0 || State.isGameOver) return;
+        activateFreeze();
+    });
+    
+    btnOvercharge.addEventListener('click', () => {
+        if (State.abilities.overcharge.cd > 0 || State.isGameOver) return;
+        activateOvercharge();
+    });
+    
+    btnStrike.addEventListener('click', () => {
+        if (State.abilities.strike.cd > 0 || State.isGameOver) return;
+        activateStrike();
+    });
+}
+
+function activateFreeze() {
+    State.abilities.freeze.duration = State.abilities.freeze.maxDuration;
+    State.abilities.freeze.cd = State.abilities.freeze.maxCd;
+    
+    // UI 반영 (아이스 링 이펙트)
+    freezeOverlay.style.borderColor = 'rgba(59, 130, 246, 0.7)';
+    freezeOverlay.classList.add('animate-pulse');
+}
+
+function activateOvercharge() {
+    State.abilities.overcharge.duration = State.abilities.overcharge.maxDuration;
+    State.abilities.overcharge.cd = State.abilities.overcharge.maxCd;
+    
+    // UI 반영
+    overchargeOverlay.style.borderColor = 'rgba(245, 158, 11, 0.7)';
+}
+
+function activateStrike() {
+    State.abilities.strike.cd = State.abilities.strike.maxCd;
+    
+    // 전술적 광역 핵폭격 (현 보드 총합 공격력의 5배)
+    const strikeDmg = Math.max(10, State.totalDamage * 5);
+    
+    // 전체 섬광 및 물리 연산
+    damageFlash.style.opacity = '1';
+    setTimeout(() => { damageFlash.style.opacity = '0'; }, 200);
+    
+    // 적 전체 피격 효과 연출
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        e.hp -= strikeDmg;
+        e.txt.text = Math.max(0, e.hp).toString();
+        e.graphic.tint = 0xef4444;
+        
+        createMinimalExplosion(e.x, e.y);
+        
+        if (e.hp <= 0) {
+            const coinAmount = Math.max(2, Math.floor(Math.log10(e.maxHp + 1) * 3) + Math.floor(Math.random()*4));
+            spawnCoinParticles(e.x, e.y, coinAmount);
+            pixiApp.stage.removeChild(e);
+            enemies.splice(i, 1);
+        } else {
+            setTimeout(() => { if (e && e.graphic) e.graphic.tint = 0xffffff; }, 100);
+        }
+    }
+}
+
+// 실시간 쿨타임 및 지속 기한 연산 (매 틱 루프에서 업데이트)
+function updateAbilitiesCooldowns(delta) {
+    const sec = delta / 60; // 60프레임 기준 환산
+    
+    // 1. 프리즈
+    if (State.abilities.freeze.duration > 0) {
+        State.abilities.freeze.duration -= sec;
+        if (State.abilities.freeze.duration <= 0) {
+            freezeOverlay.style.borderColor = 'rgba(59, 130, 246, 0)';
+            freezeOverlay.classList.remove('animate-pulse');
+        }
+    }
+    if (State.abilities.freeze.cd > 0) {
+        State.abilities.freeze.cd -= sec;
+        if (State.abilities.freeze.cd < 0) State.abilities.freeze.cd = 0;
+    }
+    
+    // 2. 오버차지
+    if (State.abilities.overcharge.duration > 0) {
+        State.abilities.overcharge.duration -= sec;
+        if (State.abilities.overcharge.duration <= 0) {
+            overchargeOverlay.style.borderColor = 'rgba(245, 158, 11, 0)';
+        }
+    }
+    if (State.abilities.overcharge.cd > 0) {
+        State.abilities.overcharge.cd -= sec;
+        if (State.abilities.overcharge.cd < 0) State.abilities.overcharge.cd = 0;
+    }
+    
+    // 3. 스트라이크
+    if (State.abilities.strike.cd > 0) {
+        State.abilities.strike.cd -= sec;
+        if (State.abilities.strike.cd < 0) State.abilities.strike.cd = 0;
+    }
+    
+    // HTML 버튼 컴포넌트 렌더 동기화
+    renderAbilityButtons();
+}
+
+function renderAbilityButtons() {
+    // 프리즈
+    if (State.abilities.freeze.cd > 0) {
+        btnFreeze.disabled = true;
+        txtFreezeCd.textContent = `${Math.ceil(State.abilities.freeze.cd)}s`;
+        const pct = (State.abilities.freeze.cd / State.abilities.freeze.maxCd) * 100;
+        btnFreeze.querySelector('.cooldown-overlay').style.height = `${pct}%`;
+    } else {
+        btnFreeze.disabled = false;
+        txtFreezeCd.textContent = "READY";
+        btnFreeze.querySelector('.cooldown-overlay').style.height = `0%`;
+    }
+
+    // 오버차지
+    if (State.abilities.overcharge.cd > 0) {
+        btnOvercharge.disabled = true;
+        txtOverchargeCd.textContent = `${Math.ceil(State.abilities.overcharge.cd)}s`;
+        const pct = (State.abilities.overcharge.cd / State.abilities.overcharge.maxCd) * 100;
+        btnOvercharge.querySelector('.cooldown-overlay').style.height = `${pct}%`;
+    } else {
+        btnOvercharge.disabled = false;
+        txtOverchargeCd.textContent = "READY";
+        btnOvercharge.querySelector('.cooldown-overlay').style.height = `0%`;
+    }
+
+    // 스트라이크
+    if (State.abilities.strike.cd > 0) {
+        btnStrike.disabled = true;
+        txtStrikeCd.textContent = `${Math.ceil(State.abilities.strike.cd)}s`;
+        const pct = (State.abilities.strike.cd / State.abilities.strike.maxCd) * 100;
+        btnStrike.querySelector('.cooldown-overlay').style.height = `${pct}%`;
+    } else {
+        btnStrike.disabled = false;
+        txtStrikeCd.textContent = "READY";
+        btnStrike.querySelector('.cooldown-overlay').style.height = `0%`;
+    }
+}
+
+// 키 바인딩 및 2048 제어 핸들러
 document.addEventListener('keydown', (e) => {
     switch(e.key) {
         case 'ArrowUp':
@@ -563,7 +927,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// 스와이프 제어 (모바일 대응)
+// 스와이프 탐지
 let touchStartX = 0;
 let touchStartY = 0;
 gridContainer.addEventListener('touchstart', (e) => {
@@ -573,10 +937,9 @@ gridContainer.addEventListener('touchstart', (e) => {
 
 gridContainer.addEventListener('touchend', (e) => {
     if (!touchStartX || !touchStartY) return;
-    
     const diffX = e.changedTouches[0].clientX - touchStartX;
     const diffY = e.changedTouches[0].clientY - touchStartY;
-    const threshold = 40; // 스와이프 기준 임계치 (픽셀)
+    const threshold = 40;
     
     if (Math.abs(diffX) > Math.abs(diffY)) {
         if (Math.abs(diffX) > threshold) {
@@ -603,25 +966,17 @@ let fireTimer = 0;
 let enemySpawnTimer = 0;
 let targetGunX = 0;
 
-window.onload = function() {
-    initGrid();
-    initPixiShooter();
-    setupModals();
-};
-
 function initPixiShooter() {
     const holder = document.getElementById('pixi-canvas-holder');
     
-    // 돔 크기 계산 유도를 위해 지연 프레임 처리 (0높이 방지 핵심 기술)
     requestAnimationFrame(() => {
         const width = holder.clientWidth || 300;
-        const height = holder.clientHeight || 180;
+        const height = holder.clientHeight || 230; 
         
-        // PixiJS Application 초기화
         pixiApp = new PIXI.Application({
             width: width,
             height: height,
-            backgroundAlpha: 0, // 뒷배경 투명하게 하여 Tailwind 테마와 일치
+            backgroundAlpha: 0,
             resolution: window.devicePixelRatio || 1,
             autoDensity: true,
             antialias: true
@@ -630,22 +985,20 @@ function initPixiShooter() {
         holder.appendChild(pixiApp.view);
         targetGunX = width / 2;
 
-        // 1. 총(Gun) 스프라이트 생성
+        // 마우스 포인터 가이드라인용 플레이어 총
         gunSprite = new PIXI.Graphics();
         gunSprite.beginFill(0xffffff);
-        // 미니멀한 삼각형/레이저 건 스타일
-        gunSprite.moveTo(0, -12);
-        gunSprite.lineTo(8, 6);
-        gunSprite.lineTo(-8, 6);
+        gunSprite.moveTo(0, -14);
+        gunSprite.lineTo(9, 6);
+        gunSprite.lineTo(-9, 6);
         gunSprite.closePath();
         gunSprite.endFill();
         gunSprite.x = width / 2;
-        gunSprite.y = height - 18;
+        gunSprite.y = height - 15;
         pixiApp.stage.addChild(gunSprite);
 
-        // 2. 조준을 위한 드래그 및 마우스 인터랙션 바인딩
-        const interactionArea = document.getElementById('pixi-canvas-holder');
-        
+        // 상호작용 컨트롤 매핑
+        const interactionArea = document.getElementById('canvas-wrapper-holder');
         function setGunXFromPointer(clientX) {
             const rect = interactionArea.getBoundingClientRect();
             const relativeX = clientX - rect.left;
@@ -655,66 +1008,87 @@ function initPixiShooter() {
         interactionArea.addEventListener('mousemove', (e) => {
             setGunXFromPointer(e.clientX);
         });
-        
         interactionArea.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 0) {
-                setGunXFromPointer(e.touches[0].clientX);
-            }
+            if (e.touches.length > 0) setGunXFromPointer(e.touches[0].clientX);
         }, { passive: true });
 
-        // 3. 업데이트 루프
+        // 실시간 연동 틱 루프
         pixiApp.ticker.add((delta) => {
-            // 총구 유연한 수평 보간 이동(Lerp)
-            gunSprite.x += (targetGunX - gunSprite.x) * 0.25;
+            if (State.isGameOver) return;
             
-            // 실시간 뷰포트 변경 대응을 위해 총 위치의 Y축 상시 동기화
-            gunSprite.y = pixiApp.screen.height - 18;
+            // 쿨다운 업데이트
+            updateAbilitiesCooldowns(delta);
 
-            // 발사 로직 (공격력 합계가 0보다 클 때만 발사 가능)
+            // 1. 준비 단계 카운트다운 관리
+            if (State.waveState === 'preparing') {
+                const sec = delta / 60;
+                State.restTimeRemaining -= sec;
+                if (State.restTimeRemaining <= 0) {
+                    startActiveWave();
+                } else {
+                    updateWaveDisplay();
+                }
+            }
+
+            // 총 모션 트랜지션
+            gunSprite.x += (targetGunX - gunSprite.x) * 0.25;
+            gunSprite.y = pixiApp.screen.height - 15;
+
+            // 2. 자동 발사 주기 연산 (오버차지 시 연사속도 3배 가속)
             fireTimer += delta;
-            if (fireTimer >= 12 && State.totalDamage > 0) {
+            const currentFireRateMax = State.abilities.overcharge.duration > 0 ? 4 : 12;
+            if (fireTimer >= currentFireRateMax && State.totalDamage > 0) {
                 fireBullet();
                 fireTimer = 0;
             }
 
-            // 적 스폰 관리
-            enemySpawnTimer += delta;
-            if (enemySpawnTimer >= 55) { 
-                spawnEnemy();
-                enemySpawnTimer = 0;
+            // 3. 적 웨이브 스폰 연산
+            if (State.waveState === 'active' && State.enemiesToSpawn > 0) {
+                enemySpawnTimer += delta;
+                if (enemySpawnTimer >= 55) { 
+                    spawnWaveEnemy();
+                    enemySpawnTimer = 0;
+                }
             }
 
-            // 투사체 및 객체 관리
+            // 웨이브 종료 체크 (남은 적도 없고 스폰 대기도 없음)
+            if (State.waveState === 'active' && State.enemiesToSpawn === 0 && enemies.length === 0) {
+                finishActiveWave();
+            }
+
+            // 물리 요소 전파 및 정산
             updateBullets(delta);
             updateEnemies(delta);
             updateCoinsPool(delta);
         });
     });
 
-    // 해상도 조절 리사이즈 감지 (예외 처리 완료)
     window.addEventListener('resize', () => {
         if (pixiApp && pixiApp.renderer && gunSprite) {
             const w = holder.clientWidth;
             const h = holder.clientHeight;
             pixiApp.renderer.resize(w, h);
-            gunSprite.y = h - 18;
+            gunSprite.y = h - 15;
         }
     });
 }
 
-// 총알 생성 및 관리
 function fireBullet() {
     if (!gunSprite) return;
     const bullet = new PIXI.Graphics();
     
-    // 공격력 높으면 조금 더 굵은 미니멀 빔 생성
-    const widthFactor = Math.min(6, 1 + Math.log10(State.totalDamage + 1));
-    bullet.beginFill(0xf4f4f5);
-    bullet.drawRect(-widthFactor/2, -10, widthFactor, 10);
+    // 데미지 스케일별 투사체 시각 확대
+    const widthFactor = Math.min(8, 1.5 + Math.log10(State.totalDamage + 1));
+    
+    // 오버차지 활성화 시 특수 컬러빔 발사
+    const bulletColor = State.abilities.overcharge.duration > 0 ? 0xf59e0b : 0xf4f4f5;
+    
+    bullet.beginFill(bulletColor);
+    bullet.drawRect(-widthFactor/2, -12, widthFactor, 12);
     bullet.endFill();
     
     bullet.x = gunSprite.x;
-    bullet.y = gunSprite.y - 12;
+    bullet.y = gunSprite.y - 14;
     bullet.damage = State.totalDamage;
     
     bullets.push(bullet);
@@ -724,9 +1098,7 @@ function fireBullet() {
 function updateBullets(delta) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
-        b.y -= 7 * delta;
-        
-        // 화면 외곽 소멸
+        b.y -= 8 * delta;
         if (b.y < -20) {
             pixiApp.stage.removeChild(b);
             bullets.splice(i, 1);
@@ -734,21 +1106,22 @@ function updateBullets(delta) {
     }
 }
 
-// 적 구조 설계 및 생성
-function spawnEnemy() {
+// 적 스폰 (지수적 성장 및 배치)
+function spawnWaveEnemy() {
     if (!pixiApp) return;
     const width = pixiApp.screen.width;
     const enemy = new PIXI.Container();
     
-    // 타일 데미지에 비례한 유연한 난이도 스케일링 설정
-    const minHp = Math.max(5, Math.floor(State.totalDamage * 0.3));
-    const maxHp = Math.max(15, Math.floor(State.totalDamage * 1.5));
-    const hp = Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp;
+    // 지수식 체력 성장 공식 적용
+    const baseHp = Math.floor(6 * Math.pow(1.35, State.wave - 1)) + State.wave * 2;
+    const variance = Math.max(1, Math.floor(baseHp * 0.2));
+    
+    // 무작위 범위 편차 부여
+    const hp = baseHp + (Math.floor(Math.random() * (variance * 2 + 1)) - variance);
     
     enemy.hp = hp;
     enemy.maxHp = hp;
 
-    // 미니멀 사각형 드로잉
     const shape = new PIXI.Graphics();
     const size = 26;
     shape.lineStyle(1.5, 0xffffff);
@@ -759,7 +1132,6 @@ function spawnEnemy() {
     enemy.addChild(shape);
     enemy.graphic = shape;
 
-    // 미니멀 HP 텍스트 드로잉
     const text = new PIXI.Text(hp.toString(), {
         fontFamily: 'Space Grotesk',
         fontSize: 10,
@@ -774,62 +1146,84 @@ function spawnEnemy() {
     enemy.x = Math.random() * (width - 40) + 20;
     enemy.y = -30;
     
-    // 떨어지는 속도 조절
-    enemy.speed = 0.8 + Math.random() * 0.7;
+    // 스피드 조절 (프리즈 상태일 때 이속 70% 감소)
+    enemy.speed = 0.85 + Math.random() * 0.65;
 
     enemies.push(enemy);
     pixiApp.stage.addChild(enemy);
+    
+    State.enemiesToSpawn--;
+    updateWaveDisplay();
 }
 
 function updateEnemies(delta) {
     if (!pixiApp) return;
     const height = pixiApp.screen.height;
+    let anyEnemyClose = false;
+
+    // 프리즈 액티브 상태 판정
+    const isFrozen = State.abilities.freeze.duration > 0;
 
     for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
-        e.y += e.speed * delta;
+        
+        // 프리즈 걸린 경우 극도의 속도 저하
+        const currentSpeed = isFrozen ? e.speed * 0.15 : e.speed;
+        e.y += currentSpeed * delta;
 
-        // 충돌 검사 (총알 vs 적)
+        // 적군 경고 마지노선 침공
+        if (e.y > height * 0.55) {
+            anyEnemyClose = true;
+        }
+
+        // 총알 충돌 감지
         for (let j = bullets.length - 1; j >= 0; j--) {
             const b = bullets[j];
             const dist = Math.hypot(e.x - b.x, e.y - b.y);
             if (dist < 18) {
-                // 피격 처리
                 e.hp -= b.damage;
                 e.txt.text = Math.max(0, e.hp).toString();
                 
-                // 피격 화이트 플래시 효과
-                e.graphic.tint = 0xef4444;
+                // 타격 이펙트 (빙결 시 파란색, 일반 시 빨간색)
+                e.graphic.tint = isFrozen ? 0x3b82f6 : 0xef4444;
                 setTimeout(() => { if (e && e.graphic) e.graphic.tint = 0xffffff; }, 50);
 
-                // 관통 소멸이 아닌 단일 제거
                 pixiApp.stage.removeChild(b);
                 bullets.splice(j, 1);
 
                 if (e.hp <= 0) {
-                    // 격파 보상 코인 드랍
-                    const coinAmount = Math.max(2, Math.floor(Math.log10(e.maxHp + 1) * 3) + Math.floor(Math.random()*4));
+                    const coinAmount = Math.max(2, Math.floor(Math.log10(e.maxHp + 1) * 3.2) + Math.floor(Math.random()*4));
                     spawnCoinParticles(e.x, e.y, coinAmount);
-                    
-                    // 파티클 삭제
                     createMinimalExplosion(e.x, e.y);
                     pixiApp.stage.removeChild(e);
                     enemies.splice(i, 1);
+                    updateWaveDisplay();
                     break;
                 }
             }
         }
 
-        // 바닥선 돌파 제재 처리
-        if (e.y > height - 12) {
+        // 바닥 방어선 침략 (목숨 차감)
+        if (e.y > height - 10) {
             triggerBreachPenalty();
             pixiApp.stage.removeChild(e);
             enemies.splice(i, 1);
+            updateWaveDisplay();
+        }
+    }
+
+    // 침공 경보 활성/비활성 제어 (탭 상태 연동)
+    if (anyEnemyClose && State.activeTab === 'board') {
+        dangerBadge.classList.remove('hidden');
+        tabBtnShooter.classList.add('border', 'border-red-500', 'text-red-400', 'animate-pulse');
+    } else {
+        dangerBadge.classList.add('hidden');
+        if (State.activeTab !== 'shooter') {
+            tabBtnShooter.classList.remove('border', 'border-red-500', 'text-red-400', 'animate-pulse');
         }
     }
 }
 
-// 미니멀 피격 폭발 효과
 function createMinimalExplosion(x, y) {
     for (let i = 0; i < 6; i++) {
         const part = new PIXI.Graphics();
@@ -838,10 +1232,10 @@ function createMinimalExplosion(x, y) {
         part.endFill();
         part.x = x;
         part.y = y;
-        part.vx = (Math.random() - 0.5) * 4;
-        part.vy = (Math.random() - 0.5) * 4;
+        part.vx = (Math.random() - 0.5) * 4.5;
+        part.vy = (Math.random() - 0.5) * 4.5;
         part.alpha = 1;
-        part.decay = 0.04 + Math.random() * 0.03;
+        part.decay = 0.04 + Math.random() * 0.04;
 
         pixiApp.stage.addChild(part);
         
@@ -858,7 +1252,6 @@ function createMinimalExplosion(x, y) {
     }
 }
 
-// 코인 타격 회수 연출
 function spawnCoinParticles(startX, startY, count) {
     for (let i = 0; i < count; i++) {
         const coin = new PIXI.Graphics();
@@ -866,15 +1259,11 @@ function spawnCoinParticles(startX, startY, count) {
         coin.drawCircle(0, 0, 3.5);
         coin.endFill();
         
-        coin.x = startX + (Math.random() - 0.5) * 20;
-        coin.y = startY + (Math.random() - 0.5) * 20;
-        
-        // 흩뿌림 초기 속도
+        coin.x = startX + (Math.random() - 0.5) * 18;
+        coin.y = startY + (Math.random() - 0.5) * 18;
         coin.vx = (Math.random() - 0.5) * 5;
-        coin.vy = -2 - Math.random() * 3;
-        
-        // 궤도 타겟팅 상태 전환용 타이머
-        coin.delay = 15 + Math.random() * 15; 
+        coin.vy = -2 - Math.random() * 3.5;
+        coin.delay = 12 + Math.random() * 15; 
         
         coinsPool.push(coin);
         pixiApp.stage.addChild(coin);
@@ -884,16 +1273,13 @@ function spawnCoinParticles(startX, startY, count) {
 function updateCoinsPool(delta) {
     for (let i = coinsPool.length - 1; i >= 0; i--) {
         const c = coinsPool[i];
-        
         if (c.delay > 0) {
-            // 사방 비산 상태
             c.x += c.vx * delta;
             c.y += c.vy * delta;
-            c.vx *= 0.95;
-            c.vy += 0.15 * delta; // 중력 영향
+            c.vx *= 0.94;
+            c.vy += 0.16 * delta;
             c.delay -= delta;
         } else {
-            // 지갑(좌상단)을 향해 보간 비행
             const targetX = 20;
             const targetY = -40;
             const dx = targetX - c.x;
@@ -901,48 +1287,133 @@ function updateCoinsPool(delta) {
             const dist = Math.hypot(dx, dy);
             
             if (dist < 15) {
-                // 흡수 처리 및 코인 증가
                 addCoins(1);
                 pixiApp.stage.removeChild(c);
                 coinsPool.splice(i, 1);
                 continue;
             }
             
-            // 점진적인 가속 유도
-            const speed = 7;
+            const speed = 8;
             c.x += (dx / dist) * speed * delta;
             c.y += (dy / dist) * speed * delta;
         }
     }
 }
 
-// 침공 방어선 실패 패널티 처리
+// 방어선 침범 시 목숨 차감 정산
 function triggerBreachPenalty() {
-    // 적 침해시 15코인 차감 및 경고 플래시
-    addCoins(-15);
+    State.lives--;
+    renderLives();
     
     damageFlash.style.opacity = '1';
     uiAlert.classList.remove('opacity-0');
     uiAlert.classList.add('opacity-100');
     
-    setTimeout(() => {
-        damageFlash.style.opacity = '0';
-    }, 150);
-
+    setTimeout(() => { damageFlash.style.opacity = '0'; }, 150);
     setTimeout(() => {
         uiAlert.classList.remove('opacity-100');
         uiAlert.classList.add('opacity-0');
     }, 2000);
+    
+    // 사망 확인
+    if (State.lives <= 0) {
+        triggerGameOver();
+    }
 }
 
-// 모달 연동 제어
-function setupModals() {
-    // 모달 표시
-    btnShowProb.addEventListener('click', () => {
-        // 실시간 업그레이드 수치에 따른 확률 현황 동적 바인딩
-        const table = CONFIG.probTables[State.spawnProbLevel];
-        let html = `<p class="font-bold mb-2 text-zinc-200">현재 레벨 (Lv.${State.spawnProbLevel}) 소환 확률</p>`;
+// --- GAME LIFE CYCLE CONTROLLERS ---
+function triggerGameOver() {
+    State.isGameOver = true;
+    saveHighScore();
+    
+    // 오버레이 활성화
+    goWaveLabel.textContent = `Wave ${State.wave}`;
+    loadHighScore();
+    
+    gameOverScreen.classList.remove('hidden');
+}
+
+function resetGame() {
+    // 모든 스테이지 적 제거
+    for (const e of enemies) {
+        pixiApp.stage.removeChild(e);
+    }
+    for (const b of bullets) {
+        pixiApp.stage.removeChild(b);
+    }
+    for (const c of coinsPool) {
+        pixiApp.stage.removeChild(c);
+    }
+    enemies.length = 0;
+    bullets.length = 0;
+    coinsPool.length = 0;
+    
+    // 상태 초기화
+    State.coins = 100;
+    State.gridSize = 4;
+    State.spawnProbLevel = 1;
+    State.lives = State.maxLives;
+    State.isGameOver = false;
+    
+    // 스킬 상태 초기화
+    State.abilities.freeze.duration = 0;
+    State.abilities.freeze.cd = 0;
+    State.abilities.overcharge.duration = 0;
+    State.abilities.overcharge.cd = 0;
+    State.abilities.strike.cd = 0;
+    
+    freezeOverlay.style.borderColor = 'rgba(59, 130, 246, 0)';
+    overchargeOverlay.style.borderColor = 'rgba(245, 158, 11, 0)';
+    
+    initGrid();
+    initWaveController();
+    renderLives();
+    
+    // 기본 소환 타일 생성
+    const targetRow = Math.floor(Math.random() * 4);
+    const targetCol = Math.floor(Math.random() * 4);
+    State.board[targetRow][targetCol] = 2;
+    renderGrid();
+    
+    gameOverScreen.classList.add('hidden');
+    mainScreen.classList.add('hidden');
+}
+
+// --- TAB SWITCHERS & EVENT HOOKS ---
+function setupTabs() {
+    tabBtnShooter.addEventListener('click', () => {
+        State.activeTab = 'shooter';
         
+        tabViewShooter.classList.remove('hidden');
+        tabViewBoard.classList.add('hidden');
+        
+        tabBtnShooter.className = "flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden bg-zinc-800 text-white shadow-lg";
+        tabBtnBoard.className = "flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300";
+        
+        dangerBadge.classList.add('hidden');
+        tabBtnShooter.classList.remove('border', 'border-red-500', 'text-red-400', 'animate-pulse');
+
+        if (pixiApp && pixiApp.renderer) {
+            const holder = document.getElementById('pixi-canvas-holder');
+            pixiApp.renderer.resize(holder.clientWidth, holder.clientHeight);
+        }
+    });
+
+    tabBtnBoard.addEventListener('click', () => {
+        State.activeTab = 'board';
+        
+        tabViewShooter.classList.add('hidden');
+        tabViewBoard.classList.remove('hidden');
+        
+        tabBtnBoard.className = "flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden bg-zinc-800 text-white shadow-lg";
+        tabBtnShooter.className = "flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300";
+    });
+}
+
+function setupModals() {
+    btnShowProb.addEventListener('click', () => {
+        const table = CONFIG.probTables[State.spawnProbLevel];
+        let html = `<p class="font-bold mb-2 text-zinc-200">현재 등급 (Lv.${State.spawnProbLevel}) 확률</p>`;
         for (const [val, prob] of Object.entries(table)) {
             html += `
                 <div class="flex justify-between items-center py-1 border-b border-zinc-800">
@@ -954,10 +1425,10 @@ function setupModals() {
         
         if (State.spawnProbLevel < 5) {
             const nextTable = CONFIG.probTables[State.spawnProbLevel + 1];
-            html += `<p class="font-bold mt-4 mb-2 text-zinc-400">다음 레벨 (Lv.${State.spawnProbLevel + 1}) 변경 수치</p>`;
+            html += `<p class="font-bold mt-4 mb-2 text-zinc-400 text-[10px]">다음 등급 (Lv.${State.spawnProbLevel + 1}) 변경 수치</p>`;
             for (const [val, prob] of Object.entries(nextTable)) {
                 html += `
-                    <div class="flex justify-between items-center py-1 border-b border-zinc-800/40 text-zinc-500">
+                    <div class="flex justify-between items-center py-1 border-b border-zinc-800/40 text-zinc-500 text-[11px]">
                         <span class="font-semibold">${val}</span>
                         <span class="font-mono">${(prob * 100).toFixed(0)}%</span>
                     </div>
@@ -970,18 +1441,40 @@ function setupModals() {
     });
 
     const hideModal = () => probModal.classList.add('hidden');
-    
     btnCloseProb.addEventListener('click', hideModal);
     btnCloseProbOk.addEventListener('click', hideModal);
     probModal.addEventListener('click', (e) => {
         if (e.target === probModal) hideModal();
     });
 
-    // 버튼 액션 연동
+    // 기본 버튼 이벤트 리스너 연동
     btnSpawn.addEventListener('click', summonTile);
+    btnQuickSpawn.addEventListener('click', summonTile);
     btnUpgradeProb.addEventListener('click', upgradeProb);
     btnUpgradeGrid.addEventListener('click', upgradeGrid);
+    
+    // 정비 타임 건너뛰기
+    btnSkipRest.addEventListener('click', () => {
+        if (State.waveState === 'preparing') {
+            startActiveWave();
+        }
+    });
+
+    // 메인 루프 스타트/재해 시동 스위치
+    btnStartGame.addEventListener('click', resetGame);
+    btnRetryGame.addEventListener('click', resetGame);
 }
+
+// 윈도우 최초 진입 초기화 실행
+window.onload = function() {
+    loadHighScore();
+    initGrid();
+    initPixiShooter();
+    setupTabs();
+    setupModals();
+    setupAbilities();
+    renderLives();
+};
 </script>
 </body>
 </html>
