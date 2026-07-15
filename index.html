@@ -2,23 +2,28 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>2048 Shooter - Classic Arcade Hell</title>
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
     <!-- PixiJS CDN (Stable v7) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" crossorigin="anonymous"></script>
     <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest" crossorigin="anonymous"></script>
     <!-- Google Fonts: Space Grotesk -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;900&display=swap" rel="stylesheet">
     
     <style>
-        body {
+        html, body {
             font-family: 'Space Grotesk', sans-serif;
             background-color: #050508;
             color: #f4f4f5;
             overflow: hidden;
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        body {
             touch-action: none;
         }
         .neon-glow {
@@ -70,6 +75,7 @@
         <button id="btn-start-game" class="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-black tracking-wider rounded-2xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2">
             <i data-lucide="play" class="w-5 h-5 fill-white text-white"></i>
             <span>START MISSION</span>
+            <span class="text-[9px] font-mono opacity-70 border border-white/30 rounded px-1 py-0.5 ml-1">Enter</span>
         </button>
     </div>
 
@@ -97,6 +103,7 @@
         <button id="btn-retry-game" class="w-full py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-black tracking-wider rounded-2xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2">
             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
             <span>REDEPLOY FIGHTER</span>
+            <span class="text-[9px] font-mono opacity-70 border border-zinc-600 rounded px-1 py-0.5 ml-1">Enter</span>
         </button>
     </div>
 
@@ -117,7 +124,7 @@
             <span id="wave-state-tag" class="text-[9px] text-emerald-400 font-bold tracking-wider uppercase">PREPARING</span>
             <div class="flex items-center gap-1.5">
                 <h1 id="wave-title" class="text-sm sm:text-base font-black tracking-widest text-zinc-200">WAVE 1</h1>
-                <button id="btn-skip-rest" class="hidden px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-zinc-300 text-[8px] font-black rounded-md active:scale-95 transition-all">SKIP</button>
+                <button id="btn-skip-rest" class="hidden px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-zinc-300 text-[8px] font-black rounded-md active:scale-95 transition-all">SKIP [N]</button>
             </div>
             <span id="wave-countdown" class="text-[9px] text-emerald-400 font-mono tracking-widest mt-0.5">NEXT IN 12.0s</span>
         </div>
@@ -146,6 +153,7 @@
         <button id="tab-btn-shooter" class="flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden bg-zinc-800 text-white shadow-lg">
             <i data-lucide="crosshair" class="w-4 h-4"></i>
             <span>BATTLE ARENA</span>
+            <span class="text-[8px] font-mono opacity-60 border border-current rounded px-1">1</span>
             <!-- 침공 위기 배지 -->
             <span id="danger-badge" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full hidden animate-ping"></span>
         </button>
@@ -153,6 +161,7 @@
         <button id="tab-btn-board" class="flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300">
             <i data-lucide="grid-3x3" class="w-4 h-4"></i>
             <span>COMMAND GRID (2048)</span>
+            <span class="text-[8px] font-mono opacity-60 border border-current rounded px-1">2</span>
         </button>
     </div>
 
@@ -189,6 +198,7 @@
                     <!-- 능력 1: 프리즈 -->
                     <button id="ability-btn-freeze" class="relative overflow-hidden group flex flex-col items-center justify-between p-2 bg-zinc-950 border border-zinc-800 rounded-xl active:scale-95 transition-all disabled:opacity-50">
                         <div class="cooldown-overlay absolute bottom-0 left-0 w-full bg-blue-500/20 h-0 pointer-events-none"></div>
+                        <span class="absolute top-1 right-1.5 text-[7px] font-mono text-zinc-500 border border-zinc-700 rounded px-1 z-10">Q</span>
                         <i data-lucide="snowflake" class="w-4 h-4 text-blue-400 mb-1 z-10"></i>
                         <span class="text-[9px] font-bold text-zinc-300 z-10">EMP FREEZE</span>
                         <span id="freeze-cd-text" class="text-[8px] font-mono text-blue-400 font-bold mt-0.5 z-10">READY</span>
@@ -197,6 +207,7 @@
                     <!-- 능력 2: 오버차지 -->
                     <button id="ability-btn-overcharge" class="relative overflow-hidden group flex flex-col items-center justify-between p-2 bg-zinc-950 border border-zinc-800 rounded-xl active:scale-95 transition-all disabled:opacity-50">
                         <div class="cooldown-overlay absolute bottom-0 left-0 w-full bg-amber-500/20 h-0 pointer-events-none"></div>
+                        <span class="absolute top-1 right-1.5 text-[7px] font-mono text-zinc-500 border border-zinc-700 rounded px-1 z-10">E</span>
                         <i data-lucide="flame" class="w-4 h-4 text-amber-500 mb-1 z-10"></i>
                         <span class="text-[9px] font-bold text-zinc-300 z-10">OVERCHARGE</span>
                         <span id="overcharge-cd-text" class="text-[8px] font-mono text-amber-400 font-bold mt-0.5 z-10">READY</span>
@@ -205,6 +216,7 @@
                     <!-- 능력 3: 전술 핵/스트라이크 -->
                     <button id="ability-btn-strike" class="relative overflow-hidden group flex flex-col items-center justify-between p-2 bg-zinc-950 border border-zinc-800 rounded-xl active:scale-95 transition-all disabled:opacity-50">
                         <div class="cooldown-overlay absolute bottom-0 left-0 w-full bg-rose-500/20 h-0 pointer-events-none"></div>
+                        <span class="absolute top-1 right-1.5 text-[7px] font-mono text-zinc-500 border border-zinc-700 rounded px-1 z-10">R</span>
                         <i data-lucide="bomb" class="w-4 h-4 text-rose-500 mb-1 z-10"></i>
                         <span class="text-[9px] font-bold text-zinc-300 z-10">TACTICAL STRIKE</span>
                         <span id="strike-cd-text" class="text-[8px] font-mono text-rose-500 font-bold mt-0.5 z-10">READY</span>
@@ -222,6 +234,7 @@
                 <button id="btn-quick-spawn" class="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-full text-[9px] font-black active:scale-95 transition-all flex items-center gap-1.5 shadow-md">
                     <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-amber-500"></i>
                     <span>Quick Spawn (<span class="text-amber-500 font-mono">10G</span>)</span>
+                    <span class="text-[8px] font-mono opacity-60 border border-zinc-700 rounded px-1">X</span>
                 </button>
             </div>
         </div>
@@ -238,7 +251,8 @@
             <!-- 하단 업그레이드 패널 -->
             <div class="grid grid-cols-3 gap-2 flex-shrink-0">
                 <!-- 1. 타일 소환 버튼 -->
-                <button id="btn-spawn" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+                <button id="btn-spawn" class="upgrade-btn relative flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+                    <span class="absolute top-1 right-1.5 text-[7px] font-mono text-zinc-600 border border-zinc-700 rounded px-1">Z</span>
                     <span class="text-[9px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Spawn Tile</span>
                     <div class="my-1.5 p-1 bg-zinc-800/80 rounded-lg">
                         <i data-lucide="plus" class="w-4 h-4 text-white"></i>
@@ -247,7 +261,8 @@
                 </button>
 
                 <!-- 2. 소환 확률 강화 버튼 -->
-                <button id="btn-upgrade-prob" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+                <button id="btn-upgrade-prob" class="upgrade-btn relative flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+                    <span class="absolute top-1 right-1.5 text-[7px] font-mono text-zinc-600 border border-zinc-700 rounded px-1">C</span>
                     <div class="flex items-center gap-1">
                         <span class="text-[9px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Upgrade Prob</span>
                         <span id="prob-lvl-tag" class="text-[8px] bg-zinc-800 text-zinc-300 px-1 py-0.5 rounded font-mono font-bold">Lv.1</span>
@@ -259,7 +274,8 @@
                 </button>
 
                 <!-- 3. 그리드 확장 버튼 -->
-                <button id="btn-upgrade-grid" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+                <button id="btn-upgrade-grid" class="upgrade-btn relative flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+                    <span class="absolute top-1 right-1.5 text-[7px] font-mono text-zinc-600 border border-zinc-700 rounded px-1">V</span>
                     <div class="flex items-center gap-1">
                         <span class="text-[9px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Expand Grid</span>
                         <span id="grid-lvl-tag" class="text-[8px] bg-zinc-800 text-zinc-300 px-1 py-0.5 rounded font-mono font-bold">4x4</span>
@@ -270,6 +286,20 @@
                     <span class="text-xs font-black text-amber-400 font-mono" id="grid-upgrade-cost">1000 G</span>
                 </button>
             </div>
+
+            <!-- 4. 블럭 삭제 버튼 -->
+            <button id="btn-delete-tile" class="upgrade-btn w-full flex items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="p-1 bg-zinc-800/80 rounded-lg">
+                        <i data-lucide="eraser" class="w-4 h-4 text-rose-400"></i>
+                    </div>
+                    <div class="flex flex-col items-start">
+                        <span id="delete-tile-label" class="text-[10px] font-black tracking-wider text-zinc-300 uppercase">Delete Tile</span>
+                        <span id="delete-tile-hint" class="text-[8px] text-zinc-500">원하는 블럭을 터치해서 제거 <span class="text-zinc-600">[T]</span></span>
+                    </div>
+                </div>
+                <span class="text-xs font-black text-amber-400 font-mono" id="delete-tile-cost">100 G</span>
+            </button>
         </div>
 
     </div>
@@ -281,7 +311,7 @@
             <span>Swipe or use arrow keys / WASD to merge grid numbers</span>
         </span>
         <button id="btn-show-prob" class="hover:text-zinc-400 underline decoration-dotted transition-colors flex items-center gap-1 font-semibold">
-            <i data-lucide="bar-chart-3" class="w-3 h-3 text-emerald-400"></i> 소환 확률표 보기
+            <i data-lucide="bar-chart-3" class="w-3 h-3 text-emerald-400"></i> 소환 확률표 보기 <span class="text-[8px] font-mono opacity-60 border border-zinc-700 rounded px-1 no-underline">P</span>
         </button>
     </div>
 
@@ -302,18 +332,71 @@
             <!-- 확률 데이터 주입구 -->
         </div>
         <button id="btn-close-prob-ok" class="mt-2 w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold rounded-xl transition-all">
-            확인
+            확인 <span class="text-[9px] font-mono opacity-60 border border-zinc-600 rounded px-1 ml-1">Esc</span>
         </button>
     </div>
 </div>
 
 <script>
+// --- iOS/iPadOS 핀치줌 및 더블탭 줌 "고착" 방지 패치 ---
+// iOS Safari는 user-scalable=no를 무시하는 경우가 있어, 핀치나 더블탭으로
+// 확대된 뒤 다시 축소되지 않는 문제가 발생할 수 있음. 제스처 이벤트를 차단하고
+// 더블탭 확대를 무력화하며, 혹시 확대된 상태라면 뷰포트를 강제로 재설정한다.
+(function setupZoomGuard() {
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    const baseContent = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+
+    function forceResetZoom() {
+        if (!viewportMeta) return;
+        // 뷰포트 컨텐츠를 잠깐 변경했다가 원래대로 되돌리면 브라우저가 스케일을 재계산하며 확대가 풀림
+        viewportMeta.setAttribute('content', baseContent + ', maximum-scale=1.0001');
+        requestAnimationFrame(() => {
+            viewportMeta.setAttribute('content', baseContent);
+        });
+    }
+
+    // iOS Safari 전용 제스처 이벤트 (핀치 줌) 차단
+    document.addEventListener('gesturestart', (e) => { e.preventDefault(); forceResetZoom(); }, { passive: false });
+    document.addEventListener('gesturechange', (e) => { e.preventDefault(); }, { passive: false });
+    document.addEventListener('gestureend', (e) => { e.preventDefault(); forceResetZoom(); }, { passive: false });
+
+    // 더블탭 확대 차단
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 350) {
+            e.preventDefault();
+            forceResetZoom();
+        }
+        lastTouchEnd = now;
+    }, { passive: false });
+
+    // 두 손가락 이상 터치(핀치 시도) 자체를 원천 차단
+    document.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // 화면 방향 전환이나 포커스 복귀 시에도 안전하게 스케일 재고정
+    window.addEventListener('orientationchange', forceResetZoom);
+    window.addEventListener('focus', forceResetZoom);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) forceResetZoom();
+    });
+})();
+
 // Lucide 아이콘 초기화
-lucide.createIcons();
+try {
+    lucide.createIcons();
+} catch (err) {
+    console.error("lucide 아이콘 초기화 실패 (아이콘 없이 계속 진행합니다):", err);
+}
 
 // --- GAME CONFIG & STATES ---
 const CONFIG = {
     baseSpawnCost: 10,
+    deleteTileCost: 100,
     upgradeProbCosts: [150, 400, 1000, 2500], 
     upgradeGridCosts: [1000, 3000], 
     probTables: {
@@ -332,6 +415,7 @@ const State = {
     spawnProbLevel: 1,
     board: [], 
     totalDamage: 0,
+    deleteMode: false,
     activeTab: 'shooter',
     highWave: 1,
     isGameOver: false,
@@ -350,9 +434,9 @@ const State = {
     
     // 특수 능력 상태군
     abilities: {
-        freeze: { duration: 0, maxDuration: 5, cd: 0, maxCd: 18 },
-        overcharge: { duration: 0, maxDuration: 6, cd: 0, maxCd: 22 },
-        strike: { cd: 0, maxCd: 30 }
+        freeze: { duration: 0, maxDuration: 3, cd: 0, maxCd: 28 },
+        overcharge: { duration: 0, maxDuration: 4, cd: 0, maxCd: 34 },
+        strike: { cd: 0, maxCd: 48 }
     }
 };
 
@@ -369,6 +453,10 @@ const probUpgradeCost = document.getElementById('prob-upgrade-cost');
 const btnUpgradeGrid = document.getElementById('btn-upgrade-grid');
 const gridLvlTag = document.getElementById('grid-lvl-tag');
 const gridUpgradeCost = document.getElementById('grid-upgrade-cost');
+const btnDeleteTile = document.getElementById('btn-delete-tile');
+const deleteTileLabel = document.getElementById('delete-tile-label');
+const deleteTileHint = document.getElementById('delete-tile-hint');
+const deleteTileCostLabel = document.getElementById('delete-tile-cost');
 const damageFlash = document.getElementById('damage-flash');
 const uiAlert = document.getElementById('ui-alert');
 const btnShowProb = document.getElementById('btn-show-prob');
@@ -463,7 +551,11 @@ function renderLives() {
         }
         livesContainer.appendChild(heartIcon);
     }
-    lucide.createIcons();
+    try {
+        lucide.createIcons();
+    } catch (err) {
+        console.error("lucide 아이콘 갱신 실패:", err);
+    }
 }
 
 // 2048 그리드 초기화
@@ -504,7 +596,12 @@ function renderGrid() {
             const cell = document.createElement('div');
             
             const style = tileStyleMap[val] || { bg: 'bg-yellow-300 text-yellow-950 shadow-2xl ring-4 ring-yellow-300/60', text: 'text-xs sm:text-sm font-black' };
-            cell.className = `flex items-center justify-center rounded-xl transition-all duration-100 ${style.bg}`;
+            let cellClass = `flex items-center justify-center rounded-xl transition-all duration-100 ${style.bg}`;
+            
+            if (State.deleteMode && val > 0) {
+                cellClass += ' ring-2 ring-rose-500 cursor-pointer animate-pulse';
+            }
+            cell.className = cellClass;
             
             if (val > 0) {
                 const textNode = document.createElement('span');
@@ -512,6 +609,10 @@ function renderGrid() {
                 textNode.textContent = val;
                 cell.appendChild(textNode);
             }
+            
+            const cellR = r, cellC = c;
+            cell.addEventListener('click', () => handleTileClick(cellR, cellC));
+            
             gridContainer.appendChild(cell);
         }
     }
@@ -642,9 +743,10 @@ function addCoins(amount) {
 }
 
 function updateDamage() {
-    const sum = State.board.flat().reduce((a, b) => a + b, 0);
-    State.totalDamage = sum;
-    damageCounter.textContent = sum;
+    const flat = State.board.flat();
+    const maxVal = flat.length > 0 ? Math.max(0, ...flat) : 0;
+    State.totalDamage = maxVal;
+    damageCounter.textContent = maxVal;
 }
 
 function upgradeProb() {
@@ -676,6 +778,37 @@ function upgradeGrid() {
         }
         renderGrid();
     }
+}
+
+// 블럭 삭제 모드 토글 (100 코인을 내고 원하는 블럭 하나를 제거)
+function toggleDeleteMode() {
+    if (State.isGameOver) return;
+    if (!State.deleteMode) {
+        if (State.coins < CONFIG.deleteTileCost) return;
+        State.deleteMode = true;
+    } else {
+        State.deleteMode = false;
+    }
+    renderGrid();
+    updateUIButtons();
+}
+
+// 삭제 모드 중 타일 클릭 시 호출
+function handleTileClick(r, c) {
+    if (!State.deleteMode) return;
+    const val = (State.board[r] && State.board[r][c] !== undefined) ? State.board[r][c] : 0;
+    if (val <= 0) return;
+    if (State.coins < CONFIG.deleteTileCost) {
+        State.deleteMode = false;
+        renderGrid();
+        updateUIButtons();
+        return;
+    }
+    
+    addCoins(-CONFIG.deleteTileCost);
+    State.board[r][c] = 0;
+    State.deleteMode = false;
+    renderGrid();
 }
 
 // 안전하게 클래스를 개별 제어하여 DOM Token List 및 Webview 호환성을 가집니다.
@@ -722,6 +855,21 @@ function updateUIButtons() {
         gridLvlTag.textContent = `${State.gridSize}x${State.gridSize}`;
         gridUpgradeCost.textContent = `${nextCost} G`;
         btnUpgradeGrid.disabled = (State.coins < nextCost);
+    }
+    
+    if (btnDeleteTile) {
+        btnDeleteTile.disabled = (State.coins < CONFIG.deleteTileCost && !State.deleteMode);
+        if (State.deleteMode) {
+            btnDeleteTile.className = "upgrade-btn w-full flex items-center justify-between p-2.5 bg-rose-950/40 hover:bg-rose-950/60 border border-rose-500/60 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group flex-shrink-0 animate-pulse";
+            deleteTileLabel.textContent = "삭제할 블럭 선택 중...";
+            deleteTileHint.textContent = "취소하려면 다시 클릭 [T]";
+            deleteTileCostLabel.textContent = "CANCEL";
+        } else {
+            btnDeleteTile.className = "upgrade-btn w-full flex items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group flex-shrink-0";
+            deleteTileLabel.textContent = "Delete Tile";
+            deleteTileHint.innerHTML = '원하는 블럭을 터치해서 제거 <span class="text-zinc-600">[T]</span>';
+            deleteTileCostLabel.textContent = `${CONFIG.deleteTileCost} G`;
+        }
     }
 }
 
@@ -821,7 +969,7 @@ function activateOvercharge() {
 function activateStrike() {
     State.abilities.strike.cd = State.abilities.strike.maxCd;
     
-    const strikeDmg = Math.max(12, State.totalDamage * 6);
+    const strikeDmg = Math.max(8, State.totalDamage * 3);
     damageFlash.style.opacity = '1';
     setTimeout(() => { damageFlash.style.opacity = '0'; }, 200);
     
@@ -971,6 +1119,59 @@ window.addEventListener('blur', () => {
     keysPressed.right = false;
 });
 
+// --- 버튼 전용 단축키 시스템 ---
+// 이동에 쓰이는 방향키/WASD와 겹치지 않는 키들을 각 버튼에 매핑한다.
+const SHORTCUT_KEYS = ['q', 'e', 'r', 'z', 'x', 'c', 'v', 't', 'n', 'p', '1', '2', 'enter', 'escape'];
+
+document.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    if (!SHORTCUT_KEYS.includes(key)) return;
+
+    // 확률표 모달이 열려있을 때는 닫기 단축키만 처리
+    if (probModal && !probModal.classList.contains('hidden')) {
+        if (key === 'escape') {
+            e.preventDefault();
+            btnCloseProbOk.click();
+        }
+        return;
+    }
+
+    // 타이틀 화면에서는 시작 단축키만 처리
+    if (mainScreen && !mainScreen.classList.contains('hidden')) {
+        if (key === 'enter') {
+            e.preventDefault();
+            btnStartGame.click();
+        }
+        return;
+    }
+
+    // 게임오버 화면에서는 재시작 단축키만 처리
+    if (gameOverScreen && !gameOverScreen.classList.contains('hidden')) {
+        if (key === 'enter') {
+            e.preventDefault();
+            btnRetryGame.click();
+        }
+        return;
+    }
+
+    switch (key) {
+        case '1': tabBtnShooter.click(); break;
+        case '2': tabBtnBoard.click(); break;
+        case 'q': btnFreeze.click(); break;
+        case 'e': btnOvercharge.click(); break;
+        case 'r': btnStrike.click(); break;
+        case 'z': btnSpawn.click(); break;
+        case 'x': btnQuickSpawn.click(); break;
+        case 'c': btnUpgradeProb.click(); break;
+        case 'v': btnUpgradeGrid.click(); break;
+        case 't': btnDeleteTile.click(); break;
+        case 'n': btnSkipRest.click(); break;
+        case 'p': btnShowProb.click(); break;
+        default: return;
+    }
+    e.preventDefault();
+});
+
 // 스와이프 탐지
 let touchStartX = 0;
 let touchStartY = 0;
@@ -1014,139 +1215,174 @@ let enemySpawnTimer = 0;
 let targetGunX = 0;
 let targetGunY = 0;
 
+// WebGL 렌더러 생성이 실패하는 환경(미리보기 iframe, 구형 브라우저 등)을 대비해 Canvas 렌더러로 자동 재시도
+function createPixiApp(width, height) {
+    const baseOptions = {
+        width: width,
+        height: height,
+        backgroundAlpha: 0,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true,
+        antialias: true
+    };
+    try {
+        return new PIXI.Application(baseOptions);
+    } catch (err) {
+        console.warn("WebGL 렌더러 생성 실패, Canvas 렌더러로 재시도합니다:", err);
+        try {
+            return new PIXI.Application(Object.assign({}, baseOptions, { forceCanvas: true }));
+        } catch (err2) {
+            console.error("Canvas 렌더러 생성도 실패했습니다:", err2);
+            return null;
+        }
+    }
+}
+
+// 슈팅 파트를 렌더링할 수 없는 경우, 전체 페이지가 깨지는 대신 안내 메시지로 우아하게 대체
+function showShooterFallbackMessage(holder) {
+    if (!holder) return;
+    holder.innerHTML = '<div class="w-full h-full flex items-center justify-center text-center text-[10px] text-zinc-500 p-4 leading-relaxed">이 브라우저/환경에서는 슈팅 화면을 표시할 수 없습니다.<br>커맨드 그리드(2048) 탭은 정상적으로 이용 가능합니다.</div>';
+}
+
 function initPixiShooter() {
     const holder = document.getElementById('pixi-canvas-holder');
     
     requestAnimationFrame(() => {
-        const width = holder.clientWidth || 300;
-        const height = holder.clientHeight || 230; 
-        
-        pixiApp = new PIXI.Application({
-            width: width,
-            height: height,
-            backgroundAlpha: 0,
-            resolution: window.devicePixelRatio || 1,
-            autoDensity: true,
-            antialias: true
-        });
-        
-        holder.appendChild(pixiApp.view);
-        
-        targetGunX = width / 2;
-        targetGunY = height - 35;
-
-        gunSprite = new PIXI.Graphics();
-        gunSprite.beginFill(0xf4f4f5); 
-        gunSprite.drawPolygon([
-            0, -15,   
-            -11, 11,  
-            11, 11    
-        ]);
-        gunSprite.endFill();
-        
-        gunSprite.x = targetGunX;
-        gunSprite.y = targetGunY;
-        pixiApp.stage.addChild(gunSprite);
-
-        const interactionArea = document.getElementById('canvas-wrapper-holder');
-        function setGunPositionFromPointer(clientX, clientY) {
-            const rect = interactionArea.getBoundingClientRect();
-            const relativeX = clientX - rect.left;
-            const relativeY = clientY - rect.top;
+        try {
+            const width = holder.clientWidth || 300;
+            const height = holder.clientHeight || 230; 
             
-            const currentWidth = (pixiApp && pixiApp.screen) ? pixiApp.screen.width : width;
-            const currentHeight = (pixiApp && pixiApp.screen) ? pixiApp.screen.height : height;
-            
-            targetGunX = Math.max(15, Math.min(relativeX, currentWidth - 15));
-            targetGunY = Math.max(20, Math.min(relativeY, currentHeight - 15));
-        }
-        
-        interactionArea.addEventListener('mousemove', (e) => {
-            setGunPositionFromPointer(e.clientX, e.clientY);
-        });
-        interactionArea.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 0) {
-                setGunPositionFromPointer(e.touches[0].clientX, e.touches[0].clientY);
+            pixiApp = createPixiApp(width, height);
+            if (!pixiApp) {
+                showShooterFallbackMessage(holder);
+                return;
             }
-        }, { passive: true });
-
-        pixiApp.ticker.add((delta) => {
-            if (State.isGameOver) return;
             
-            updateAbilitiesCooldowns(delta);
+            holder.appendChild(pixiApp.view);
+            
+            targetGunX = width / 2;
+            targetGunY = height - 35;
 
-            if (State.waveState === 'preparing') {
-                const sec = delta / 60;
-                State.restTimeRemaining -= sec;
-                if (State.restTimeRemaining <= 0) {
-                    try {
-                        startActiveWave();
-                    } catch (err) {
-                        console.error("Error starting wave safely:", err);
-                    }
-                } else {
-                    updateWaveDisplay();
+            gunSprite = new PIXI.Graphics();
+            gunSprite.beginFill(0xf4f4f5); 
+            gunSprite.drawPolygon([
+                0, -15,   
+                -11, 11,  
+                11, 11    
+            ]);
+            gunSprite.endFill();
+            
+            gunSprite.x = targetGunX;
+            gunSprite.y = targetGunY;
+            pixiApp.stage.addChild(gunSprite);
+
+            const interactionArea = document.getElementById('canvas-wrapper-holder');
+            function setGunPositionFromPointer(clientX, clientY) {
+                const rect = interactionArea.getBoundingClientRect();
+                const relativeX = clientX - rect.left;
+                const relativeY = clientY - rect.top;
+                
+                const currentWidth = (pixiApp && pixiApp.screen) ? pixiApp.screen.width : width;
+                const currentHeight = (pixiApp && pixiApp.screen) ? pixiApp.screen.height : height;
+                
+                targetGunX = Math.max(15, Math.min(relativeX, currentWidth - 15));
+                targetGunY = Math.max(20, Math.min(relativeY, currentHeight - 15));
+            }
+            
+            interactionArea.addEventListener('mousemove', (e) => {
+                setGunPositionFromPointer(e.clientX, e.clientY);
+            });
+            interactionArea.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 0) {
+                    setGunPositionFromPointer(e.touches[0].clientX, e.touches[0].clientY);
                 }
-            }
+            }, { passive: true });
 
-            // 키보드 입력으로 전투기 목표 좌표 갱신 (마우스/터치와 동일한 방식으로 합류)
-            if (keysPressed.up || keysPressed.down || keysPressed.left || keysPressed.right) {
-                let dx = 0, dy = 0;
-                if (keysPressed.up) dy -= 1;
-                if (keysPressed.down) dy += 1;
-                if (keysPressed.left) dx -= 1;
-                if (keysPressed.right) dx += 1;
-
-                const len = Math.hypot(dx, dy) || 1;
-                dx /= len;
-                dy /= len;
-
-                const keyboardSpeed = 6.5;
-                const currentWidth = pixiApp.screen.width;
-                const currentHeight = pixiApp.screen.height;
-
-                targetGunX = Math.max(15, Math.min(targetGunX + dx * keyboardSpeed * delta, currentWidth - 15));
-                targetGunY = Math.max(20, Math.min(targetGunY + dy * keyboardSpeed * delta, currentHeight - 15));
-            }
-
-            gunSprite.x += (targetGunX - gunSprite.x) * 0.22 * delta;
-            gunSprite.y += (targetGunY - gunSprite.y) * 0.22 * delta;
-
-            if (State.invincibleTimer > 0) {
-                gunSprite.alpha = 0.4 + 0.4 * Math.sin(pixiApp.ticker.lastTime * 0.15);
-            } else {
-                gunSprite.alpha = 1.0;
-            }
-
-            fireTimer += delta;
-            const currentFireRateMax = State.abilities.overcharge.duration > 0 ? 4 : 11;
-            if (fireTimer >= currentFireRateMax && State.totalDamage > 0) {
-                fireBullet();
-                fireTimer = 0;
-            }
-
-            if (State.waveState === 'active' && State.enemiesToSpawn > 0) {
-                enemySpawnTimer += delta;
-                const spawnSpeed = Math.max(28, 55 - State.wave * 2);
-                if (enemySpawnTimer >= spawnSpeed) { 
-                    spawnWaveEnemy();
-                    enemySpawnTimer = 0;
-                }
-            }
-
-            if (State.waveState === 'active' && State.enemiesToSpawn === 0 && enemies.length === 0) {
+            pixiApp.ticker.add((delta) => {
                 try {
-                    finishActiveWave();
-                } catch (err) {
-                    console.error("Error ending wave safely:", err);
-                }
-            }
+                    if (State.isGameOver) return;
+                    
+                    updateAbilitiesCooldowns(delta);
 
-            updateBullets(delta);
-            updateEnemyBullets(delta);
-            updateEnemies(delta);
-            updateCoinsPool(delta);
-        });
+                    if (State.waveState === 'preparing') {
+                        const sec = delta / 60;
+                        State.restTimeRemaining -= sec;
+                        if (State.restTimeRemaining <= 0) {
+                            try {
+                                startActiveWave();
+                            } catch (err) {
+                                console.error("Error starting wave safely:", err);
+                            }
+                        } else {
+                            updateWaveDisplay();
+                        }
+                    }
+
+                    // 키보드 입력으로 전투기 목표 좌표 갱신 (마우스/터치와 동일한 방식으로 합류)
+                    if (keysPressed.up || keysPressed.down || keysPressed.left || keysPressed.right) {
+                        let dx = 0, dy = 0;
+                        if (keysPressed.up) dy -= 1;
+                        if (keysPressed.down) dy += 1;
+                        if (keysPressed.left) dx -= 1;
+                        if (keysPressed.right) dx += 1;
+
+                        const len = Math.hypot(dx, dy) || 1;
+                        dx /= len;
+                        dy /= len;
+
+                        const keyboardSpeed = 6.5;
+                        const currentWidth = pixiApp.screen.width;
+                        const currentHeight = pixiApp.screen.height;
+
+                        targetGunX = Math.max(15, Math.min(targetGunX + dx * keyboardSpeed * delta, currentWidth - 15));
+                        targetGunY = Math.max(20, Math.min(targetGunY + dy * keyboardSpeed * delta, currentHeight - 15));
+                    }
+
+                    gunSprite.x += (targetGunX - gunSprite.x) * 0.22 * delta;
+                    gunSprite.y += (targetGunY - gunSprite.y) * 0.22 * delta;
+
+                    if (State.invincibleTimer > 0) {
+                        gunSprite.alpha = 0.4 + 0.4 * Math.sin(pixiApp.ticker.lastTime * 0.15);
+                    } else {
+                        gunSprite.alpha = 1.0;
+                    }
+
+                    fireTimer += delta;
+                    const currentFireRateMax = State.abilities.overcharge.duration > 0 ? 7 : 11;
+                    if (fireTimer >= currentFireRateMax && State.totalDamage > 0) {
+                        fireBullet();
+                        fireTimer = 0;
+                    }
+
+                    if (State.waveState === 'active' && State.enemiesToSpawn > 0) {
+                        enemySpawnTimer += delta;
+                        const spawnSpeed = Math.max(28, 55 - State.wave * 2);
+                        if (enemySpawnTimer >= spawnSpeed) { 
+                            spawnWaveEnemy();
+                            enemySpawnTimer = 0;
+                        }
+                    }
+
+                    if (State.waveState === 'active' && State.enemiesToSpawn === 0 && enemies.length === 0) {
+                        try {
+                            finishActiveWave();
+                        } catch (err) {
+                            console.error("Error ending wave safely:", err);
+                        }
+                    }
+
+                    updateBullets(delta);
+                    updateEnemyBullets(delta);
+                    updateEnemies(delta);
+                    updateCoinsPool(delta);
+                } catch (err) {
+                    console.error("슈팅 파트 프레임 업데이트 중 오류가 발생했지만 게임 루프는 계속 진행합니다:", err);
+                }
+            });
+        } catch (err) {
+            console.error("슈팅 파트 초기화에 실패했습니다. 2048 파트는 계속 이용 가능합니다:", err);
+            showShooterFallbackMessage(holder);
+        }
     });
 
     window.addEventListener('resize', () => {
@@ -1258,21 +1494,44 @@ function updateEnemyBullets(delta) {
     }
 }
 
+// 웨이브 진행도에 따라 등장 가능한 적 종류를 확장 (초반엔 단순하게, 후반엔 다양하게)
+function getAvailableEnemyTypes() {
+    const types = ['scout', 'scout', 'bomber', 'kamikaze', 'swarm', 'swarm'];
+    if (State.wave >= 4) types.push('tank');
+    if (State.wave >= 7) { types.push('tank'); types.push('sniper'); }
+    if (State.wave >= 10) { types.push('sniper'); types.push('swarm'); }
+    return types;
+}
+
+// 적 타입별 체력 배율 (탱크는 훨씬 단단하고, 스웜은 훨씬 약하지만 빠르게 몰려옴)
+const ENEMY_HP_MULTIPLIER = {
+    scout: 1.0,
+    bomber: 1.2,
+    kamikaze: 0.75,
+    swarm: 0.4,
+    tank: 2.6,
+    sniper: 0.9
+};
+
 function spawnWaveEnemy() {
     if (!pixiApp) return;
     const width = pixiApp.screen.width;
     const enemy = new PIXI.Container();
     
-    const baseHp = Math.floor(6 * Math.pow(1.36, State.wave - 1)) + State.wave * 3;
-    const variance = Math.max(1, Math.floor(baseHp * 0.15));
-    const hp = baseHp + (Math.floor(Math.random() * (variance * 2 + 1)) - variance);
+    // 체력 성장 곡선을 대폭 상향 조정 (웨이브가 오를수록 훨씬 가파르게 강해짐)
+    const baseHp = Math.floor(8 * Math.pow(1.42, State.wave - 1)) + State.wave * 6;
+
+    const types = getAvailableEnemyTypes();
+    const currentType = types[Math.floor(Math.random() * types.length)];
+    enemy.patternType = currentType;
+
+    const mult = ENEMY_HP_MULTIPLIER[currentType] || 1.0;
+    const scaledHp = Math.max(1, Math.floor(baseHp * mult));
+    const variance = Math.max(1, Math.floor(scaledHp * 0.15));
+    const hp = Math.max(1, scaledHp + (Math.floor(Math.random() * (variance * 2 + 1)) - variance));
     
     enemy.hp = hp;
     enemy.maxHp = hp;
-
-    const types = ['scout', 'scout', 'bomber', 'kamikaze'];
-    const currentType = types[Math.floor(Math.random() * types.length)];
-    enemy.patternType = currentType;
 
     const shape = new PIXI.Graphics();
     enemy.addChild(shape);
@@ -1301,6 +1560,43 @@ function spawnWaveEnemy() {
         shape.endFill();
         enemy.speed = 1.6 + Math.random() * 0.6;
         enemy.fireCooldown = 99999; 
+    } else if (currentType === 'swarm') {
+        shape.lineStyle(1.2, 0xf472b6);
+        shape.beginFill(0x27272a);
+        shape.drawPolygon([
+            0, 10,
+            -7, -7,
+            7, -7
+        ]);
+        shape.endFill();
+        enemy.speed = 2.0 + Math.random() * 0.8;
+        enemy.fireCooldown = 160 + Math.random() * 60;
+    } else if (currentType === 'tank') {
+        shape.lineStyle(2, 0x8b5cf6);
+        shape.beginFill(0x18181b);
+        shape.drawPolygon([
+            0, -22,
+            19, -11,
+            19, 11,
+            0, 22,
+            -19, 11,
+            -19, -11
+        ]);
+        shape.endFill();
+        enemy.speed = 0.35 + Math.random() * 0.2;
+        enemy.fireCooldown = 130 + Math.random() * 40;
+    } else if (currentType === 'sniper') {
+        shape.lineStyle(1.5, 0x22d3ee);
+        shape.beginFill(0x18181b);
+        shape.drawPolygon([
+            0, -16,
+            10, 0,
+            0, 16,
+            -10, 0
+        ]);
+        shape.endFill();
+        enemy.speed = 0.6 + Math.random() * 0.3;
+        enemy.fireCooldown = 140 + Math.random() * 40;
     } else {
         shape.lineStyle(1.5, 0x3b82f6);
         shape.beginFill(0x18181b);
@@ -1351,18 +1647,29 @@ function updateEnemies(delta) {
                 continue;
             }
             
-            const finalSpeed = isFrozen ? (e.speed || 1) * 0.15 : (e.speed || 1);
+            const finalSpeed = isFrozen ? (e.speed || 1) * 0.4 : (e.speed || 1);
             e.patternTime = (e.patternTime || 0) + 0.05 * delta;
 
             if (e.patternType === 'scout') {
                 e.y += finalSpeed * delta;
                 e.x = (e.initialX || 0) + Math.sin(e.patternTime) * 45;
+            } else if (e.patternType === 'swarm') {
+                e.y += finalSpeed * delta;
+                e.x = (e.initialX || 0) + Math.sin(e.patternTime * 2.2) * 65;
             } else if (e.patternType === 'kamikaze') {
                 const dx = px - e.x;
                 const stepX = (dx > 0 ? 1 : -1) * 1.0 * finalSpeed;
                 e.x += stepX * delta;
                 e.y += finalSpeed * 1.2 * delta;
+            } else if (e.patternType === 'sniper') {
+                if (e.y < height * 0.32) {
+                    e.y += finalSpeed * delta;
+                } else {
+                    const dx = px - e.x;
+                    e.x += Math.sign(dx) * 0.4 * finalSpeed * delta;
+                }
             } else {
+                // bomber, tank: 그대로 하강
                 e.y += finalSpeed * delta;
             }
 
@@ -1399,6 +1706,26 @@ function updateEnemies(delta) {
                             fireEnemyBullet(e.x, e.y, dx/len, dy/len, 3.0);
                         }
                         e.fireCooldown = 70 + Math.random() * 30;
+                    } else if (e.patternType === 'tank') {
+                        const dx = px - e.x;
+                        const dy = py - e.y;
+                        const baseAngle = Math.atan2(dy, dx);
+                        for (let k = -2; k <= 2; k++) {
+                            const ang = baseAngle + k * 0.18;
+                            fireEnemyBullet(e.x, e.y, Math.cos(ang), Math.sin(ang), 2.2);
+                        }
+                        e.fireCooldown = 130 + Math.random() * 40;
+                    } else if (e.patternType === 'sniper') {
+                        const dx = px - e.x;
+                        const dy = py - e.y;
+                        const len = Math.hypot(dx, dy);
+                        if (len > 10) {
+                            fireEnemyBullet(e.x, e.y, dx/len, dy/len, 4.4);
+                        }
+                        e.fireCooldown = 140 + Math.random() * 40;
+                    } else if (e.patternType === 'swarm') {
+                        fireEnemyBullet(e.x, e.y, 0, 1, 2.0);
+                        e.fireCooldown = 160 + Math.random() * 60;
                     }
                 }
             }
@@ -1645,6 +1972,7 @@ function resetGame() {
     State.lives = State.maxLives;
     State.isGameOver = false;
     State.invincibleTimer = 0;
+    State.deleteMode = false;
     
     if (pixiApp && gunSprite) {
         targetGunX = pixiApp.screen.width / 2;
@@ -1757,6 +2085,7 @@ function setupModals() {
     btnQuickSpawn.addEventListener('click', summonTile);
     btnUpgradeProb.addEventListener('click', upgradeProb);
     btnUpgradeGrid.addEventListener('click', upgradeGrid);
+    btnDeleteTile.addEventListener('click', toggleDeleteMode);
     
     btnSkipRest.addEventListener('click', () => {
         if (State.waveState === 'preparing') {
@@ -1774,13 +2103,13 @@ function setupModals() {
 
 // 윈도우 로드 시동 개시
 window.onload = function() {
-    loadHighScore();
-    initGrid();
-    initPixiShooter();
-    setupTabs();
-    setupModals();
-    setupAbilities();
-    renderLives();
+    try { loadHighScore(); } catch (err) { console.error("loadHighScore 초기화 실패:", err); }
+    try { initGrid(); } catch (err) { console.error("initGrid 초기화 실패:", err); }
+    try { initPixiShooter(); } catch (err) { console.error("initPixiShooter 초기화 실패:", err); }
+    try { setupTabs(); } catch (err) { console.error("setupTabs 초기화 실패:", err); }
+    try { setupModals(); } catch (err) { console.error("setupModals 초기화 실패:", err); }
+    try { setupAbilities(); } catch (err) { console.error("setupAbilities 초기화 실패:", err); }
+    try { renderLives(); } catch (err) { console.error("renderLives 초기화 실패:", err); }
 };
 </script>
 </body>
