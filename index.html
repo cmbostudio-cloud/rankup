@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>2048 Shooter - Classic Arcade Hell</title>
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- PixiJS CDN (Stable v7) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
     <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Google Fonts: Space Grotesk -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;900&display=swap" rel="stylesheet">
     
@@ -309,11 +309,7 @@
 
 <script>
 // Lucide 아이콘 초기화
-try {
-    lucide.createIcons();
-} catch (err) {
-    console.error("lucide 아이콘 초기화 실패 (아이콘 없이 계속 진행합니다):", err);
-}
+lucide.createIcons();
 
 // --- GAME CONFIG & STATES ---
 const CONFIG = {
@@ -467,11 +463,7 @@ function renderLives() {
         }
         livesContainer.appendChild(heartIcon);
     }
-    try {
-        lucide.createIcons();
-    } catch (err) {
-        console.error("lucide 아이콘 갱신 실패:", err);
-    }
+    lucide.createIcons();
 }
 
 // 2048 그리드 초기화
@@ -1022,174 +1014,139 @@ let enemySpawnTimer = 0;
 let targetGunX = 0;
 let targetGunY = 0;
 
-// WebGL 렌더러 생성이 실패하는 환경(미리보기 iframe, 구형 브라우저 등)을 대비해 Canvas 렌더러로 자동 재시도
-function createPixiApp(width, height) {
-    const baseOptions = {
-        width: width,
-        height: height,
-        backgroundAlpha: 0,
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
-        antialias: true
-    };
-    try {
-        return new PIXI.Application(baseOptions);
-    } catch (err) {
-        console.warn("WebGL 렌더러 생성 실패, Canvas 렌더러로 재시도합니다:", err);
-        try {
-            return new PIXI.Application(Object.assign({}, baseOptions, { forceCanvas: true }));
-        } catch (err2) {
-            console.error("Canvas 렌더러 생성도 실패했습니다:", err2);
-            return null;
-        }
-    }
-}
-
-// 슈팅 파트를 렌더링할 수 없는 경우, 전체 페이지가 깨지는 대신 안내 메시지로 우아하게 대체
-function showShooterFallbackMessage(holder) {
-    if (!holder) return;
-    holder.innerHTML = '<div class="w-full h-full flex items-center justify-center text-center text-[10px] text-zinc-500 p-4 leading-relaxed">이 브라우저/환경에서는 슈팅 화면을 표시할 수 없습니다.<br>커맨드 그리드(2048) 탭은 정상적으로 이용 가능합니다.</div>';
-}
-
 function initPixiShooter() {
     const holder = document.getElementById('pixi-canvas-holder');
     
     requestAnimationFrame(() => {
-        try {
-            const width = holder.clientWidth || 300;
-            const height = holder.clientHeight || 230; 
+        const width = holder.clientWidth || 300;
+        const height = holder.clientHeight || 230; 
+        
+        pixiApp = new PIXI.Application({
+            width: width,
+            height: height,
+            backgroundAlpha: 0,
+            resolution: window.devicePixelRatio || 1,
+            autoDensity: true,
+            antialias: true
+        });
+        
+        holder.appendChild(pixiApp.view);
+        
+        targetGunX = width / 2;
+        targetGunY = height - 35;
+
+        gunSprite = new PIXI.Graphics();
+        gunSprite.beginFill(0xf4f4f5); 
+        gunSprite.drawPolygon([
+            0, -15,   
+            -11, 11,  
+            11, 11    
+        ]);
+        gunSprite.endFill();
+        
+        gunSprite.x = targetGunX;
+        gunSprite.y = targetGunY;
+        pixiApp.stage.addChild(gunSprite);
+
+        const interactionArea = document.getElementById('canvas-wrapper-holder');
+        function setGunPositionFromPointer(clientX, clientY) {
+            const rect = interactionArea.getBoundingClientRect();
+            const relativeX = clientX - rect.left;
+            const relativeY = clientY - rect.top;
             
-            pixiApp = createPixiApp(width, height);
-            if (!pixiApp) {
-                showShooterFallbackMessage(holder);
-                return;
-            }
+            const currentWidth = (pixiApp && pixiApp.screen) ? pixiApp.screen.width : width;
+            const currentHeight = (pixiApp && pixiApp.screen) ? pixiApp.screen.height : height;
             
-            holder.appendChild(pixiApp.view);
-            
-            targetGunX = width / 2;
-            targetGunY = height - 35;
-
-            gunSprite = new PIXI.Graphics();
-            gunSprite.beginFill(0xf4f4f5); 
-            gunSprite.drawPolygon([
-                0, -15,   
-                -11, 11,  
-                11, 11    
-            ]);
-            gunSprite.endFill();
-            
-            gunSprite.x = targetGunX;
-            gunSprite.y = targetGunY;
-            pixiApp.stage.addChild(gunSprite);
-
-            const interactionArea = document.getElementById('canvas-wrapper-holder');
-            function setGunPositionFromPointer(clientX, clientY) {
-                const rect = interactionArea.getBoundingClientRect();
-                const relativeX = clientX - rect.left;
-                const relativeY = clientY - rect.top;
-                
-                const currentWidth = (pixiApp && pixiApp.screen) ? pixiApp.screen.width : width;
-                const currentHeight = (pixiApp && pixiApp.screen) ? pixiApp.screen.height : height;
-                
-                targetGunX = Math.max(15, Math.min(relativeX, currentWidth - 15));
-                targetGunY = Math.max(20, Math.min(relativeY, currentHeight - 15));
-            }
-            
-            interactionArea.addEventListener('mousemove', (e) => {
-                setGunPositionFromPointer(e.clientX, e.clientY);
-            });
-            interactionArea.addEventListener('touchmove', (e) => {
-                if (e.touches.length > 0) {
-                    setGunPositionFromPointer(e.touches[0].clientX, e.touches[0].clientY);
-                }
-            }, { passive: true });
-
-            pixiApp.ticker.add((delta) => {
-                try {
-                    if (State.isGameOver) return;
-                    
-                    updateAbilitiesCooldowns(delta);
-
-                    if (State.waveState === 'preparing') {
-                        const sec = delta / 60;
-                        State.restTimeRemaining -= sec;
-                        if (State.restTimeRemaining <= 0) {
-                            try {
-                                startActiveWave();
-                            } catch (err) {
-                                console.error("Error starting wave safely:", err);
-                            }
-                        } else {
-                            updateWaveDisplay();
-                        }
-                    }
-
-                    // 키보드 입력으로 전투기 목표 좌표 갱신 (마우스/터치와 동일한 방식으로 합류)
-                    if (keysPressed.up || keysPressed.down || keysPressed.left || keysPressed.right) {
-                        let dx = 0, dy = 0;
-                        if (keysPressed.up) dy -= 1;
-                        if (keysPressed.down) dy += 1;
-                        if (keysPressed.left) dx -= 1;
-                        if (keysPressed.right) dx += 1;
-
-                        const len = Math.hypot(dx, dy) || 1;
-                        dx /= len;
-                        dy /= len;
-
-                        const keyboardSpeed = 6.5;
-                        const currentWidth = pixiApp.screen.width;
-                        const currentHeight = pixiApp.screen.height;
-
-                        targetGunX = Math.max(15, Math.min(targetGunX + dx * keyboardSpeed * delta, currentWidth - 15));
-                        targetGunY = Math.max(20, Math.min(targetGunY + dy * keyboardSpeed * delta, currentHeight - 15));
-                    }
-
-                    gunSprite.x += (targetGunX - gunSprite.x) * 0.22 * delta;
-                    gunSprite.y += (targetGunY - gunSprite.y) * 0.22 * delta;
-
-                    if (State.invincibleTimer > 0) {
-                        gunSprite.alpha = 0.4 + 0.4 * Math.sin(pixiApp.ticker.lastTime * 0.15);
-                    } else {
-                        gunSprite.alpha = 1.0;
-                    }
-
-                    fireTimer += delta;
-                    const currentFireRateMax = State.abilities.overcharge.duration > 0 ? 4 : 11;
-                    if (fireTimer >= currentFireRateMax && State.totalDamage > 0) {
-                        fireBullet();
-                        fireTimer = 0;
-                    }
-
-                    if (State.waveState === 'active' && State.enemiesToSpawn > 0) {
-                        enemySpawnTimer += delta;
-                        const spawnSpeed = Math.max(28, 55 - State.wave * 2);
-                        if (enemySpawnTimer >= spawnSpeed) { 
-                            spawnWaveEnemy();
-                            enemySpawnTimer = 0;
-                        }
-                    }
-
-                    if (State.waveState === 'active' && State.enemiesToSpawn === 0 && enemies.length === 0) {
-                        try {
-                            finishActiveWave();
-                        } catch (err) {
-                            console.error("Error ending wave safely:", err);
-                        }
-                    }
-
-                    updateBullets(delta);
-                    updateEnemyBullets(delta);
-                    updateEnemies(delta);
-                    updateCoinsPool(delta);
-                } catch (err) {
-                    console.error("슈팅 파트 프레임 업데이트 중 오류가 발생했지만 게임 루프는 계속 진행합니다:", err);
-                }
-            });
-        } catch (err) {
-            console.error("슈팅 파트 초기화에 실패했습니다. 2048 파트는 계속 이용 가능합니다:", err);
-            showShooterFallbackMessage(holder);
+            targetGunX = Math.max(15, Math.min(relativeX, currentWidth - 15));
+            targetGunY = Math.max(20, Math.min(relativeY, currentHeight - 15));
         }
+        
+        interactionArea.addEventListener('mousemove', (e) => {
+            setGunPositionFromPointer(e.clientX, e.clientY);
+        });
+        interactionArea.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                setGunPositionFromPointer(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        pixiApp.ticker.add((delta) => {
+            if (State.isGameOver) return;
+            
+            updateAbilitiesCooldowns(delta);
+
+            if (State.waveState === 'preparing') {
+                const sec = delta / 60;
+                State.restTimeRemaining -= sec;
+                if (State.restTimeRemaining <= 0) {
+                    try {
+                        startActiveWave();
+                    } catch (err) {
+                        console.error("Error starting wave safely:", err);
+                    }
+                } else {
+                    updateWaveDisplay();
+                }
+            }
+
+            // 키보드 입력으로 전투기 목표 좌표 갱신 (마우스/터치와 동일한 방식으로 합류)
+            if (keysPressed.up || keysPressed.down || keysPressed.left || keysPressed.right) {
+                let dx = 0, dy = 0;
+                if (keysPressed.up) dy -= 1;
+                if (keysPressed.down) dy += 1;
+                if (keysPressed.left) dx -= 1;
+                if (keysPressed.right) dx += 1;
+
+                const len = Math.hypot(dx, dy) || 1;
+                dx /= len;
+                dy /= len;
+
+                const keyboardSpeed = 6.5;
+                const currentWidth = pixiApp.screen.width;
+                const currentHeight = pixiApp.screen.height;
+
+                targetGunX = Math.max(15, Math.min(targetGunX + dx * keyboardSpeed * delta, currentWidth - 15));
+                targetGunY = Math.max(20, Math.min(targetGunY + dy * keyboardSpeed * delta, currentHeight - 15));
+            }
+
+            gunSprite.x += (targetGunX - gunSprite.x) * 0.22 * delta;
+            gunSprite.y += (targetGunY - gunSprite.y) * 0.22 * delta;
+
+            if (State.invincibleTimer > 0) {
+                gunSprite.alpha = 0.4 + 0.4 * Math.sin(pixiApp.ticker.lastTime * 0.15);
+            } else {
+                gunSprite.alpha = 1.0;
+            }
+
+            fireTimer += delta;
+            const currentFireRateMax = State.abilities.overcharge.duration > 0 ? 4 : 11;
+            if (fireTimer >= currentFireRateMax && State.totalDamage > 0) {
+                fireBullet();
+                fireTimer = 0;
+            }
+
+            if (State.waveState === 'active' && State.enemiesToSpawn > 0) {
+                enemySpawnTimer += delta;
+                const spawnSpeed = Math.max(28, 55 - State.wave * 2);
+                if (enemySpawnTimer >= spawnSpeed) { 
+                    spawnWaveEnemy();
+                    enemySpawnTimer = 0;
+                }
+            }
+
+            if (State.waveState === 'active' && State.enemiesToSpawn === 0 && enemies.length === 0) {
+                try {
+                    finishActiveWave();
+                } catch (err) {
+                    console.error("Error ending wave safely:", err);
+                }
+            }
+
+            updateBullets(delta);
+            updateEnemyBullets(delta);
+            updateEnemies(delta);
+            updateCoinsPool(delta);
+        });
     });
 
     window.addEventListener('resize', () => {
@@ -1817,13 +1774,13 @@ function setupModals() {
 
 // 윈도우 로드 시동 개시
 window.onload = function() {
-    try { loadHighScore(); } catch (err) { console.error("loadHighScore 초기화 실패:", err); }
-    try { initGrid(); } catch (err) { console.error("initGrid 초기화 실패:", err); }
-    try { initPixiShooter(); } catch (err) { console.error("initPixiShooter 초기화 실패:", err); }
-    try { setupTabs(); } catch (err) { console.error("setupTabs 초기화 실패:", err); }
-    try { setupModals(); } catch (err) { console.error("setupModals 초기화 실패:", err); }
-    try { setupAbilities(); } catch (err) { console.error("setupAbilities 초기화 실패:", err); }
-    try { renderLives(); } catch (err) { console.error("renderLives 초기화 실패:", err); }
+    loadHighScore();
+    initGrid();
+    initPixiShooter();
+    setupTabs();
+    setupModals();
+    setupAbilities();
+    renderLives();
 };
 </script>
 </body>
