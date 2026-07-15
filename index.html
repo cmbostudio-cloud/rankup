@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2048 Shooter - Wave & Ability Vanguard</title>
+    <title>2048 Shooter - Classic Arcade Hell</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PixiJS CDN (Stable v7) -->
@@ -16,16 +16,16 @@
     <style>
         body {
             font-family: 'Space Grotesk', sans-serif;
-            background-color: #09090b;
+            background-color: #050508;
             color: #f4f4f5;
             overflow: hidden;
             touch-action: none;
         }
         .neon-glow {
-            box-shadow: 0 0 25px rgba(239, 68, 68, 0.08);
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.15);
         }
         .canvas-container {
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.15);
         }
         ::-webkit-scrollbar {
             display: none;
@@ -40,7 +40,6 @@
             0 { transform: scale(0.85); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-        /* 능력 쿨타임 애니메이션 오버레이용 */
         .cooldown-overlay {
             transition: height 0.1s linear;
         }
@@ -53,33 +52,36 @@
     <!-- === [SCREEN 1] 메인 타이틀 스크린 오버레이 === -->
     <div id="main-screen" class="absolute inset-0 bg-zinc-950 z-50 flex flex-col items-center justify-between p-8 text-center">
         <div class="my-auto flex flex-col items-center gap-6">
-            <div class="w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/5">
-                <i data-lucide="shield" class="w-8 h-8 text-red-500"></i>
+            <div class="w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/5 animate-pulse">
+                <i data-lucide="plane" class="w-8 h-8 text-red-500 rotate-45"></i>
             </div>
             <div>
                 <h1 class="text-3xl font-black tracking-widest text-zinc-100">2048 SHOOTER</h1>
-                <p class="text-xs text-zinc-500 uppercase tracking-widest mt-1 font-mono">Wave &amp; Ability Edition</p>
+                <p class="text-xs text-red-500 uppercase tracking-widest mt-1 font-mono">ARCADE HELL EDITION</p>
             </div>
             <div class="bg-zinc-900/40 border border-zinc-800/80 px-4 py-2.5 rounded-xl flex flex-col gap-0.5">
                 <span class="text-[9px] text-zinc-500 uppercase tracking-wider font-semibold">Tactical Record</span>
                 <span id="main-high-wave" class="text-sm font-bold text-amber-400">BEST WAVE: 1</span>
             </div>
+            <div class="text-xs text-zinc-400 max-w-[280px] leading-relaxed">
+                전투기를 <span class="text-red-400 font-bold">상하좌우로 정밀 제어</span>하십시오!<br>적들의 가공할 탄막과 기체 충돌을 피하고 2048 타일을 합성하여 화력을 극대화해야 합니다.
+            </div>
         </div>
-        <button id="btn-start-game" class="w-full py-4 bg-zinc-100 hover:bg-white text-zinc-950 font-black tracking-wider rounded-2xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2">
-            <i data-lucide="play" class="w-5 h-5 fill-zinc-950 text-zinc-950"></i>
-            <span>START DEFENSE SYSTEM</span>
+        <button id="btn-start-game" class="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-black tracking-wider rounded-2xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2">
+            <i data-lucide="play" class="w-5 h-5 fill-white text-white"></i>
+            <span>START MISSION</span>
         </button>
     </div>
 
     <!-- === [SCREEN 2] 게임 오버 스크린 오버레이 === -->
     <div id="game-over-screen" class="hidden absolute inset-0 bg-black/95 z-50 flex flex-col items-center justify-between p-8 text-center backdrop-blur-sm">
         <div class="my-auto flex flex-col items-center gap-5">
-            <div class="w-16 h-16 bg-red-600/20 border border-red-500 rounded-full flex items-center justify-center animate-pulse">
+            <div class="w-16 h-16 bg-red-600/20 border border-red-500 rounded-full flex items-center justify-center animate-bounce">
                 <i data-lucide="skull" class="w-8 h-8 text-red-500"></i>
             </div>
             <div>
-                <h2 class="text-2xl font-black tracking-wider text-red-500 uppercase">SYSTEM SHUTDOWN</h2>
-                <p class="text-xs text-zinc-500 mt-1">Our frontlines were breached by numerical entities.</p>
+                <h2 class="text-2xl font-black tracking-wider text-red-500 uppercase">MISSION FAILED</h2>
+                <p class="text-xs text-zinc-500 mt-1">Our fighter jet was destroyed by hostile forces.</p>
             </div>
             <div class="grid grid-cols-2 gap-3 w-full max-w-[240px] mt-2">
                 <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/50">
@@ -94,7 +96,7 @@
         </div>
         <button id="btn-retry-game" class="w-full py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-black tracking-wider rounded-2xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2">
             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-            <span>RESTART DEFENSE</span>
+            <span>REDEPLOY FIGHTER</span>
         </button>
     </div>
 
@@ -112,12 +114,12 @@
         
         <!-- 실시간 웨이브 / 정비 알림 -->
         <div class="text-center flex flex-col items-center">
-            <span id="wave-state-tag" class="text-[9px] text-zinc-500 font-bold tracking-wider uppercase">PREPARING</span>
+            <span id="wave-state-tag" class="text-[9px] text-emerald-400 font-bold tracking-wider uppercase">PREPARING</span>
             <div class="flex items-center gap-1.5">
                 <h1 id="wave-title" class="text-sm sm:text-base font-black tracking-widest text-zinc-200">WAVE 1</h1>
                 <button id="btn-skip-rest" class="hidden px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-zinc-300 text-[8px] font-black rounded-md active:scale-95 transition-all">SKIP</button>
             </div>
-            <span id="wave-countdown" class="text-[9px] text-emerald-400 font-mono tracking-widest mt-0.5">NEXT IN 10.0s</span>
+            <span id="wave-countdown" class="text-[9px] text-emerald-400 font-mono tracking-widest mt-0.5">NEXT IN 12.0s</span>
         </div>
 
         <!-- 목숨 및 총 데미지 표시구역 -->
@@ -167,10 +169,10 @@
                 <div id="freeze-overlay" class="absolute inset-0 border-[3px] border-blue-500/0 pointer-events-none rounded-2xl transition-all duration-300"></div>
                 <div id="overcharge-overlay" class="absolute inset-0 border-[3px] border-amber-400/0 pointer-events-none rounded-2xl transition-all duration-300"></div>
                 
-                <!-- 브리치 경보 오버레이 -->
-                <div id="ui-alert" class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full opacity-0 transition-opacity duration-300 shadow-md flex items-center gap-1 z-10 font-mono uppercase tracking-wider">
+                <!-- 기체 타격 및 경보 오버레이 -->
+                <div id="ui-alert" class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full opacity-0 transition-opacity duration-300 shadow-md flex items-center gap-1 z-10 font-mono uppercase tracking-wider">
                     <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
-                    <span>DEFENSE LINE BREACHED! -1 LIFE</span>
+                    <span>FIGHTER DAMAGE DETECTED! -1 LIFE</span>
                 </div>
             </div>
 
@@ -213,8 +215,8 @@
             <!-- 아레나 미니 컨트롤 -->
             <div class="flex items-center justify-between px-1">
                 <span class="text-[9px] text-zinc-500 flex items-center gap-1 font-mono">
-                    <i data-lucide="info" class="w-3 h-3 text-zinc-500"></i>
-                    <span>Drag screen to slide Gun & Auto fire</span>
+                    <i data-lucide="info" class="w-3 h-3 text-red-400"></i>
+                    <span>화면을 드래그하여 상하좌우 자유 비행 (자동 발사)</span>
                 </span>
                 
                 <button id="btn-quick-spawn" class="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-full text-[9px] font-black active:scale-95 transition-all flex items-center gap-1.5 shadow-md">
@@ -321,7 +323,6 @@ const CONFIG = {
         4: { 2: 0.30, 4: 0.35, 8: 0.20, 16: 0.10, 32: 0.05 },
         5: { 2: 0.15, 4: 0.25, 8: 0.25, 16: 0.20, 32: 0.10, 64: 0.05 }
     },
-    // 웨이브당 최대 준비 기간 (초)
     prepTime: 12
 };
 
@@ -338,10 +339,13 @@ const State = {
     lives: 3,
     maxLives: 3,
     wave: 1,
-    waveState: 'preparing', // 'preparing' or 'active'
-    restTimeRemaining: CONFIG.prepTime, // 남은 휴식초
+    waveState: 'preparing', 
+    restTimeRemaining: CONFIG.prepTime, 
     enemiesToSpawn: 0,
     enemiesTotalInWave: 0,
+    
+    // 무적 기체 버퍼시간
+    invincibleTimer: 0,
     
     // 특수 능력 상태군
     abilities: {
@@ -378,7 +382,6 @@ const tabViewShooter = document.getElementById('tab-view-shooter');
 const tabViewBoard = document.getElementById('tab-view-board');
 const dangerBadge = document.getElementById('danger-badge');
 
-// 신규 추가 요소
 const mainScreen = document.getElementById('main-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
 const mainHighWave = document.getElementById('main-high-wave');
@@ -392,7 +395,7 @@ const waveCountdown = document.getElementById('wave-countdown');
 const btnSkipRest = document.getElementById('btn-skip-rest');
 const livesContainer = document.getElementById('lives-container');
 
-// 능력 오버레이 & 쿨타임 버튼
+// 능력 쿨타임 컴포넌트
 const btnFreeze = document.getElementById('ability-btn-freeze');
 const btnOvercharge = document.getElementById('ability-btn-overcharge');
 const btnStrike = document.getElementById('ability-btn-strike');
@@ -402,10 +405,9 @@ const txtStrikeCd = document.getElementById('strike-cd-text');
 const freezeOverlay = document.getElementById('freeze-overlay');
 const overchargeOverlay = document.getElementById('overcharge-overlay');
 
-// --- STREAMING_CHUNK: Implementing local storage load... -->
-// 로컬 스토리지 하이스코어 동기화
+// 로컬 스토리지 연동
 function loadHighScore() {
-    const saved = localStorage.getItem('2048shooter_highwave');
+    const saved = localStorage.getItem('2048shooter_highwave_hell');
     if (saved) {
         State.highWave = parseInt(saved);
     } else {
@@ -418,7 +420,7 @@ function loadHighScore() {
 function saveHighScore() {
     if (State.wave > State.highWave) {
         State.highWave = State.wave;
-        localStorage.setItem('2048shooter_highwave', State.highWave);
+        localStorage.setItem('2048shooter_highwave_hell', State.highWave);
     }
 }
 
@@ -444,7 +446,6 @@ function initGrid() {
     renderGrid();
 }
 
-// --- STREAMING_CHUNK: Rendering the 2048 core layout... -->
 // 2048 격자 UI 업데이트
 function renderGrid() {
     gridContainer.innerHTML = '';
@@ -506,7 +507,6 @@ function reverseRows(matrix) {
     return matrix.map(row => [...row].reverse());
 }
 
-// --- STREAMING_CHUNK: Designing 2048 physics merge... -->
 function slideLeft(matrix) {
     const n = matrix.length;
     let moved = false;
@@ -616,7 +616,6 @@ function updateDamage() {
     damageCounter.textContent = sum;
 }
 
-// --- STREAMING_CHUNK: Processing standard grid upgrades... -->
 function upgradeProb() {
     const cost = CONFIG.upgradeProbCosts[State.spawnProbLevel - 1];
     if (State.coins >= cost && State.spawnProbLevel < 5) {
@@ -690,8 +689,6 @@ function initWaveController() {
     State.wave = 1;
     State.waveState = 'preparing';
     State.restTimeRemaining = CONFIG.prepTime;
-    
-    // 첫 소환 유도용 알림 유지
     updateWaveDisplay();
 }
 
@@ -705,10 +702,10 @@ function updateWaveDisplay() {
         waveCountdown.classList.remove('hidden');
         waveCountdown.textContent = `NEXT IN ${State.restTimeRemaining.toFixed(1)}s`;
     } else {
-        waveStateTag.textContent = 'BATTLE ACTIVE';
+        waveStateTag.textContent = 'HELL BREWING';
         waveStateTag.className = 'text-[9px] text-red-500 font-bold tracking-wider uppercase animate-pulse';
         btnSkipRest.classList.add('hidden');
-        waveCountdown.textContent = `ENEMIES: ${State.enemiesToSpawn + enemies.length}`;
+        waveCountdown.textContent = `HOSTILES: ${State.enemiesToSpawn + enemies.length}`;
         waveCountdown.classList.remove('hidden');
     }
 }
@@ -716,22 +713,18 @@ function updateWaveDisplay() {
 function startActiveWave() {
     State.waveState = 'active';
     
-    // 웨이브 당 적 물량 설정
-    State.enemiesTotalInWave = 8 + State.wave * 2;
+    // 웨이브당 무자비하게 늘어나는 배치량
+    State.enemiesTotalInWave = 10 + State.wave * 3;
     State.enemiesToSpawn = State.enemiesTotalInWave;
     
     updateWaveDisplay();
-    
-    // 웨이브 전환 알림 이펙트 (임시)
-    triggerWaveAlert(`WAVE ${State.wave} START!`);
+    triggerWaveAlert(`WAVE ${State.wave} : ARCADE HELL`);
 }
 
 function finishActiveWave() {
-    // 골드 보너스 수여
-    const completionBonus = 50 + State.wave * 10;
+    const completionBonus = 60 + State.wave * 15;
     addCoins(completionBonus);
     
-    // 상태 전환
     State.wave++;
     saveHighScore();
     State.waveState = 'preparing';
@@ -743,18 +736,13 @@ function finishActiveWave() {
 
 function triggerWaveAlert(msg) {
     uiAlert.querySelector('span').textContent = msg;
-    uiAlert.classList.remove('bg-red-500');
-    uiAlert.classList.add('bg-zinc-100', 'text-zinc-950');
-    uiAlert.classList.remove('opacity-0');
-    uiAlert.classList.add('opacity-100');
+    uiAlert.className = "absolute top-2 left-1/2 transform -translate-x-1/2 text-zinc-950 text-[10px] font-bold px-3 py-1 rounded-full opacity-100 transition-opacity duration-300 shadow-md flex items-center gap-1 z-10 font-mono uppercase tracking-wider bg-zinc-100";
     
     setTimeout(() => {
         uiAlert.classList.remove('opacity-100');
         uiAlert.classList.add('opacity-0');
-        // 복귀
         setTimeout(() => {
-            uiAlert.classList.remove('bg-zinc-100', 'text-zinc-950');
-            uiAlert.classList.add('bg-red-500', 'text-white');
+            uiAlert.className = "absolute top-2 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full opacity-0 transition-opacity duration-300 shadow-md flex items-center gap-1 z-10 font-mono uppercase tracking-wider";
         }, 300);
     }, 2000);
 }
@@ -780,8 +768,6 @@ function setupAbilities() {
 function activateFreeze() {
     State.abilities.freeze.duration = State.abilities.freeze.maxDuration;
     State.abilities.freeze.cd = State.abilities.freeze.maxCd;
-    
-    // UI 반영 (아이스 링 이펙트)
     freezeOverlay.style.borderColor = 'rgba(59, 130, 246, 0.7)';
     freezeOverlay.classList.add('animate-pulse');
 }
@@ -789,22 +775,16 @@ function activateFreeze() {
 function activateOvercharge() {
     State.abilities.overcharge.duration = State.abilities.overcharge.maxDuration;
     State.abilities.overcharge.cd = State.abilities.overcharge.maxCd;
-    
-    // UI 반영
     overchargeOverlay.style.borderColor = 'rgba(245, 158, 11, 0.7)';
 }
 
 function activateStrike() {
     State.abilities.strike.cd = State.abilities.strike.maxCd;
     
-    // 전술적 광역 핵폭격 (현 보드 총합 공격력의 5배)
-    const strikeDmg = Math.max(10, State.totalDamage * 5);
-    
-    // 전체 섬광 및 물리 연산
+    const strikeDmg = Math.max(12, State.totalDamage * 6);
     damageFlash.style.opacity = '1';
     setTimeout(() => { damageFlash.style.opacity = '0'; }, 200);
     
-    // 적 전체 피격 효과 연출
     for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         e.hp -= strikeDmg;
@@ -822,13 +802,18 @@ function activateStrike() {
             setTimeout(() => { if (e && e.graphic) e.graphic.tint = 0xffffff; }, 100);
         }
     }
+    
+    // 화면에 포진한 적 총알들도 일시 소거시키는 핵폭풍 연출
+    for (const eb of enemyBullets) {
+        createTinyExplosion(eb.x, eb.y, 0xff3366);
+        pixiApp.stage.removeChild(eb);
+    }
+    enemyBullets.length = 0;
 }
 
-// 실시간 쿨타임 및 지속 기한 연산 (매 틱 루프에서 업데이트)
 function updateAbilitiesCooldowns(delta) {
-    const sec = delta / 60; // 60프레임 기준 환산
+    const sec = delta / 60; 
     
-    // 1. 프리즈
     if (State.abilities.freeze.duration > 0) {
         State.abilities.freeze.duration -= sec;
         if (State.abilities.freeze.duration <= 0) {
@@ -841,7 +826,6 @@ function updateAbilitiesCooldowns(delta) {
         if (State.abilities.freeze.cd < 0) State.abilities.freeze.cd = 0;
     }
     
-    // 2. 오버차지
     if (State.abilities.overcharge.duration > 0) {
         State.abilities.overcharge.duration -= sec;
         if (State.abilities.overcharge.duration <= 0) {
@@ -853,18 +837,19 @@ function updateAbilitiesCooldowns(delta) {
         if (State.abilities.overcharge.cd < 0) State.abilities.overcharge.cd = 0;
     }
     
-    // 3. 스트라이크
     if (State.abilities.strike.cd > 0) {
         State.abilities.strike.cd -= sec;
         if (State.abilities.strike.cd < 0) State.abilities.strike.cd = 0;
     }
     
-    // HTML 버튼 컴포넌트 렌더 동기화
+    if (State.invincibleTimer > 0) {
+        State.invincibleTimer -= sec;
+    }
+    
     renderAbilityButtons();
 }
 
 function renderAbilityButtons() {
-    // 프리즈
     if (State.abilities.freeze.cd > 0) {
         btnFreeze.disabled = true;
         txtFreezeCd.textContent = `${Math.ceil(State.abilities.freeze.cd)}s`;
@@ -876,7 +861,6 @@ function renderAbilityButtons() {
         btnFreeze.querySelector('.cooldown-overlay').style.height = `0%`;
     }
 
-    // 오버차지
     if (State.abilities.overcharge.cd > 0) {
         btnOvercharge.disabled = true;
         txtOverchargeCd.textContent = `${Math.ceil(State.abilities.overcharge.cd)}s`;
@@ -888,7 +872,6 @@ function renderAbilityButtons() {
         btnOvercharge.querySelector('.cooldown-overlay').style.height = `0%`;
     }
 
-    // 스트라이크
     if (State.abilities.strike.cd > 0) {
         btnStrike.disabled = true;
         txtStrikeCd.textContent = `${Math.ceil(State.abilities.strike.cd)}s`;
@@ -901,7 +884,7 @@ function renderAbilityButtons() {
     }
 }
 
-// 키 바인딩 및 2048 제어 핸들러
+// 키 바인딩 (W, A, S, D 및 방향키 2048 조작)
 document.addEventListener('keydown', (e) => {
     switch(e.key) {
         case 'ArrowUp':
@@ -956,15 +939,20 @@ gridContainer.addEventListener('touchend', (e) => {
     touchStartY = 0;
 }, { passive: true });
 
-// --- PIXIJS SHOOTER CORE SYSTEM ---
+
+// --- PIXIJS CLASSIC SHOOTER CORE SYSTEM (HELL MODE) ---
 let pixiApp;
 const enemies = [];
 const bullets = [];
+const enemyBullets = [];
 const coinsPool = [];
 let gunSprite;
 let fireTimer = 0;
 let enemySpawnTimer = 0;
+
+// 조종 목표치 (상하좌우 2D 제어)
 let targetGunX = 0;
+let targetGunY = 0;
 
 function initPixiShooter() {
     const holder = document.getElementById('pixi-canvas-holder');
@@ -983,43 +971,65 @@ function initPixiShooter() {
         });
         
         holder.appendChild(pixiApp.view);
+        
         targetGunX = width / 2;
+        targetGunY = height - 35;
 
-        // 마우스 포인터 가이드라인용 플레이어 총
+        // 클래식 레트로 더블 프로펠러기 디자인 그리기
         gunSprite = new PIXI.Graphics();
-        gunSprite.beginFill(0xffffff);
-        gunSprite.moveTo(0, -14);
-        gunSprite.lineTo(9, 6);
-        gunSprite.lineTo(-9, 6);
-        gunSprite.closePath();
+        
+        // 동체 (Fuselage) - 연회색
+        gunSprite.beginFill(0xe4e4e7);
+        gunSprite.drawRect(-3, -15, 6, 26);
+        gunSprite.drawRect(-4, -18, 8, 4); // 전면 주둥이
+        
+        // 날개 (Main Wings) - 어두운 철색
+        gunSprite.beginFill(0x52525b);
+        gunSprite.drawRect(-20, -5, 40, 5);
+        gunSprite.drawRect(-18, -6, 36, 1);
+        
+        // 쌍발 프로펠러 엔진 포인트 (Red Accents)
+        gunSprite.beginFill(0xef4444);
+        gunSprite.drawRect(-14, -9, 4, 6);
+        gunSprite.drawRect(10, -9, 4, 6);
+        
+        // 꼬리 날개
+        gunSprite.beginFill(0x52525b);
+        gunSprite.drawRect(-8, 7, 16, 3);
         gunSprite.endFill();
-        gunSprite.x = width / 2;
-        gunSprite.y = height - 15;
+        
+        gunSprite.x = targetGunX;
+        gunSprite.y = targetGunY;
         pixiApp.stage.addChild(gunSprite);
 
-        // 상호작용 컨트롤 매핑
+        // 상호작용 컨트롤 매핑 (상하좌우 유연 추적 및 자동 발사)
         const interactionArea = document.getElementById('canvas-wrapper-holder');
-        function setGunXFromPointer(clientX) {
+        function setGunPositionFromPointer(clientX, clientY) {
             const rect = interactionArea.getBoundingClientRect();
             const relativeX = clientX - rect.left;
+            const relativeY = clientY - rect.top;
+            
+            // 아레나 캔버스 바운더리 안에서 완전 자유 비행 제한
             targetGunX = Math.max(15, Math.min(relativeX, width - 15));
+            targetGunY = Math.max(20, Math.min(relativeY, height - 15));
         }
         
         interactionArea.addEventListener('mousemove', (e) => {
-            setGunXFromPointer(e.clientX);
+            setGunPositionFromPointer(e.clientX, e.clientY);
         });
         interactionArea.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 0) setGunXFromPointer(e.touches[0].clientX);
+            if (e.touches.length > 0) {
+                setGunPositionFromPointer(e.touches[0].clientX, e.touches[0].clientY);
+            }
         }, { passive: true });
 
-        // 실시간 연동 틱 루프
+        // 실시간 물리 & 기체 렌더링 틱 루프
         pixiApp.ticker.add((delta) => {
             if (State.isGameOver) return;
             
-            // 쿨다운 업데이트
             updateAbilitiesCooldowns(delta);
 
-            // 1. 준비 단계 카운트다운 관리
+            // 1. 준비 단계 오프닝 타이머
             if (State.waveState === 'preparing') {
                 const sec = delta / 60;
                 State.restTimeRemaining -= sec;
@@ -1030,34 +1040,44 @@ function initPixiShooter() {
                 }
             }
 
-            // 총 모션 트랜지션
-            gunSprite.x += (targetGunX - gunSprite.x) * 0.25;
-            gunSprite.y = pixiApp.screen.height - 15;
+            // 전투기 보간 프레임 이동 (상하좌우 2D 이동 가속도)
+            gunSprite.x += (targetGunX - gunSprite.x) * 0.22 * delta;
+            gunSprite.y += (targetGunY - gunSprite.y) * 0.22 * delta;
 
-            // 2. 자동 발사 주기 연산 (오버차지 시 연사속도 3배 가속)
+            // 피격시 무적 깜빡임 이펙트
+            if (State.invincibleTimer > 0) {
+                gunSprite.alpha = 0.4 + 0.4 * Math.sin(pixiApp.ticker.lastTime * 0.15);
+            } else {
+                gunSprite.alpha = 1.0;
+            }
+
+            // 2. 플레이어 총 발사 주기 (오버차지 시 대폭 가속)
             fireTimer += delta;
-            const currentFireRateMax = State.abilities.overcharge.duration > 0 ? 4 : 12;
+            const currentFireRateMax = State.abilities.overcharge.duration > 0 ? 4 : 11;
             if (fireTimer >= currentFireRateMax && State.totalDamage > 0) {
                 fireBullet();
                 fireTimer = 0;
             }
 
-            // 3. 적 웨이브 스폰 연산
+            // 3. 적 리스폰 연산
             if (State.waveState === 'active' && State.enemiesToSpawn > 0) {
                 enemySpawnTimer += delta;
-                if (enemySpawnTimer >= 55) { 
+                // 더욱 몰아치는 스폰 속도
+                const spawnSpeed = Math.max(28, 55 - State.wave * 2);
+                if (enemySpawnTimer >= spawnSpeed) { 
                     spawnWaveEnemy();
                     enemySpawnTimer = 0;
                 }
             }
 
-            // 웨이브 종료 체크 (남은 적도 없고 스폰 대기도 없음)
+            // 웨이브 종료 체크 (전멸 성공)
             if (State.waveState === 'active' && State.enemiesToSpawn === 0 && enemies.length === 0) {
                 finishActiveWave();
             }
 
-            // 물리 요소 전파 및 정산
+            // 각종 실시간 묶음 처리 업데이트
             updateBullets(delta);
+            updateEnemyBullets(delta);
             updateEnemies(delta);
             updateCoinsPool(delta);
         });
@@ -1068,7 +1088,6 @@ function initPixiShooter() {
             const w = holder.clientWidth;
             const h = holder.clientHeight;
             pixiApp.renderer.resize(w, h);
-            gunSprite.y = h - 15;
         }
     });
 }
@@ -1077,10 +1096,8 @@ function fireBullet() {
     if (!gunSprite) return;
     const bullet = new PIXI.Graphics();
     
-    // 데미지 스케일별 투사체 시각 확대
-    const widthFactor = Math.min(8, 1.5 + Math.log10(State.totalDamage + 1));
-    
-    // 오버차지 활성화 시 특수 컬러빔 발사
+    // 공격력 비례 두께감 극대화
+    const widthFactor = Math.min(9, 1.5 + Math.log10(State.totalDamage + 1));
     const bulletColor = State.abilities.overcharge.duration > 0 ? 0xf59e0b : 0xf4f4f5;
     
     bullet.beginFill(bulletColor);
@@ -1098,7 +1115,7 @@ function fireBullet() {
 function updateBullets(delta) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
-        b.y -= 8 * delta;
+        b.y -= 9 * delta;
         if (b.y < -20) {
             pixiApp.stage.removeChild(b);
             bullets.splice(i, 1);
@@ -1106,31 +1123,111 @@ function updateBullets(delta) {
     }
 }
 
-// 적 스폰 (지수적 성장 및 배치)
+// 적 총알 생성 팩토리
+function fireEnemyBullet(startX, startY, vx, vy, speed = 2.5) {
+    const bullet = new PIXI.Graphics();
+    bullet.beginFill(0xff3366); // 시인성 높은 형광 핑크색 아케이드 탄막
+    bullet.drawCircle(0, 0, 4);
+    bullet.endFill();
+    
+    bullet.x = startX;
+    bullet.y = startY;
+    bullet.vx = vx * speed;
+    bullet.vy = vy * speed;
+    
+    enemyBullets.push(bullet);
+    pixiApp.stage.addChild(bullet);
+}
+
+// 적 총알 물리 업데이트 및 플레이어 피격 연산
+function updateEnemyBullets(delta) {
+    const px = gunSprite.x;
+    const py = gunSprite.y;
+    
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const eb = enemyBullets[i];
+        eb.x += eb.vx * delta;
+        eb.y += eb.vy * delta;
+        
+        // 화면 이탈 시 소거
+        if (eb.y > pixiApp.screen.height + 15 || eb.x < -15 || eb.x > pixiApp.screen.width + 15) {
+            pixiApp.stage.removeChild(eb);
+            enemyBullets.splice(i, 1);
+            continue;
+        }
+        
+        // 플레이어 정밀 중심 피격 판정 (6px 초정밀 탄막 슈팅 히트박스 구현)
+        if (State.invincibleTimer <= 0) {
+            const distToPlayer = Math.hypot(eb.x - px, eb.y - py);
+            if (distToPlayer < 8) { // 아케이드 난이도용 피격 반경 조율
+                triggerFighterHit();
+                pixiApp.stage.removeChild(eb);
+                enemyBullets.splice(i, 1);
+            }
+        }
+    }
+}
+
+// 클래식 헬 난이도 적 스폰 연산
 function spawnWaveEnemy() {
     if (!pixiApp) return;
     const width = pixiApp.screen.width;
     const enemy = new PIXI.Container();
     
-    // 지수식 체력 성장 공식 적용
-    const baseHp = Math.floor(6 * Math.pow(1.35, State.wave - 1)) + State.wave * 2;
-    const variance = Math.max(1, Math.floor(baseHp * 0.2));
-    
-    // 무작위 범위 편차 부여
+    // 지수 형태의 단단한 체력 스케일
+    const baseHp = Math.floor(6 * Math.pow(1.36, State.wave - 1)) + State.wave * 3;
+    const variance = Math.max(1, Math.floor(baseHp * 0.15));
     const hp = baseHp + (Math.floor(Math.random() * (variance * 2 + 1)) - variance);
     
     enemy.hp = hp;
     enemy.maxHp = hp;
 
+    // 무작위로 다른 행동 특성을 지닌 기종 패턴 생성
+    // 1. scout (정찰 갈지자 사선비행)
+    // 2. bomber (단단한 체력 + 3way 부채꼴 스프레드 탄막)
+    // 3. kamikaze (조준 돌진 특공기)
+    const types = ['scout', 'scout', 'bomber', 'kamikaze'];
+    const currentType = types[Math.floor(Math.random() * types.length)];
+    enemy.patternType = currentType;
+
     const shape = new PIXI.Graphics();
-    const size = 26;
-    shape.lineStyle(1.5, 0xffffff);
-    shape.beginFill(0x18181b);
-    shape.drawRect(-size/2, -size/2, size, size);
-    shape.endFill();
-    
     enemy.addChild(shape);
     enemy.graphic = shape;
+
+    if (currentType === 'bomber') {
+        // 대형 폭격기 도트 스타일링
+        shape.lineStyle(1.5, 0xef4444);
+        shape.beginFill(0x1c1917);
+        shape.drawPolygon([
+            -18, -12,
+            18, -12,
+            14, 12,
+            -14, 12
+        ]);
+        shape.endFill();
+        enemy.speed = 0.5 + Math.random() * 0.3;
+        enemy.fireCooldown = 60 + Math.random() * 40;
+    } else if (currentType === 'kamikaze') {
+        // 소형 쐐기형 고속 돌격기
+        shape.lineStyle(1.5, 0xf59e0b);
+        shape.beginFill(0x27272a);
+        shape.drawPolygon([
+            0, 14,
+            -10, -8,
+            10, -8
+        ]);
+        shape.endFill();
+        enemy.speed = 1.6 + Math.random() * 0.6;
+        enemy.fireCooldown = 99999; // 특공기는 탄막을 쏘지 않고 오직 직접 추적 몸통박치기 수행
+    } else {
+        // 일반 정찰 갈지자 전투기
+        shape.lineStyle(1.5, 0x3b82f6);
+        shape.beginFill(0x18181b);
+        shape.drawRect(-11, -11, 22, 22);
+        shape.endFill();
+        enemy.speed = 0.9 + Math.random() * 0.5;
+        enemy.fireCooldown = 50 + Math.random() * 30;
+    }
 
     const text = new PIXI.Text(hp.toString(), {
         fontFamily: 'Space Grotesk',
@@ -1144,10 +1241,11 @@ function spawnWaveEnemy() {
     enemy.txt = text;
 
     enemy.x = Math.random() * (width - 40) + 20;
-    enemy.y = -30;
+    enemy.y = -35;
     
-    // 스피드 조절 (프리즈 상태일 때 이속 70% 감소)
-    enemy.speed = 0.85 + Math.random() * 0.65;
+    // 패턴 보조 연산 변수들
+    enemy.patternTime = Math.random() * 100;
+    enemy.initialX = enemy.x;
 
     enemies.push(enemy);
     pixiApp.stage.addChild(enemy);
@@ -1156,35 +1254,91 @@ function spawnWaveEnemy() {
     updateWaveDisplay();
 }
 
+// 적 상태 및 기종 패턴 물리 연동 루프
 function updateEnemies(delta) {
     if (!pixiApp) return;
     const height = pixiApp.screen.height;
+    const px = gunSprite.x;
+    const py = gunSprite.y;
     let anyEnemyClose = false;
 
-    // 프리즈 액티브 상태 판정
     const isFrozen = State.abilities.freeze.duration > 0;
 
     for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         
-        // 프리즈 걸린 경우 극도의 속도 저하
-        const currentSpeed = isFrozen ? e.speed * 0.15 : e.speed;
-        e.y += currentSpeed * delta;
+        // 디버프 상태 시 이동 및 탄막 발사 대폭 억제
+        const finalSpeed = isFrozen ? e.speed * 0.15 : e.speed;
+        e.patternTime += 0.05 * delta;
 
-        // 적군 경고 마지노선 침공
+        // 패턴 타입별 고유 궤적 이동 알고리즘
+        if (e.patternType === 'scout') {
+            // 갈지자 (Sinusoidal) 사선 왕복 운동
+            e.y += finalSpeed * delta;
+            e.x = e.initialX + Math.sin(e.patternTime) * 45;
+        } else if (e.patternType === 'kamikaze') {
+            // 무조건 플레이어가 비행하는 방향/중심축 좌표로 하강 추격
+            const dx = px - e.x;
+            const stepX = (dx > 0 ? 1 : -1) * 1.0 * finalSpeed;
+            e.x += stepX * delta;
+            e.y += finalSpeed * 1.2 * delta;
+        } else {
+            // Bomber 등은 천천히 수직 하강
+            e.y += finalSpeed * delta;
+        }
+
+        // 위험 탐지 영역 감지 경보 레이아웃 정렬
         if (e.y > height * 0.55) {
             anyEnemyClose = true;
         }
 
-        // 총알 충돌 감지
+        // 플레이어 기체와 적 기체 간 직접 충돌 판정 (쌍방 몸통 박치기)
+        if (State.invincibleTimer <= 0) {
+            const collideDist = Math.hypot(e.x - px, e.y - py);
+            if (collideDist < 20) { // 기체끼리 직접 부딪힌 참사
+                triggerFighterHit();
+                
+                // 부딪힌 적은 즉시 격추 처리
+                createMinimalExplosion(e.x, e.y);
+                pixiApp.stage.removeChild(e);
+                enemies.splice(i, 1);
+                updateWaveDisplay();
+                continue;
+            }
+        }
+
+        // 탄막 공격 쿨다운 처리 및 발사 메커니즘
+        if (!isFrozen && !State.isGameOver) {
+            e.fireCooldown -= delta;
+            if (e.fireCooldown <= 0) {
+                // 타입별 독창적인 공격 양상 발동
+                if (e.patternType === 'bomber') {
+                    // 3방향 확산 살포탄
+                    fireEnemyBullet(e.x, e.y, 0, 1, 2.5);
+                    fireEnemyBullet(e.x, e.y, -0.4, 0.9, 2.3);
+                    fireEnemyBullet(e.x, e.y, 0.4, 0.9, 2.3);
+                    e.fireCooldown = 90 + Math.random() * 40;
+                } else if (e.patternType === 'scout') {
+                    // 플레이어 기체를 향해 저격을 날리는 조준 타격탄
+                    const dx = px - e.x;
+                    const dy = py - e.y;
+                    const len = Math.hypot(dx, dy);
+                    if (len > 10) {
+                        fireEnemyBullet(e.x, e.y, dx/len, dy/len, 3.0);
+                    }
+                    e.fireCooldown = 70 + Math.random() * 30;
+                }
+            }
+        }
+
+        // 플레이어 탄환 피격 계산
         for (let j = bullets.length - 1; j >= 0; j--) {
             const b = bullets[j];
             const dist = Math.hypot(e.x - b.x, e.y - b.y);
-            if (dist < 18) {
+            if (dist < 20) {
                 e.hp -= b.damage;
                 e.txt.text = Math.max(0, e.hp).toString();
                 
-                // 타격 이펙트 (빙결 시 파란색, 일반 시 빨간색)
                 e.graphic.tint = isFrozen ? 0x3b82f6 : 0xef4444;
                 setTimeout(() => { if (e && e.graphic) e.graphic.tint = 0xffffff; }, 50);
 
@@ -1203,16 +1357,15 @@ function updateEnemies(delta) {
             }
         }
 
-        // 바닥 방어선 침략 (목숨 차감)
-        if (e.y > height - 10) {
-            triggerBreachPenalty();
+        // 바닥 방어선 침략 (클래식 슈팅 게임이므로 무단 소멸처리되며 목숨은 안 깎임)
+        if (e.y > height + 25) {
             pixiApp.stage.removeChild(e);
             enemies.splice(i, 1);
             updateWaveDisplay();
         }
     }
 
-    // 침공 경보 활성/비활성 제어 (탭 상태 연동)
+    // 침공 경보 제어
     if (anyEnemyClose && State.activeTab === 'board') {
         dangerBadge.classList.remove('hidden');
         tabBtnShooter.classList.add('border', 'border-red-500', 'text-red-400', 'animate-pulse');
@@ -1225,20 +1378,47 @@ function updateEnemies(delta) {
 }
 
 function createMinimalExplosion(x, y) {
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
         const part = new PIXI.Graphics();
-        part.beginFill(0xffffff);
-        part.drawCircle(0, 0, 1.5 + Math.random()*2);
+        part.beginFill(0xef4444); // 붉은 파편
+        part.drawCircle(0, 0, 1.5 + Math.random()*2.5);
         part.endFill();
         part.x = x;
         part.y = y;
-        part.vx = (Math.random() - 0.5) * 4.5;
-        part.vy = (Math.random() - 0.5) * 4.5;
+        part.vx = (Math.random() - 0.5) * 6;
+        part.vy = (Math.random() - 0.5) * 6;
         part.alpha = 1;
         part.decay = 0.04 + Math.random() * 0.04;
 
         pixiApp.stage.addChild(part);
         
+        const updateParticle = (delta) => {
+            part.x += part.vx * delta;
+            part.y += part.vy * delta;
+            part.alpha -= part.decay * delta;
+            if (part.alpha <= 0) {
+                pixiApp.stage.removeChild(part);
+                pixiApp.ticker.remove(updateParticle);
+            }
+        };
+        pixiApp.ticker.add(updateParticle);
+    }
+}
+
+function createTinyExplosion(x, y, color = 0xffffff) {
+    for (let i = 0; i < 3; i++) {
+        const part = new PIXI.Graphics();
+        part.beginFill(color);
+        part.drawCircle(0, 0, 1.5);
+        part.endFill();
+        part.x = x;
+        part.y = y;
+        part.vx = (Math.random() - 0.5) * 3;
+        part.vy = (Math.random() - 0.5) * 3;
+        part.alpha = 1;
+        part.decay = 0.08;
+
+        pixiApp.stage.addChild(part);
         const updateParticle = (delta) => {
             part.x += part.vx * delta;
             part.y += part.vy * delta;
@@ -1280,8 +1460,9 @@ function updateCoinsPool(delta) {
             c.vy += 0.16 * delta;
             c.delay -= delta;
         } else {
-            const targetX = 20;
-            const targetY = -40;
+            // 플레이어가 상하좌우 움직이므로, 동전들은 전투기의 현재 위치(gunSprite)를 정밀하게 추적합니다.
+            const targetX = gunSprite.x;
+            const targetY = gunSprite.y;
             const dx = targetX - c.x;
             const dy = targetY - c.y;
             const dist = Math.hypot(dx, dy);
@@ -1293,27 +1474,36 @@ function updateCoinsPool(delta) {
                 continue;
             }
             
-            const speed = 8;
+            const speed = 9;
             c.x += (dx / dist) * speed * delta;
             c.y += (dy / dist) * speed * delta;
         }
     }
 }
 
-// 방어선 침범 시 목숨 차감 정산
-function triggerBreachPenalty() {
+// 전투기 피격 처리 (목숨 감소 및 무적 발동)
+function triggerFighterHit() {
+    if (State.invincibleTimer > 0) return;
+    
     State.lives--;
     renderLives();
     
+    // 무적 활성화 (1.5초)
+    State.invincibleTimer = 1.5;
+    
+    // 타격 효과음 느낌의 연출
     damageFlash.style.opacity = '1';
-    uiAlert.classList.remove('opacity-0');
-    uiAlert.classList.add('opacity-100');
+    uiAlert.textContent = "FIGHTER COLLISION DETECTED! -1 LIFE";
+    uiAlert.className = "absolute top-2 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full opacity-100 transition-opacity duration-300 shadow-md flex items-center gap-1 z-10 font-mono uppercase tracking-wider";
     
     setTimeout(() => { damageFlash.style.opacity = '0'; }, 150);
     setTimeout(() => {
         uiAlert.classList.remove('opacity-100');
         uiAlert.classList.add('opacity-0');
     }, 2000);
+    
+    // 전방위 충격 폭발 이펙트
+    createMinimalExplosion(gunSprite.x, gunSprite.y);
     
     // 사망 확인
     if (State.lives <= 0) {
@@ -1326,7 +1516,6 @@ function triggerGameOver() {
     State.isGameOver = true;
     saveHighScore();
     
-    // 오버레이 활성화
     goWaveLabel.textContent = `Wave ${State.wave}`;
     loadHighScore();
     
@@ -1334,18 +1523,22 @@ function triggerGameOver() {
 }
 
 function resetGame() {
-    // 모든 스테이지 적 제거
+    // 모든 스테이지 오브젝트 제거
     for (const e of enemies) {
         pixiApp.stage.removeChild(e);
     }
     for (const b of bullets) {
         pixiApp.stage.removeChild(b);
     }
+    for (const eb of enemyBullets) {
+        pixiApp.stage.removeChild(eb);
+    }
     for (const c of coinsPool) {
         pixiApp.stage.removeChild(c);
     }
     enemies.length = 0;
     bullets.length = 0;
+    enemyBullets.length = 0;
     coinsPool.length = 0;
     
     // 상태 초기화
@@ -1354,6 +1547,15 @@ function resetGame() {
     State.spawnProbLevel = 1;
     State.lives = State.maxLives;
     State.isGameOver = false;
+    State.invincibleTimer = 0;
+    
+    // 전투기 위치 초기화
+    if (pixiApp && gunSprite) {
+        targetGunX = pixiApp.screen.width / 2;
+        targetGunY = pixiApp.screen.height - 35;
+        gunSprite.x = targetGunX;
+        gunSprite.y = targetGunY;
+    }
     
     // 스킬 상태 초기화
     State.abilities.freeze.duration = 0;
@@ -1447,25 +1649,22 @@ function setupModals() {
         if (e.target === probModal) hideModal();
     });
 
-    // 기본 버튼 이벤트 리스너 연동
     btnSpawn.addEventListener('click', summonTile);
     btnQuickSpawn.addEventListener('click', summonTile);
     btnUpgradeProb.addEventListener('click', upgradeProb);
     btnUpgradeGrid.addEventListener('click', upgradeGrid);
     
-    // 정비 타임 건너뛰기
     btnSkipRest.addEventListener('click', () => {
         if (State.waveState === 'preparing') {
             startActiveWave();
         }
     });
 
-    // 메인 루프 스타트/재해 시동 스위치
     btnStartGame.addEventListener('click', resetGame);
     btnRetryGame.addEventListener('click', resetGame);
 }
 
-// 윈도우 최초 진입 초기화 실행
+// 윈도우 로드 시동 개시
 window.onload = function() {
     loadHighScore();
     initGrid();
