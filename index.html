@@ -12,6 +12,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Google Fonts: Space Grotesk -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
     <style>
         body {
             font-family: 'Space Grotesk', sans-serif;
@@ -25,7 +26,7 @@
             animation: pop 0.15s ease-out;
         }
         @keyframes pop {
-            0% { transform: scale(0.8); opacity: 0; }
+            0 { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
         /* 미니멀 네온 글로우 효과 */
@@ -39,14 +40,75 @@
         ::-webkit-scrollbar {
             display: none;
         }
+
+        /* 세로 높이가 낮은 화면/아이프레임 뷰포트 대응 반응형 레이아웃 */
+        @media (max-height: 780px) {
+            .card-wrapper {
+                padding: 0.75rem !important; /* p-3 */
+                gap: 0.75rem !important;
+            }
+            .canvas-container {
+                height: 140px !important;
+            }
+            #grid-container {
+                gap: 6px !important;
+                padding: 6px !important;
+            }
+            .upgrade-btn {
+                padding: 0.5rem !important; /* p-2 */
+            }
+        }
+
+        @media (max-height: 680px) {
+            .card-wrapper {
+                padding: 0.5rem !important; /* p-2 */
+                gap: 0.5rem !important;
+            }
+            .canvas-container {
+                height: 110px !important;
+            }
+            #grid-container {
+                gap: 4px !important;
+                padding: 4px !important;
+            }
+            .upgrade-btn {
+                padding: 0.375rem !important; /* p-1.5 */
+            }
+            .upgrade-btn span {
+                font-size: 9px !important;
+            }
+            .upgrade-btn div {
+                margin-top: 0.25rem !important;
+                margin-bottom: 0.25rem !important;
+                padding: 2px !important;
+            }
+            .upgrade-btn i {
+                width: 16px !important;
+                height: 16px !important;
+            }
+            .header-container {
+                padding-bottom: 0.5rem !important;
+            }
+        }
+
+        @media (max-height: 565px) {
+            .card-wrapper {
+                max-height: 100vh !important;
+                border-radius: 0px !important;
+                border: none !important;
+            }
+            .canvas-container {
+                height: 85px !important;
+            }
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-2 sm:p-4 select-none">
 
-<div class="w-full max-w-md bg-zinc-950 rounded-3xl p-4 sm:p-6 border border-zinc-900 flex flex-col gap-4 max-h-[96vh] justify-between shadow-2xl relative overflow-hidden">
+<div class="card-wrapper w-full max-w-md bg-zinc-950 rounded-3xl p-4 sm:p-6 border border-zinc-900 flex flex-col gap-4 max-h-[96vh] justify-between shadow-2xl relative overflow-hidden">
     
     <!-- 상단 헤더: 코인 및 총 데미지 정보 -->
-    <div class="flex items-center justify-between border-b border-zinc-900 pb-3">
+    <div class="header-container flex items-center justify-between border-b border-zinc-900 pb-3 flex-shrink-0">
         <div class="flex flex-col">
             <span class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Wallet</span>
             <div class="flex items-center gap-1.5 mt-0.5">
@@ -58,7 +120,7 @@
         
         <div class="text-center">
             <h1 class="text-base sm:text-lg font-black tracking-tighter text-zinc-300">2048 SHOOTER</h1>
-            <span class="text-[10px] text-zinc-600 font-mono">MINIMALIST HYBRID v1.0</span>
+            <span class="text-[10px] text-zinc-600 font-mono">MINIMALIST HYBRID v1.1</span>
         </div>
 
         <div class="flex flex-col items-end">
@@ -70,8 +132,8 @@
         </div>
     </div>
 
-    <!-- 상단 슈팅 게임 영역 (PixiJS가 주입됨) -->
-    <div class="relative w-full h-[200px] sm:h-[240px] bg-zinc-900/60 rounded-2xl overflow-hidden canvas-container neon-glow">
+    <!-- 상단 슈팅 게임 영역 (PixiJS가 주입됨, flex-shrink-0 적용으로 소형 디바이스 찌그러짐 현상 해결) -->
+    <div class="relative w-full h-[180px] sm:h-[220px] flex-shrink-0 bg-zinc-900/60 rounded-2xl overflow-hidden canvas-container neon-glow">
         <div id="pixi-canvas-holder" class="w-full h-full"></div>
         
         <!-- 오버레이: 적 침공 경고 및 안내 메시지 -->
@@ -82,8 +144,8 @@
         </div>
     </div>
 
-    <!-- 2048 보드판 영역 -->
-    <div class="relative flex flex-col items-center">
+    <!-- 2048 보드판 영역 (flex-shrink-0 적용으로 무조건적인 레이아웃 유지) -->
+    <div class="relative flex flex-col items-center flex-shrink-0">
         <!-- 스와이프 및 상호작용 가능한 보드 컨테이너 -->
         <div id="grid-container" class="w-full bg-zinc-900 rounded-2xl p-2 border border-zinc-800/80 transition-all duration-300 aspect-square flex flex-col justify-between">
             <!-- JS를 통해 동적 생성됨 (4x4 또는 5x5) -->
@@ -91,9 +153,9 @@
     </div>
 
     <!-- 하단 조작 및 업그레이드 패널 -->
-    <div class="grid grid-cols-3 gap-2.5">
+    <div class="grid grid-cols-3 gap-2.5 flex-shrink-0">
         <!-- 1. 타일 소환 버튼 -->
-        <button id="btn-spawn" class="flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+        <button id="btn-spawn" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
             <span class="text-[10px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Spawn Tile</span>
             <div class="my-1.5 p-1 bg-zinc-800/80 rounded-lg">
                 <i data-lucide="plus-square" class="w-5 h-5 text-white"></i>
@@ -102,7 +164,7 @@
         </button>
 
         <!-- 2. 확률 강화 버튼 -->
-        <button id="btn-upgrade-prob" class="flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+        <button id="btn-upgrade-prob" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
             <div class="flex items-center gap-1">
                 <span class="text-[10px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Upgrade Prob</span>
                 <span id="prob-lvl-tag" class="text-[9px] bg-zinc-800 text-zinc-300 px-1 py-0.5 rounded font-mono">Lv.1</span>
@@ -114,7 +176,7 @@
         </button>
 
         <!-- 3. 그리드 확장 버튼 -->
-        <button id="btn-upgrade-grid" class="flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
+        <button id="btn-upgrade-grid" class="upgrade-btn flex flex-col items-center justify-between p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all rounded-xl disabled:opacity-40 disabled:pointer-events-none group">
             <div class="flex items-center gap-1">
                 <span class="text-[10px] font-bold tracking-wider text-zinc-500 uppercase group-hover:text-zinc-400">Expand Grid</span>
                 <span id="grid-lvl-tag" class="text-[9px] bg-zinc-800 text-zinc-300 px-1 py-0.5 rounded font-mono">4x4</span>
@@ -127,7 +189,7 @@
     </div>
 
     <!-- 확률표 및 터치 조작 안내 -->
-    <div class="flex items-center justify-between text-[11px] text-zinc-600 px-1 pt-2 border-t border-zinc-900">
+    <div class="flex items-center justify-between text-[11px] text-zinc-600 px-1 pt-2 border-t border-zinc-900 flex-shrink-0">
         <span class="flex items-center gap-1">
             <i data-lucide="info" class="w-3.5 h-3.5"></i>
             <span>Drag mouse/touch top screen to aim</span>
@@ -442,6 +504,13 @@ function updateUIButtons() {
     const empties = State.board.flat().filter(val => val === 0).length;
     btnSpawn.disabled = (State.coins < CONFIG.baseSpawnCost || empties === 0);
     
+    // UX 폴리시: 데미지가 0일 때 (게임 초기 시작 상태), 첫 스폰을 유도하기 위해 소환 버튼이 빛나도록 스타일 추가
+    if (State.totalDamage === 0 && State.coins >= CONFIG.baseSpawnCost) {
+        btnSpawn.classList.add('ring-2', 'ring-amber-400', 'animate-pulse');
+    } else {
+        btnSpawn.classList.remove('ring-2', 'ring-amber-400', 'animate-pulse');
+    }
+    
     // 2. 확률 강화 제어
     if (State.spawnProbLevel >= 5) {
         probLvlTag.textContent = "Lv.MAX";
@@ -542,90 +611,100 @@ window.onload = function() {
 
 function initPixiShooter() {
     const holder = document.getElementById('pixi-canvas-holder');
-    const width = holder.clientWidth;
-    const height = holder.clientHeight;
     
-    // PixiJS Application 초기화
-    pixiApp = new PIXI.Application({
-        width: width,
-        height: height,
-        backgroundAlpha: 0, // 뒷배경 투명하게 하여 Tailwind 테마와 일치
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
-        antialias: true
-    });
-    
-    holder.appendChild(pixiApp.view);
-    targetGunX = width / 2;
+    // 돔 크기 계산 유도를 위해 지연 프레임 처리 (0높이 방지 핵심 기술)
+    requestAnimationFrame(() => {
+        const width = holder.clientWidth || 300;
+        const height = holder.clientHeight || 180;
+        
+        // PixiJS Application 초기화
+        pixiApp = new PIXI.Application({
+            width: width,
+            height: height,
+            backgroundAlpha: 0, // 뒷배경 투명하게 하여 Tailwind 테마와 일치
+            resolution: window.devicePixelRatio || 1,
+            autoDensity: true,
+            antialias: true
+        });
+        
+        holder.appendChild(pixiApp.view);
+        targetGunX = width / 2;
 
-    // 1. 총(Gun) 스프라이트 생성
-    gunSprite = new PIXI.Graphics();
-    gunSprite.beginFill(0xffffff);
-    // 미니멀한 삼각형/레이저 건 스타일
-    gunSprite.moveTo(0, -12);
-    gunSprite.lineTo(8, 6);
-    gunSprite.lineTo(-8, 6);
-    gunSprite.closePath();
-    gunSprite.endFill();
-    gunSprite.x = width / 2;
-    gunSprite.y = height - 18;
-    pixiApp.stage.addChild(gunSprite);
+        // 1. 총(Gun) 스프라이트 생성
+        gunSprite = new PIXI.Graphics();
+        gunSprite.beginFill(0xffffff);
+        // 미니멀한 삼각형/레이저 건 스타일
+        gunSprite.moveTo(0, -12);
+        gunSprite.lineTo(8, 6);
+        gunSprite.lineTo(-8, 6);
+        gunSprite.closePath();
+        gunSprite.endFill();
+        gunSprite.x = width / 2;
+        gunSprite.y = height - 18;
+        pixiApp.stage.addChild(gunSprite);
 
-    // 2. 조준을 위한 드래그 및 마우스 인터랙션 바인딩
-    const interactionArea = document.getElementById('pixi-canvas-holder');
-    
-    function setGunXFromPointer(clientX) {
-        const rect = interactionArea.getBoundingClientRect();
-        const relativeX = clientX - rect.left;
-        targetGunX = Math.max(15, Math.min(relativeX, width - 15));
-    }
-    
-    interactionArea.addEventListener('mousemove', (e) => {
-        setGunXFromPointer(e.clientX);
-    });
-    
-    interactionArea.addEventListener('touchmove', (e) => {
-        if (e.touches.length > 0) {
-            setGunXFromPointer(e.touches[0].clientX);
+        // 2. 조준을 위한 드래그 및 마우스 인터랙션 바인딩
+        const interactionArea = document.getElementById('pixi-canvas-holder');
+        
+        function setGunXFromPointer(clientX) {
+            const rect = interactionArea.getBoundingClientRect();
+            const relativeX = clientX - rect.left;
+            targetGunX = Math.max(15, Math.min(relativeX, width - 15));
         }
-    }, { passive: true });
+        
+        interactionArea.addEventListener('mousemove', (e) => {
+            setGunXFromPointer(e.clientX);
+        });
+        
+        interactionArea.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                setGunXFromPointer(e.touches[0].clientX);
+            }
+        }, { passive: true });
 
-    // 3. 업데이트 루프
-    pixiApp.ticker.add((delta) => {
-        // 총구 유연한 수평 보간 이동(Lerp)
-        gunSprite.x += (targetGunX - gunSprite.x) * 0.25;
+        // 3. 업데이트 루프
+        pixiApp.ticker.add((delta) => {
+            // 총구 유연한 수평 보간 이동(Lerp)
+            gunSprite.x += (targetGunX - gunSprite.x) * 0.25;
+            
+            // 실시간 뷰포트 변경 대응을 위해 총 위치의 Y축 상시 동기화
+            gunSprite.y = pixiApp.screen.height - 18;
 
-        // 발사 로직 (공격력 합계가 0보다 클 때만 발사 가능)
-        fireTimer += delta;
-        if (fireTimer >= 12 && State.totalDamage > 0) {
-            fireBullet();
-            fireTimer = 0;
-        }
+            // 발사 로직 (공격력 합계가 0보다 클 때만 발사 가능)
+            fireTimer += delta;
+            if (fireTimer >= 12 && State.totalDamage > 0) {
+                fireBullet();
+                fireTimer = 0;
+            }
 
-        // 적 스폰 관리
-        enemySpawnTimer += delta;
-        if (enemySpawnTimer >= 55) { 
-            spawnEnemy();
-            enemySpawnTimer = 0;
-        }
+            // 적 스폰 관리
+            enemySpawnTimer += delta;
+            if (enemySpawnTimer >= 55) { 
+                spawnEnemy();
+                enemySpawnTimer = 0;
+            }
 
-        // 투사체 및 객체 관리
-        updateBullets(delta);
-        updateEnemies(delta);
-        updateCoinsPool(delta);
+            // 투사체 및 객체 관리
+            updateBullets(delta);
+            updateEnemies(delta);
+            updateCoinsPool(delta);
+        });
     });
 
-    // 해상도 조절 리사이즈 감지
+    // 해상도 조절 리사이즈 감지 (예외 처리 완료)
     window.addEventListener('resize', () => {
-        const w = holder.clientWidth;
-        const h = holder.clientHeight;
-        pixiApp.renderer.resize(w, h);
-        gunSprite.y = h - 18;
+        if (pixiApp && pixiApp.renderer && gunSprite) {
+            const w = holder.clientWidth;
+            const h = holder.clientHeight;
+            pixiApp.renderer.resize(w, h);
+            gunSprite.y = h - 18;
+        }
     });
 }
 
 // 총알 생성 및 관리
 function fireBullet() {
+    if (!gunSprite) return;
     const bullet = new PIXI.Graphics();
     
     // 공격력 높으면 조금 더 굵은 미니멀 빔 생성
@@ -657,6 +736,7 @@ function updateBullets(delta) {
 
 // 적 구조 설계 및 생성
 function spawnEnemy() {
+    if (!pixiApp) return;
     const width = pixiApp.screen.width;
     const enemy = new PIXI.Container();
     
@@ -670,7 +750,7 @@ function spawnEnemy() {
 
     // 미니멀 사각형 드로잉
     const shape = new PIXI.Graphics();
-    const size = 30;
+    const size = 26;
     shape.lineStyle(1.5, 0xffffff);
     shape.beginFill(0x18181b);
     shape.drawRect(-size/2, -size/2, size, size);
@@ -702,6 +782,7 @@ function spawnEnemy() {
 }
 
 function updateEnemies(delta) {
+    if (!pixiApp) return;
     const height = pixiApp.screen.height;
 
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -712,7 +793,7 @@ function updateEnemies(delta) {
         for (let j = bullets.length - 1; j >= 0; j--) {
             const b = bullets[j];
             const dist = Math.hypot(e.x - b.x, e.y - b.y);
-            if (dist < 20) {
+            if (dist < 18) {
                 // 피격 처리
                 e.hp -= b.damage;
                 e.txt.text = Math.max(0, e.hp).toString();
@@ -739,8 +820,8 @@ function updateEnemies(delta) {
             }
         }
 
-        // 바닥선 돌파 제재 처리 (체력 깎는 대신 유도 코인 가불)
-        if (e.y > height - 30) {
+        // 바닥선 돌파 제재 처리
+        if (e.y > height - 12) {
             triggerBreachPenalty();
             pixiApp.stage.removeChild(e);
             enemies.splice(i, 1);
