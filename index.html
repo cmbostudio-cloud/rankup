@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>2048shooter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -13,7 +13,15 @@
             font-family: 'Share Tech Mono', monospace; 
             overflow: hidden; 
             letter-spacing: 0.05em; 
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        /* 모바일 터치 오작동 방지 및 반응형 캔버스 바인딩 */
         canvas { 
             display: block; 
             margin: 0 auto; 
@@ -21,6 +29,9 @@
             box-shadow: 0 0 60px rgba(6, 182, 212, 0.12); 
             max-width: 100%;
             height: auto;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         .vector-panel { 
             background-color: #0a0a0e; 
@@ -30,6 +41,7 @@
             background-color: #0c0c12; 
             border: 1px solid #1f1f2e; 
             transition: all 0.15s ease-in-out; 
+            touch-action: none;
         }
         .vector-btn:hover:not(:disabled) { 
             background-color: #141420; 
@@ -40,175 +52,172 @@
             opacity: 0.25; 
             cursor: not-allowed; 
         }
-        /* 스크롤바 바인딩 스타일 */
-        .custom-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: #060608;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #1f1f2e;
-            border-radius: 2px;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-            background: #06b6d4;
+        /* 터치 스크롤 및 롱탭 복사 방지 */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen text-slate-300 p-2 md:p-4 select-none">
+<body class="text-slate-300 select-none">
 
-    <!-- 상단 계기판 콘솔 정보 영역 -->
-    <div class="w-full max-w-[400px] vector-panel p-3 mb-2">
-        <div class="flex justify-between items-start">
-            <div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[8px] font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-2 py-0.5 bg-cyan-950/20">GRID_CORE_V5</span>
-                    <button id="btn-settings-toggle" class="text-[8px] font-bold tracking-widest text-zinc-400 border border-zinc-800 px-2 py-0.5 hover:bg-zinc-900 hover:text-white transition-all">
-                        [ SETTINGS / PAUSE ]
+    <!-- 화면 중앙에서 비례 배율 조정이 수행되는 마스터 래퍼 -->
+    <div id="main-wrapper" class="flex flex-col items-center justify-center max-w-[400px] w-full p-2 md:p-4">
+        
+        <!-- 상단 계기판 콘솔 정보 영역 -->
+        <div class="w-full vector-panel p-3 mb-2">
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[8px] font-bold tracking-widest text-cyan-400 border border-cyan-500/30 px-2 py-0.5 bg-cyan-950/20">GRID_CORE_V5</span>
+                        <button id="btn-settings-toggle" class="text-[8px] font-bold tracking-widest text-zinc-400 border border-zinc-800 px-2 py-0.5 hover:bg-zinc-900 hover:text-white transition-all">
+                            [ SETTINGS / PAUSE ]
+                        </button>
+                    </div>
+                    <h1 class="text-lg font-bold tracking-widest text-zinc-100 mt-1.5">2048SHOOTER</h1>
+                </div>
+                <div class="text-right">
+                    <span class="text-[8px] text-zinc-500 tracking-widest block">RESERVE_CAPITAL</span>
+                    <span id="coin-display" class="text-xl font-bold text-white tracking-normal">100</span>
+                    <div class="text-[8px] text-cyan-400 mt-0.5 flex flex-col items-end">
+                        <div>SYS_DMG: <span id="dmg-display" class="text-white font-bold">2</span></div>
+                        <div class="text-red-400 mt-0.5 tracking-wider">LIVES: <span id="lives-display" class="text-red-400 font-bold">|||</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5 mt-2.5">
+                <button id="tab-battle" class="py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 border text-cyan-400 border-cyan-500/30 bg-cyan-950/10">
+                    [ 01 // BATTLE DECK ]
+                </button>
+                <button id="tab-merge" class="py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 border text-zinc-500 border-zinc-800">
+                    [ 02 // MERGE SYSTEM ]
+                </button>
+            </div>
+        </div>
+
+        <!-- 메인 그래픽 캔버스 영역 -->
+        <div id="game-container" class="relative max-w-full touch-none">
+            <div id="alert-banner" class="absolute top-3 left-1/2 -translate-x-1/2 vector-panel text-red-400 text-[8px] py-1 px-3 opacity-0 pointer-events-none transition-all duration-300 z-10 tracking-widest whitespace-nowrap">
+                WARNING: SHIELD DEPLETED // DAMAGE DETECTED
+            </div>
+            <div id="wave-banner" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-lg font-bold tracking-[0.2em] pointer-events-none opacity-0 transition-all duration-500 z-10 text-center whitespace-nowrap">
+                SYS_WAVE_01
+            </div>
+            
+            <!-- 게임 오버 레이어 -->
+            <div id="game-over-overlay" class="absolute inset-0 bg-[#060608]/95 flex flex-col items-center justify-center z-20 hidden">
+                <div class="text-center p-5 vector-panel border-red-500/50 max-w-[280px]">
+                    <h2 class="text-red-500 text-xl font-bold tracking-[0.25em] mb-1">SYSTEM FAILURE</h2>
+                    <div class="text-[10px] text-cyan-400 mb-5 font-bold">REACHED WAVE: <span id="final-wave-display" class="text-white">01</span></div>
+                    <button id="btn-restart" class="vector-btn w-full py-2.5 text-[10px] font-bold tracking-widest text-white uppercase border border-red-500/30 hover:border-red-500 hover:text-red-400">
+                        [ REBOOT SYSTEM ]
                     </button>
                 </div>
-                <h1 class="text-lg font-bold tracking-widest text-zinc-100 mt-1.5">2048SHOOTER</h1>
             </div>
-            <div class="text-right">
-                <span class="text-[8px] text-zinc-500 tracking-widest block">RESERVE_CAPITAL</span>
-                <span id="coin-display" class="text-xl font-bold text-white tracking-normal">100</span>
-                <div class="text-[8px] text-cyan-400 mt-0.5 flex flex-col items-end">
-                    <div>SYS_DMG: <span id="dmg-display" class="text-white font-bold">2</span></div>
-                    <div class="text-red-400 mt-0.5 tracking-wider">LIVES: <span id="lives-display" class="text-red-400 font-bold">|||</span></div>
-                </div>
-            </div>
-        </div>
-        <div class="grid grid-cols-2 gap-1.5 mt-2.5">
-            <button id="tab-battle" class="py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 border text-cyan-400 border-cyan-500/30 bg-cyan-950/10">
-                [ 01 // BATTLE DECK ]
-            </button>
-            <button id="tab-merge" class="py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 border text-zinc-500 border-zinc-800">
-                [ 02 // MERGE SYSTEM ]
-            </button>
-        </div>
-    </div>
 
-    <!-- 메인 그래픽 캔버스 영역 -->
-    <div id="game-container" class="relative max-w-full">
-        <div id="alert-banner" class="absolute top-3 left-1/2 -translate-x-1/2 vector-panel text-red-400 text-[8px] py-1 px-3 opacity-0 pointer-events-none transition-all duration-300 z-10 tracking-widest whitespace-nowrap">
-            WARNING: SHIELD DEPLETED // DAMAGE DETECTED
-        </div>
-        <div id="wave-banner" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-lg font-bold tracking-[0.2em] pointer-events-none opacity-0 transition-all duration-500 z-10 text-center whitespace-nowrap">
-            SYS_WAVE_01
-        </div>
-        
-        <!-- 게임 오버 레이어 -->
-        <div id="game-over-overlay" class="absolute inset-0 bg-[#060608]/95 flex flex-col items-center justify-center z-20 hidden">
-            <div class="text-center p-5 vector-panel border-red-500/50 max-w-[280px]">
-                <h2 class="text-red-500 text-xl font-bold tracking-[0.25em] mb-1">SYSTEM FAILURE</h2>
-                <div class="text-[10px] text-cyan-400 mb-5 font-bold">REACHED WAVE: <span id="final-wave-display" class="text-white">01</span></div>
-                <button id="btn-restart" class="vector-btn w-full py-2.5 text-[10px] font-bold tracking-widest text-white uppercase border border-red-500/30 hover:border-red-500 hover:text-red-400">
-                    [ REBOOT SYSTEM ]
-                </button>
-            </div>
-        </div>
-
-        <!-- 설정 및 일시정지 오버레이 -->
-        <div id="settings-overlay" class="absolute inset-0 bg-[#060608]/90 flex flex-col items-center justify-center z-20 hidden">
-            <div class="w-[280px] p-5 vector-panel border-cyan-500/40">
-                <h2 class="text-cyan-400 text-sm font-bold tracking-widest mb-3 text-center">SETTINGS</h2>
-                <div class="space-y-3.5 mb-5">
-                    <div class="flex justify-between items-center text-[10px]">
-                        <span class="text-zinc-400">AUDIO OUTPUT</span>
-                        <button id="btn-audio-toggle" class="vector-btn px-2.5 py-0.5 text-[8px] text-emerald-400 border border-emerald-500/30">ENABLED</button>
-                    </div>
-                    <div class="text-[10px] space-y-1">
-                        <div class="flex justify-between">
-                            <span class="text-zinc-400">THRUST SENSITIVITY (KEYBOARD/MOUSE)</span>
-                            <span id="sens-value" class="text-cyan-400 font-bold">5.5</span>
+            <!-- 설정 및 일시정지 오버레이 -->
+            <div id="settings-overlay" class="absolute inset-0 bg-[#060608]/90 flex flex-col items-center justify-center z-20 hidden">
+                <div class="w-[280px] p-5 vector-panel border-cyan-500/40">
+                    <h2 class="text-cyan-400 text-sm font-bold tracking-widest mb-3 text-center">SETTINGS</h2>
+                    <div class="space-y-3.5 mb-5">
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span class="text-zinc-400">AUDIO OUTPUT</span>
+                            <button id="btn-audio-toggle" class="vector-btn px-2.5 py-0.5 text-[8px] text-emerald-400 border border-emerald-500/30">ENABLED</button>
                         </div>
-                        <input id="range-sens" type="range" min="3.0" max="9.0" step="0.5" value="5.5" class="w-full h-1 bg-zinc-800 rounded outline-none appearance-none cursor-pointer accent-cyan-400">
+                        <div class="text-[10px] space-y-1">
+                            <div class="flex justify-between">
+                                <span class="text-zinc-400">THRUST SENSITIVITY</span>
+                                <span id="sens-value" class="text-cyan-400 font-bold">5.5</span>
+                            </div>
+                            <input id="range-sens" type="range" min="3.0" max="9.0" step="0.5" value="5.5" class="w-full h-1 bg-zinc-800 rounded outline-none appearance-none cursor-pointer accent-cyan-400">
+                        </div>
                     </div>
+                    <button id="btn-settings-close" class="vector-btn w-full py-2 text-[10px] font-bold tracking-widest text-cyan-400 border border-cyan-500/30 uppercase">
+                        [ RESUME ]
+                    </button>
                 </div>
-                <button id="btn-settings-close" class="vector-btn w-full py-2 text-[10px] font-bold tracking-widest text-cyan-400 border border-cyan-500/30 uppercase">
-                    [ RESUME ]
-                </button>
             </div>
         </div>
-    </div>
 
-    <!-- 하단 동적 제어 패널 -->
-    <div id="context-panel" class="w-full max-w-[400px] vector-panel p-3 mt-1.5">
-        <!-- 배틀 탭 활성화 전술 모니터 -->
-        <div id="panel-battle" class="flex items-center justify-between gap-3 py-0.5">
-            <div class="flex flex-col">
-                <span class="text-[8px] text-zinc-500 tracking-wider">RADAR_TARGETS</span>
-                <span class="text-[11px] font-bold text-white mt-0.5">ENEMIES: <span id="radar-enemies" class="text-cyan-400">0</span></span>
+        <!-- 하단 동적 제어 패널 -->
+        <div id="context-panel" class="w-full vector-panel p-3 mt-1.5">
+            <!-- 배틀 탭 활성화 전술 모니터 -->
+            <div id="panel-battle" class="flex items-center justify-between gap-3 py-0.5">
+                <div class="flex flex-col">
+                    <span class="text-[8px] text-zinc-500 tracking-wider">RADAR_TARGETS</span>
+                    <span class="text-[11px] font-bold text-white mt-0.5">ENEMIES: <span id="radar-enemies" class="text-cyan-400">0</span></span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[8px] text-zinc-500 tracking-wider">WAVE_STABILITY</span>
+                    <span class="text-[11px] font-bold text-white mt-0.5">TIMER: <span id="radar-timer" class="text-yellow-500">45S</span></span>
+                </div>
+                <button id="btn-skip-wave" class="vector-btn px-3 py-1.5 text-[9px] font-bold text-cyan-400 tracking-widest uppercase disabled:opacity-20">
+                    [ SKIP WAIT ]
+                </button>
             </div>
-            <div class="flex flex-col">
-                <span class="text-[8px] text-zinc-500 tracking-wider">WAVE_STABILITY</span>
-                <span class="text-[11px] font-bold text-white mt-0.5">TIMER: <span id="radar-timer" class="text-yellow-500">45S</span></span>
+
+            <!-- 머지 탭 활성화 업그레이더 및 양자 확률 분석기 -->
+            <div id="panel-merge" class="hidden flex flex-col gap-2">
+                <div class="grid grid-cols-3 gap-1">
+                    <button id="btn-spawn" class="vector-btn p-2 flex flex-col items-center justify-center">
+                        <span class="text-[8px] font-bold text-zinc-500 tracking-wider">ALLOCATE BLOCK</span>
+                        <span id="spawn-cost" class="text-[10px] font-bold text-white mt-0.5">10 COIN</span>
+                    </button>
+                    <button id="btn-up-prob" class="vector-btn p-2 flex flex-col items-center justify-center">
+                        <span class="text-[8px] font-bold text-zinc-500 tracking-wider">UP_PROB (Lv.<span id="prob-lv">1</span>)</span>
+                        <span id="prob-cost" class="text-[10px] font-bold text-white mt-0.5">50 COIN</span>
+                    </button>
+                    <button id="btn-up-board" class="vector-btn p-2 flex flex-col items-center justify-center">
+                        <span class="text-[8px] font-bold text-zinc-500 tracking-wider">GRID_EXPANSION</span>
+                        <span id="board-cost" class="text-[10px] font-bold text-white mt-0.5">500 COIN</span>
+                    </button>
+                </div>
+
+                <!-- 하단 실시간 확률 모니터링 테이블 매트릭스 -->
+                <div class="border border-zinc-900 bg-[#07070a] p-1.5 rounded-sm">
+                    <div class="text-cyan-400 font-bold mb-1 tracking-widest text-[8px]">// CORE_PROBABILITY_MATRIX</div>
+                    <div class="grid grid-cols-5 text-zinc-500 border-b border-zinc-900 pb-1 text-center font-bold text-[7.5px]">
+                        <div>LV</div>
+                        <div class="text-sky-400">'2'</div>
+                        <div class="text-cyan-400">'4'</div>
+                        <div class="text-indigo-400">'8'</div>
+                        <div class="text-purple-400">'16'</div>
+                    </div>
+                    <div class="space-y-0.5 pt-1 text-center font-medium text-[8px]">
+                        <div id="prob-row-1" class="grid grid-cols-5 py-0.5">
+                            <span class="text-zinc-500 font-bold">1</span>
+                            <span>90%</span><span>10%</span><span>0%</span><span>0%</span>
+                        </div>
+                        <div id="prob-row-2" class="grid grid-cols-5 py-0.5">
+                            <span class="text-zinc-500 font-bold">2</span>
+                            <span>70%</span><span>25%</span><span>5%</span><span>0%</span>
+                        </div>
+                        <div id="prob-row-3" class="grid grid-cols-5 py-0.5">
+                            <span class="text-zinc-500 font-bold">3</span>
+                            <span>50%</span><span>35%</span><span>12%</span><span>3%</span>
+                        </div>
+                        <div id="prob-row-4" class="grid grid-cols-5 py-0.5">
+                            <span class="text-zinc-500 font-bold">4</span>
+                            <span>30%</span><span>40%</span><span>20%</span><span>10%</span>
+                        </div>
+                        <div id="prob-row-5" class="grid grid-cols-5 py-0.5">
+                            <span class="text-zinc-500 font-bold">5</span>
+                            <span>10%</span><span>40%</span><span>30%</span><span>20%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button id="btn-skip-wave" class="vector-btn px-3 py-1.5 text-[9px] font-bold text-cyan-400 tracking-widest uppercase disabled:opacity-20">
-                [ SKIP WAIT ]
+        </div>
+
+        <!-- 푸터 바 영역 -->
+        <div class="w-full flex items-center justify-between mt-2 pt-1">
+            <span class="text-[8px] text-zinc-700 font-mono">2048SHOOTER_STRETCHED.EXE</span>
+            <button id="btn-download" class="text-[8px] text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-500 px-2 py-0.5 bg-transparent transition-all">
+                DOWNLOAD_SOURCE_FILE
             </button>
         </div>
-
-        <!-- 머지 탭 활성화 업그레이더 및 양자 확률 분석기 -->
-        <div id="panel-merge" class="hidden flex flex-col gap-2">
-            <div class="grid grid-cols-3 gap-1">
-                <button id="btn-spawn" class="vector-btn p-2 flex flex-col items-center justify-center">
-                    <span class="text-[8px] font-bold text-zinc-500 tracking-wider">ALLOCATE BLOCK</span>
-                    <span id="spawn-cost" class="text-[10px] font-bold text-white mt-0.5">10 COIN</span>
-                </button>
-                <button id="btn-up-prob" class="vector-btn p-2 flex flex-col items-center justify-center">
-                    <span class="text-[8px] font-bold text-zinc-500 tracking-wider">UP_PROB (Lv.<span id="prob-lv">1</span>)</span>
-                    <span id="prob-cost" class="text-[10px] font-bold text-white mt-0.5">50 COIN</span>
-                </button>
-                <button id="btn-up-board" class="vector-btn p-2 flex flex-col items-center justify-center">
-                    <span class="text-[8px] font-bold text-zinc-500 tracking-wider">GRID_EXPANSION</span>
-                    <span id="board-cost" class="text-[10px] font-bold text-white mt-0.5">500 COIN</span>
-                </button>
-            </div>
-
-            <!-- 하단 실시간 확률 모니터링 테이블 매트릭스 -->
-            <div class="border border-zinc-900 bg-[#07070a] p-1.5 rounded-sm">
-                <div class="text-cyan-400 font-bold mb-1 tracking-widest text-[8px]">// CORE_PROBABILITY_MATRIX</div>
-                <div class="grid grid-cols-5 text-zinc-500 border-b border-zinc-900 pb-1 text-center font-bold text-[7.5px]">
-                    <div>LV</div>
-                    <div class="text-sky-400">'2'</div>
-                    <div class="text-cyan-400">'4'</div>
-                    <div class="text-indigo-400">'8'</div>
-                    <div class="text-purple-400">'16'</div>
-                </div>
-                <div class="space-y-0.5 pt-1 text-center font-medium text-[8px]">
-                    <div id="prob-row-1" class="grid grid-cols-5 py-0.5">
-                        <span class="text-zinc-500 font-bold">1</span>
-                        <span>90%</span><span>10%</span><span>0%</span><span>0%</span>
-                    </div>
-                    <div id="prob-row-2" class="grid grid-cols-5 py-0.5">
-                        <span class="text-zinc-500 font-bold">2</span>
-                        <span>70%</span><span>25%</span><span>5%</span><span>0%</span>
-                    </div>
-                    <div id="prob-row-3" class="grid grid-cols-5 py-0.5">
-                        <span class="text-zinc-500 font-bold">3</span>
-                        <span>50%</span><span>35%</span><span>12%</span><span>3%</span>
-                    </div>
-                    <div id="prob-row-4" class="grid grid-cols-5 py-0.5">
-                        <span class="text-zinc-500 font-bold">4</span>
-                        <span>30%</span><span>40%</span><span>20%</span><span>10%</span>
-                    </div>
-                    <div id="prob-row-5" class="grid grid-cols-5 py-0.5">
-                        <span class="text-zinc-500 font-bold">5</span>
-                        <span>10%</span><span>40%</span><span>30%</span><span>20%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 푸터 바 영역 -->
-    <div class="w-full max-w-[400px] flex items-center justify-between mt-2 pt-1">
-        <span class="text-[8px] text-zinc-700 font-mono">2048SHOOTER_STRETCHED.EXE</span>
-        <button id="btn-download" class="text-[8px] text-zinc-500 hover:text-white border border-zinc-800 hover:border-zinc-500 px-2 py-0.5 bg-transparent transition-all">
-            DOWNLOAD_SOURCE_FILE
-        </button>
     </div>
 
     <script>
@@ -218,7 +227,7 @@
             SPAWN_BASE_COST: 10,
             PREPARE_DURATION: 10,
             WAVE_DURATION: 45,
-            INTERMISSION_DURATION: 8, // 정비 시간 (초)
+            INTERMISSION_DURATION: 8, 
             PROBABILITY_TABLE: {
                 1: { 2: 0.90, 4: 0.10, 8: 0.00, 16: 0.00 },
                 2: { 2: 0.70, 4: 0.25, 8: 0.05, 16: 0.00 },
@@ -241,6 +250,30 @@
                 2048: { bg: 0x014524, border: 0x10b981, text: '#34d399' }
             }
         };
+
+        // 모바일 해상도 감지 및 전체 비례 리사이즈 오토매트릭스 함수
+        function adjustLayoutScale() {
+            const wrapper = document.getElementById('main-wrapper');
+            if (!wrapper) return;
+            
+            // 본래 기준 측정 크기 리셋
+            wrapper.style.transform = 'scale(1)';
+            
+            const designW = 420;
+            const designH = 740;
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            
+            // 너비와 높이 비율 중 작은 곳에 맞춤 적용 (비례 왜곡 및 컷오프 방지)
+            const scaleX = screenW / designW;
+            const scaleY = screenH / designH;
+            const currentScale = Math.min(scaleX, scaleY, 1.0); // 1배 이상 오버스케일은 흐림 방지를 위해 배제
+            
+            wrapper.style.transform = `scale(${currentScale})`;
+            wrapper.style.transformOrigin = 'center center';
+        }
+        window.addEventListener('resize', adjustLayoutScale);
+        window.addEventListener('load', adjustLayoutScale);
 
         class Starfield {
             constructor(app) {
@@ -316,19 +349,19 @@
                 };
                 const slide = (row) => {
                     let a = row.filter(v=>v!==0);
-                    for(let i=0;i<a.length-1;i++) if(a[i]===a[i+1]) { a[i]*=2; a[i+1]=0; }
+                    for(let i=0; i<a.length-1; i++) if(a[i]===a[i+1]) { a[i]*=2; a[i+1]=0; }
                     a = a.filter(v=>v!==0); while(a.length<this.size) a.push(0);
                     return a;
                 };
                 let rots = { 'up':3, 'right':2, 'down':1, 'left':0 }[dir];
                 if (rots === undefined) return false;
                 let temp = JSON.parse(JSON.stringify(this.grid));
-                for(let i=0;i<rots;i++) temp = rotate(temp);
-                for(let r=0;r<this.size;r++) {
+                for(let i=0; i<rots; i++) temp = rotate(temp);
+                for(let r=0; r<this.size; r++) {
                     const orig = [...temp[r]]; temp[r] = slide(temp[r]);
                     if(orig.join(',')!==temp[r].join(',')) moved = true;
                 }
-                for(let i=0;i<(4-rots)%4;i++) temp = rotate(temp);
+                for(let i=0; i<(4-rots)%4; i++) temp = rotate(temp);
                 if(moved) { this.grid = temp; this.renderBlocks(); }
                 return moved;
             }
@@ -364,7 +397,7 @@
                 app.stage.addChild(this.container);
                 this.x = CONFIG.WIDTH/2; this.y = CONFIG.HEIGHT-60;
                 this.targetX = this.x; this.targetY = this.y;
-                this.speed = 5.5; // 키보드 조작과 감도 슬라이더 공용 속도 필드
+                this.speed = 5.5; 
                 this.sprite = new PIXI.Graphics();
                 this.sprite.lineStyle(1.5, 0xffffff, 1); this.sprite.beginFill(0x060608);
                 this.sprite.drawPolygon([0,-12, 12,10, 4,6, -4,6, -12,10]);
@@ -599,10 +632,17 @@
                 this.coins = CONFIG.START_COINS; this.lives = CONFIG.START_LIVES;
                 this.probLevel = 1; this.activeTab = 'battle'; this.isGameOver = false; this.isPaused = false;
                 
-                // 실시간 키보드 키 입력을 추적하기 위한 버퍼 딕셔너리
                 this.keys = {};
 
-                this.app = new PIXI.Application({ width: CONFIG.WIDTH, height: CONFIG.HEIGHT, backgroundColor: 0x060608, antialias: true });
+                // 레티나/DPI 상호 호환 고화질 렌더러 지원을 위해 resolution 및 autoDensity 추가
+                this.app = new PIXI.Application({ 
+                    width: CONFIG.WIDTH, 
+                    height: CONFIG.HEIGHT, 
+                    backgroundColor: 0x060608, 
+                    antialias: true,
+                    resolution: window.devicePixelRatio || 1,
+                    autoDensity: true
+                });
                 document.getElementById('game-container').appendChild(this.app.view);
                 this.starfield = new Starfield(this.app);
                 this.board = new Board(this.app);
@@ -613,11 +653,62 @@
                 this.app.stage.on('addCoins', (a) => { this.coins += a; this.ui.updateUI(); });
                 this.app.ticker.add((d) => this.update(d));
                 this.ui.switchTab('battle');
+                
+                // 로딩 시 첫 레이아웃 비례 크기 정렬
+                setTimeout(adjustLayoutScale, 50);
             }
             bindInput() {
                 this.app.stage.eventMode = 'static'; this.app.stage.hitArea = this.app.screen;
-                this.app.stage.on('pointermove', (e) => { if(!this.isPaused && this.activeTab==='battle') this.gun.updatePosition(e.global.x, e.global.y); });
                 
+                // 모바일 터치 및 마우스 드래그 좌표 실시간 감지
+                this.app.stage.on('pointermove', (e) => { 
+                    if(!this.isPaused && this.activeTab==='battle') {
+                        this.gun.updatePosition(e.global.x, e.global.y); 
+                    }
+                });
+
+                // 모바일 2048 스와이프(스위프) 터치 바인딩을 위한 세션 추적 데이터 구조
+                let swipeStartX = 0;
+                let swipeStartY = 0;
+                let isSwiping = false;
+
+                this.app.stage.on('pointerdown', (e) => {
+                    if (this.activeTab === 'merge') {
+                        swipeStartX = e.global.x;
+                        swipeStartY = e.global.y;
+                        isSwiping = true;
+                    }
+                });
+
+                this.app.stage.on('pointerup', (e) => {
+                    if (this.activeTab === 'merge' && isSwiping) {
+                        const diffX = e.global.x - swipeStartX;
+                        const diffY = e.global.y - swipeStartY;
+                        const swipeThreshold = 35; // 제스처 감도 임계점 (픽셀 기준)
+
+                        if (Math.hypot(diffX, diffY) > swipeThreshold) {
+                            if (Math.abs(diffX) > Math.abs(diffY)) {
+                                // 좌우 수평 이동 제스처 판정
+                                if (diffX > 0) {
+                                    this.board.move('right') && this.ui.updateUI();
+                                } else {
+                                    this.board.move('left') && this.ui.updateUI();
+                                }
+                            } else {
+                                // 상하 수직 이동 제스처 판정
+                                if (diffY > 0) {
+                                    this.board.move('down') && this.ui.updateUI();
+                                } else {
+                                    this.board.move('up') && this.ui.updateUI();
+                                }
+                            }
+                        }
+                        isSwiping = false;
+                    }
+                });
+
+                this.app.stage.on('pointerupoutside', () => { isSwiping = false; });
+
                 // 전역 키 뉨 이벤트 바인딩
                 window.addEventListener('keydown', (e) => {
                     const key = e.key.toLowerCase();
