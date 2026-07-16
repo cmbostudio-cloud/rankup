@@ -33,6 +33,10 @@
             -webkit-user-select: none;
             user-select: none;
         }
+        #main-wrapper {
+            transition: transform 0.1s ease-out;
+            will-change: transform;
+        }
         .vector-panel { 
             background-color: #0a0a0e; 
             border: 1px solid #1f1f2e; 
@@ -57,7 +61,6 @@
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
-            touch-action: manipulation;
         }
     </style>
 </head>
@@ -260,7 +263,7 @@
             wrapper.style.transform = 'scale(1)';
             
             const designW = 420;
-            const designH = 740;
+            const designH = 760;
             const screenW = window.innerWidth;
             const screenH = window.innerHeight;
             
@@ -453,17 +456,57 @@
                 this.showBanner = bannerCb; this.updateHUD = hudCb;
                 this.container = new PIXI.Container(); app.stage.addChild(this.container);
                 this.enemies = []; this.enemyBullets = []; this.particles = [];
+                this.healCapsules = []; // 회복 아이템 리스트
+                
                 this.currentWave = 1; this.waveProgress = 0; this.waveTargetCount = 10;
                 this.waveDefeatedCount = 0; this.spawnCooldown = 0;
                 this.isFirstCountdown = true; this.firstCountdownTimer = CONFIG.PREPARE_DURATION;
                 this.isWaveIntermission = false; this.intermissionTimer = 0;
                 this.waveTimer = CONFIG.WAVE_DURATION;
+
+                // 보스 전용 HP바 UI 레이아웃 준비
+                this.bossHpContainer = new PIXI.Container();
+                this.bossHpContainer.visible = false;
+                app.stage.addChild(this.bossHpContainer);
+
+                const barBg = new PIXI.Graphics();
+                barBg.beginFill(0x1f1f2e);
+                barBg.drawRect(40, 15, CONFIG.WIDTH - 80, 8);
+                barBg.endFill();
+                this.bossHpContainer.addChild(barBg);
+
+                this.bossHpFill = new PIXI.Graphics();
+                this.bossHpContainer.addChild(this.bossHpFill);
+
+                this.bossLabel = new PIXI.Text("BOSS INCOMING", {
+                    fill: '#ef4444',
+                    fontSize: 8,
+                    fontFamily: 'Share Tech Mono',
+                    fontWeight: 'bold'
+                });
+                this.bossLabel.anchor.set(0.5, 1);
+                this.bossLabel.x = CONFIG.WIDTH / 2;
+                this.bossLabel.y = 12;
+                this.bossHpContainer.addChild(this.bossLabel);
             }
             startWave(num) {
                 this.currentWave = num; this.waveDefeatedCount = 0; this.waveProgress = 0;
-                this.waveTargetCount = 6 + num * 4; this.isWaveIntermission = false;
+                
+                if (num % 5 === 0) {
+                    // 보스 웨이브 지정
+                    this.waveTargetCount = 1; 
+                } else {
+                    this.waveTargetCount = 6 + num * 4; 
+                }
+                
+                this.isWaveIntermission = false;
                 this.waveTimer = CONFIG.WAVE_DURATION;
-                this.showBanner(`WAVE ${String(num).padStart(2, '0')}`);
+                
+                if (num % 5 === 0) {
+                    this.showBanner(`!! BOSS WAVE !!`);
+                } else {
+                    this.showBanner(`WAVE ${String(num).padStart(2, '0')}`);
+                }
             }
             skipIntermissionOrWave() {
                 if (this.isFirstCountdown) { this.firstCountdownTimer = 0; return; }
@@ -493,31 +536,144 @@
                     }
                     return;
                 }
+                
                 this.waveTimer -= (delta/60);
                 if (this.waveTimer <= 0) { this.triggerIntermission("TIME OUT: SURVIVED"); return; }
+                
+                // 적 소환 루프 및 군집(Formation) 소환 가동
                 this.spawnCooldown -= delta;
                 if (this.spawnCooldown <= 0 && this.waveProgress < this.waveTargetCount) {
-                    this.spawnEnemy(); this.spawnCooldown = Math.max(25, 90 - this.currentWave * 5);
+                    if (this.currentWave % 5 === 0) {
+                        // 보스 소환 처리
+                        const bossSpawned = this.enemies.some(e => e.type === 'boss');
+                        if (!bossSpawned) {
+                            this.spawnEnemy('boss', CONFIG.WIDTH / 2, -40, 'boss');
+                            // 호위 기체 보조 스폰
+                            this.spawnEnemy('scout', CONFIG.WIDTH / 2 - 60, -20, 'zigzag');
+                            this.spawnEnemy('scout', CONFIG.WIDTH / 2 + 60, -20, 'zigzag');
+                        } else if (this.enemies.length < 3 && Math.random() < 0.25) {
+                            // 보스전 중 부속 자폭기 기습 스폰
+                            this.spawnEnemy('kamikaze', Math.random() * (CONFIG.WIDTH - 100) + 50, -20, 'charge');
+                        }
+                    } else {
+                        // 일반 웨이브 소환 처리 (확률적 군집 대형 소환)
+                        const remaining = this.waveTargetCount - this.waveProgress;
+                        if (remaining >= 3 && Math.random() < 0.25) {
+                            const fType = Math.floor(Math.random() * 3);
+                            if (fType === 0) {
+                                // V-대형 (V-Formation)
+                                const cx = Math.random() * (CONFIG.WIDTH - 160) + 80;
+                                this.spawnEnemy('scout', cx, -20, 'zigzag');
+                                this.spawnEnemy('scout', cx - 35, -45, 'zigzag');
+                                this.spawnEnemy('scout', cx + 35, -45, 'zigzag');
+                            } else if (fType === 1) {
+                                // 수평 일렬 종대 (Row-Formation)
+                                const sx = Math.random() * (CONFIG.WIDTH - 180) + 40;
+                                this.spawnEnemy('fighter', sx, -20, 'dive');
+                                this.spawnEnemy('fighter', sx + 50, -20, 'dive');
+                                this.spawnEnemy('fighter', sx + 100, -20, 'dive');
+                            } else {
+                                // 자폭기 기습 연속 침투 (Swarm-Formation)
+                                const cx = Math.random() * (CONFIG.WIDTH - 120) + 60;
+                                this.spawnEnemy('kamikaze', cx, -20, 'charge');
+                                this.spawnEnemy('kamikaze', cx - 20, -40, 'charge');
+                                this.spawnEnemy('kamikaze', cx + 20, -40, 'charge');
+                            }
+                        } else {
+                            // 개별 스폰
+                            this.spawnEnemy();
+                        }
+                    }
+                    this.spawnCooldown = Math.max(30, 95 - this.currentWave * 4);
                 }
+
+                // 보스 HP바 모니터링 가시화 렌더링
+                const activeBoss = this.enemies.find(e => e.type === 'boss');
+                if (activeBoss) {
+                    this.bossHpContainer.visible = true;
+                    this.bossHpFill.clear();
+                    this.bossHpFill.beginFill(0xef4444);
+                    const barWidth = (CONFIG.WIDTH - 80) * (activeBoss.hp / activeBoss.maxHp);
+                    this.bossHpFill.drawRect(40, 15, Math.max(0, barWidth), 8);
+                    this.bossHpFill.endFill();
+                    this.bossLabel.text = `HARBINGER UNIT [HP: ${activeBoss.hp}/${activeBoss.maxHp}]`;
+                } else {
+                    this.bossHpContainer.visible = false;
+                }
+
+                // 회복 캡슐 업데이트 및 충전 감지 루프
+                for (let i = this.healCapsules.length - 1; i >= 0; i--) {
+                    const cap = this.healCapsules[i];
+                    cap.sprite.y += 2.0 * delta;
+                    cap.sprite.rotation += 0.05 * delta;
+                    cap.y = cap.sprite.y;
+
+                    if (Math.hypot(cap.sprite.x - this.gun.x, cap.y - this.gun.y) < 18) {
+                        this.container.removeChild(cap.sprite);
+                        this.healCapsules.splice(i, 1);
+                        this.app.stage.emit('addLife'); // 라이프 충전 시그널 전송
+                        continue;
+                    }
+                    if (cap.y > CONFIG.HEIGHT + 20) {
+                        this.container.removeChild(cap.sprite);
+                        this.healCapsules.splice(i, 1);
+                    }
+                }
+
+                // 적 비행 상태 및 공격 충돌 계산
                 for (let i = this.enemies.length-1; i >= 0; i--) {
                     const e = this.enemies[i]; e.time += delta * 0.03;
+                    
                     if(e.pattern==='zigzag') { e.x += Math.sin(e.time*2)*2.5*delta; e.y += 1.8*delta; }
-                    else if(e.pattern==='dive') { e.y += 1.3*delta; }
+                    else if(e.pattern==='dive') { e.y += 1.4*delta; }
                     else if(e.pattern==='sine') { e.x += Math.sin(e.time)*1.5*delta; e.y += 0.9*delta; }
-                    else if(e.pattern==='phantom') { if(Math.sin(e.time*0.5)>0.8) e.x += Math.sin(e.time*5)*3*delta; e.y += 1.1*delta; }
+                    else if(e.pattern==='phantom') { 
+                        const alphaVal = Math.sin(e.time * 1.5) * 0.5 + 0.5;
+                        e.sprite.alpha = alphaVal < 0.25 ? 0.15 : 1.0;
+                        e.x += Math.cos(e.time*0.5)*1.2*delta; e.y += 1.1*delta; 
+                    }
+                    else if(e.pattern==='charge') { e.y += 3.8*delta; } // 빠른 종단 돌진 자폭
+                    else if(e.pattern==='boss') {
+                        e.x = CONFIG.WIDTH / 2 + Math.sin(e.time * 0.5) * (CONFIG.WIDTH / 2 - 80);
+                        if (e.y < 80) e.y += 1.0 * delta;
+                    }
+                    
                     e.sprite.x = e.x; e.sprite.y = e.y;
-                    if(Math.hypot(e.x-this.gun.x, e.y-this.gun.y) < 20) { this.deductLife(); this.triggerAlert(); this.destroyEnemy(e, i); continue; }
-                    if(e.y > CONFIG.HEIGHT + 20) { this.container.removeChild(e.sprite); this.enemies.splice(i,1); this.checkWaveStatus(); continue; }
-                    e.bulletCooldown -= delta; if(e.bulletCooldown <= 0) { this.enemyFire(e); e.bulletCooldown = e.fireRate; }
+                    
+                    // 팬텀 은닉 상태가 아닐 때 피격 감지 적용
+                    const isPhantomHidden = e.pattern==='phantom' && e.sprite.alpha < 0.3;
+
+                    if(!isPhantomHidden && Math.hypot(e.x-this.gun.x, e.y-this.gun.y) < (e.type==='boss' ? 35 : 20)) { 
+                        this.deductLife(); this.triggerAlert(); 
+                        if(e.type !== 'boss') { this.destroyEnemy(e, i); continue; }
+                    }
+                    
+                    if(e.y > CONFIG.HEIGHT + 30) { this.container.removeChild(e.sprite); this.enemies.splice(i,1); this.checkWaveStatus(); continue; }
+                    
+                    e.bulletCooldown -= delta; 
+                    if(e.bulletCooldown <= 0) { this.enemyFire(e); e.bulletCooldown = e.fireRate; }
+                    
+                    // 플레이어 미사일 충돌 충격 전파 계산
                     for(let j=this.gun.bullets.length-1; j>=0; j--) {
                         const b = this.gun.bullets[j];
-                        if(Math.abs(b.x-e.x)<20 && Math.abs(b.y-e.y)<18) {
+                        const colDist = e.type==='boss' ? 35 : 20;
+                        if(!isPhantomHidden && Math.abs(b.x-e.x)<colDist && Math.abs(b.y-e.y)<colDist) {
                             e.hp -= b.damage; e.hpText.text = Math.max(0, e.hp).toString();
                             this.gun.container.removeChild(b); this.gun.bullets.splice(j,1);
-                            if(e.hp<=0) { this.app.stage.emit('addCoins', Math.round(e.maxHp*0.4)+1); this.destroyEnemy(e,i); break; }
+                            if(e.hp<=0) { 
+                                this.app.stage.emit('addCoins', Math.round(e.maxHp*0.4)+1); 
+                                // 격추 성공 시 5%의 기하학적 확률로 체력 회복 캡슐 드롭 
+                                if (Math.random() < 0.05) {
+                                    this.spawnHealCapsule(e.x, e.y);
+                                }
+                                this.destroyEnemy(e,i); 
+                                break; 
+                            }
                         }
                     }
                 }
+                
+                // 에너미 탄환 물리 궤적 연산
                 for(let i=this.enemyBullets.length-1; i>=0; i--) {
                     const eb = this.enemyBullets[i]; eb.x += eb.vx*delta; eb.y += eb.vy*delta;
                     eb.sprite.x = eb.x; eb.sprite.y = eb.y;
@@ -525,35 +681,131 @@
                     if(Math.hypot(eb.x-this.gun.x, eb.y-this.gun.y) < 13) { this.deductLife(); this.triggerAlert(); this.container.removeChild(eb.sprite); this.enemyBullets.splice(i,1); }
                 }
             }
+            spawnHealCapsule(x, y) {
+                const cap = new PIXI.Graphics();
+                cap.lineStyle(1.5, 0x10b981); // Emerald Green 테두리
+                cap.beginFill(0x064e3b); // 진한 녹색 배경
+                cap.drawRoundedRect(-6, -10, 12, 20, 6);
+                cap.endFill();
+                
+                // 십자형 구호 표시 삽입
+                cap.lineStyle(2, 0xffffff);
+                cap.moveTo(-4, 0); cap.lineTo(4, 0);
+                cap.moveTo(0, -4); cap.lineTo(0, 4);
+                
+                cap.x = x; cap.y = y;
+                this.container.addChild(cap);
+                this.healCapsules.push({ sprite: cap, x: x, y: y });
+            }
             triggerIntermission(msg) {
                 this.isWaveIntermission = true;
                 this.intermissionTimer = CONFIG.INTERMISSION_DURATION;
                 this.enemies.forEach(e => this.container.removeChild(e.sprite));
                 this.enemies = []; this.showBanner(msg);
             }
-            spawnEnemy() {
-                this.waveProgress++;
-                const types = ['scout', 'fighter', 'bomber', 'phantom'];
-                let type = types[0];
-                if(this.currentWave>=2) type = types[Math.floor(Math.random()*2)];
-                if(this.currentWave>=4) type = types[Math.floor(Math.random()*3)];
-                if(this.currentWave>=6) type = types[Math.floor(Math.random()*4)];
-                let e = { x: Math.random()*(CONFIG.WIDTH-80)+40, y: -20, time: Math.random()*10, bulletCooldown: 30, sprite: new PIXI.Container(), type: type };
+            spawnEnemy(typeOverride = null, xOverride = null, yOverride = null, patternOverride = null) {
+                if (this.waveProgress >= this.waveTargetCount && !typeOverride) return;
+                if (!typeOverride) this.waveProgress++;
+                
+                const types = ['scout', 'fighter', 'bomber', 'phantom', 'kamikaze', 'heavy_bomber'];
+                let type = typeOverride;
+                if (!type) {
+                    let pool = ['scout'];
+                    if (this.currentWave >= 2) pool.push('fighter', 'kamikaze');
+                    if (this.currentWave >= 3) pool.push('bomber');
+                    if (this.currentWave >= 4) pool.push('phantom');
+                    if (this.currentWave >= 5) pool.push('heavy_bomber');
+                    type = pool[Math.floor(Math.random() * pool.length)];
+                }
+                
+                let px = xOverride !== null ? xOverride : Math.random() * (CONFIG.WIDTH - 80) + 40;
+                let py = yOverride !== null ? yOverride : -20;
+                
+                let e = { 
+                    x: px, 
+                    y: py, 
+                    time: Math.random()*10, 
+                    bulletCooldown: 30 + Math.random()*30, 
+                    sprite: new PIXI.Container(), 
+                    type: type,
+                    pattern: patternOverride || 'zigzag'
+                };
+                
                 const s = new PIXI.Graphics();
-                if(type==='scout') { e.hp=10+this.currentWave*7; e.fireRate=100; e.pattern='zigzag'; e.color=0x60a5fa; s.lineStyle(1.5,e.color); s.drawPolygon([0,-8,8,0,0,8,-8,0]); }
-                else if(type==='fighter') { e.hp=25+this.currentWave*12; e.fireRate=120; e.pattern='dive'; e.color=0xf43f5e; s.lineStyle(1.5,e.color); s.drawPolygon([0,-10,10,-2,7,9,-7,9,-10,-2]); }
-                else if(type==='bomber') { e.hp=50+this.currentWave*25; e.fireRate=160; e.pattern='sine'; e.color=0xeab308; s.lineStyle(2,e.color); s.drawPolygon([-12,-10,12,-10,0,10]); }
-                else { e.hp=35+this.currentWave*18; e.fireRate=130; e.pattern='phantom'; e.color=0xd946ef; s.lineStyle(1.5,e.color); s.drawPolygon([0,-12,4,-4,12,0,4,4,0,12,-4,4,-12,0,-4,-4]); }
+                if(type==='scout') { 
+                    e.hp=10+this.currentWave*5; e.fireRate=100; e.pattern=patternOverride || 'zigzag'; e.color=0x60a5fa; 
+                    s.lineStyle(1.5,e.color); s.drawPolygon([0,-8,8,0,0,8,-8,0]); 
+                }
+                else if(type==='fighter') { 
+                    e.hp=25+this.currentWave*8; e.fireRate=120; e.pattern=patternOverride || 'dive'; e.color=0xf43f5e; 
+                    s.lineStyle(1.5,e.color); s.drawPolygon([0,-10,10,-2,7,9,-7,9,-10,-2]); 
+                }
+                else if(type==='bomber') { 
+                    e.hp=50+this.currentWave*15; e.fireRate=160; e.pattern=patternOverride || 'sine'; e.color=0xeab308; 
+                    s.lineStyle(2,e.color); s.drawPolygon([-12,-10,12,-10,0,10]); 
+                }
+                else if(type==='phantom') { 
+                    e.hp=35+this.currentWave*12; e.fireRate=130; e.pattern=patternOverride || 'phantom'; e.color=0xd946ef; 
+                    s.lineStyle(1.5,e.color); s.drawPolygon([0,-12,4,-4,12,0,4,4,0,12,-4,4,-12,0,-4,-4]); 
+                }
+                else if(type==='kamikaze') {
+                    // 초고속 충돌 전선용 기체
+                    e.hp=8+this.currentWave*4; e.fireRate=9999; e.pattern=patternOverride || 'charge'; e.color=0xf97316; // 오렌지 네온
+                    s.lineStyle(1.5,e.color); s.drawPolygon([0,-10,6,8,0,4,-6,8]);
+                }
+                else if(type==='heavy_bomber') {
+                    // 고강도 헤비 폭격기
+                    e.hp=100+this.currentWave*22; e.fireRate=150; e.pattern=patternOverride || 'sine'; e.color=0x10b981; // 그린 네온
+                    s.lineStyle(2.5,e.color); s.drawPolygon([-15,-12,15,-12,10,10,-10,10]);
+                }
+                else if(type==='boss') {
+                    // 라운드 종결자 거대 보스
+                    e.hp=300+this.currentWave*150; e.fireRate=50; e.pattern='boss'; e.color=0xef4444; 
+                    s.lineStyle(4,e.color); s.drawRect(-30,-15,60,30);
+                    s.drawPolygon([-15,15,0,35,15,15]);
+                    s.drawPolygon([-30,0,-45,15,-30,15]); s.drawPolygon([30,0,45,15,30,15]);
+                }
+                
                 e.maxHp = e.hp; e.sprite.addChild(s);
-                e.hpText = new PIXI.Text(e.hp.toString(), {fill:'#fff', fontSize:8, fontFamily:'Share Tech Mono'});
+                e.hpText = new PIXI.Text(e.hp.toString(), {fill:'#fff', fontSize: type==='boss'?11:8, fontWeight:'bold', fontFamily:'Share Tech Mono'});
                 e.hpText.anchor.set(0.5); e.sprite.addChild(e.hpText);
                 this.container.addChild(e.sprite); this.enemies.push(e);
             }
             enemyFire(e) {
+                if (e.type === 'boss') {
+                    // 보스의 순환 사격 메커니즘
+                    const cycle = Math.floor(e.time % 3);
+                    if (cycle === 0) {
+                        // 5방향 부채꼴 대규모 난사
+                        for (let i = -2; i <= 2; i++) {
+                            const angle = 0.25 * i;
+                            this.spawnBullet(e.x, e.y + 15, Math.sin(angle) * 3, Math.cos(angle) * 3);
+                        }
+                    } else if (cycle === 1) {
+                        // 조준용 연사
+                        const dx = this.gun.x - e.x; const dy = this.gun.y - e.y; const d = Math.hypot(dx,dy);
+                        this.spawnBullet(e.x, e.y + 15, (dx/d)*3.5, (dy/d)*3.5);
+                        this.spawnBullet(e.x - 20, e.y + 10, 0, 3);
+                        this.spawnBullet(e.x + 20, e.y + 10, 0, 3);
+                    } else {
+                        // 자폭용 단거리 무작위 분사
+                        this.spawnBullet(e.x, e.y + 15, (Math.random() - 0.5) * 2, 4.2);
+                    }
+                } else if (e.type === 'heavy_bomber') {
+                    // 헤비 폭격기의 3방향 스프레드 분사
+                    this.spawnBullet(e.x, e.y+10, -0.8, 2.6);
+                    this.spawnBullet(e.x, e.y+10, 0, 3.1);
+                    this.spawnBullet(e.x, e.y+10, 0.8, 2.6);
+                } else {
+                    // 일반 단발 조준 사격
+                    const dx = this.gun.x - e.x; const dy = this.gun.y - e.y; const d = Math.hypot(dx,dy);
+                    const spd = 2.4 + this.currentWave*0.1;
+                    this.spawnBullet(e.x, e.y+10, (dx/d)*spd, (dy/d)*spd);
+                }
+            }
+            spawnBullet(x, y, vx, vy) {
                 const b = new PIXI.Graphics(); b.beginFill(0xffffff, 0.8); b.drawCircle(0,0,2.5);
-                const dx = this.gun.x - e.x; const dy = this.gun.y - e.y; const d = Math.hypot(dx,dy);
-                const spd = 2.4 + this.currentWave*0.1;
-                const eb = { x: e.x, y: e.y+10, vx: (dx/d)*spd, vy: (dy/d)*spd, sprite: b };
+                const eb = { x: x, y: y, vx: vx, vy: vy, sprite: b };
                 this.container.addChild(b); this.enemyBullets.push(eb);
             }
             destroyEnemy(e, i) { this.container.removeChild(e.sprite); this.enemies.splice(i, 1); this.checkWaveStatus(); }
@@ -634,7 +886,7 @@
                 
                 this.keys = {};
 
-                // 레티나/DPI 상호 호환 고화질 렌더러 지원을 위해 resolution 및 autoDensity 추가
+                // 레티나/DPI 상호 호환 고화질 렌더러 지원 설정
                 this.app = new PIXI.Application({ 
                     width: CONFIG.WIDTH, 
                     height: CONFIG.HEIGHT, 
@@ -650,53 +902,91 @@
                 this.enemyManager = new EnemyManager(this.app, this.gun, ()=>this.deductLife(), ()=>this.showAlert(), (txt)=>this.showBanner(txt), ()=>this.ui.updateUI());
                 this.ui = new UIManager(this);
                 this.bindInput();
+                
                 this.app.stage.on('addCoins', (a) => { this.coins += a; this.ui.updateUI(); });
+                this.app.stage.on('addLife', () => { this.addLife(); }); // 회복 가동
+                
                 this.app.ticker.add((d) => this.update(d));
                 this.ui.switchTab('battle');
                 
-                // 로딩 시 첫 레이아웃 비례 크기 정렬
+                // 첫 레이아웃 비례 정렬 실행
                 setTimeout(adjustLayoutScale, 50);
             }
+
             bindInput() {
                 this.app.stage.eventMode = 'static'; this.app.stage.hitArea = this.app.screen;
                 
-                // 모바일 터치 및 마우스 드래그 좌표 실시간 감지
-                this.app.stage.on('pointermove', (e) => { 
-                    if(!this.isPaused && this.activeTab==='battle') {
-                        this.gun.updatePosition(e.global.x, e.global.y); 
-                    }
-                });
+                // [PC 마우스 무시 정책 완벽 구현]
+                // 마우스 무브 이벤트를 완전히 무시하여 WASD/방향키로만 조작할 수 있도록 설계.
+                // 대신 모바일 터치 드래그 조작은 독립적인 모바일 터치 리스너로 바인딩하여 정상 보존합니다.
 
-                // 모바일 2048 스와이프(스위프) 터치 바인딩을 위한 세션 추적 데이터 구조
-                let swipeStartX = 0;
-                let swipeStartY = 0;
+                const view = this.app.view;
+                let touchStartX = 0;
+                let touchStartY = 0;
+                let touchStartTime = 0;
                 let isSwiping = false;
 
-                this.app.stage.on('pointerdown', (e) => {
-                    if (this.activeTab === 'merge') {
-                        swipeStartX = e.global.x;
-                        swipeStartY = e.global.y;
-                        isSwiping = true;
+                // [모바일 네이티브 고감도 터치 이벤트 엔진 탑재]
+                // 브라우저의 '당겨서 새로고침' 및 스크롤 이벤트와 충돌하는 것을 방지하고 100% 드래그를 처리하기 위해,
+                // 패시브 옵션을 끄고 preventDefault를 직접 호출하는 터치 엔진을 연결합니다.
+                view.addEventListener('touchstart', (e) => {
+                    if (this.isPaused) return;
+                    if (e.touches.length === 1) {
+                        const touch = e.touches[0];
+                        const rect = view.getBoundingClientRect();
+                        // 스케일 축소/확장 시에도 정확한 터치 좌표 매핑을 위한 가상 좌표 보정 계산 적용
+                        const x = ((touch.clientX - rect.left) / rect.width) * CONFIG.WIDTH;
+                        const y = ((touch.clientY - rect.top) / rect.height) * CONFIG.HEIGHT;
+                        
+                        if (this.activeTab === 'battle') {
+                            this.gun.updatePosition(x, y);
+                        } else if (this.activeTab === 'merge') {
+                            touchStartX = touch.clientX;
+                            touchStartY = touch.clientY;
+                            touchStartTime = Date.now();
+                            isSwiping = true;
+                        }
+                        e.preventDefault();
                     }
-                });
+                }, { passive: false });
 
-                this.app.stage.on('pointerup', (e) => {
-                    if (this.activeTab === 'merge' && isSwiping) {
-                        const diffX = e.global.x - swipeStartX;
-                        const diffY = e.global.y - swipeStartY;
-                        const swipeThreshold = 35; // 제스처 감도 임계점 (픽셀 기준)
+                view.addEventListener('touchmove', (e) => {
+                    if (this.isPaused) return;
+                    if (e.touches.length === 1) {
+                        const touch = e.touches[0];
+                        const rect = view.getBoundingClientRect();
+                        const x = ((touch.clientX - rect.left) / rect.width) * CONFIG.WIDTH;
+                        const y = ((touch.clientY - rect.top) / rect.height) * CONFIG.HEIGHT;
+                        
+                        if (this.activeTab === 'battle') {
+                            this.gun.updatePosition(x, y);
+                        }
+                        e.preventDefault();
+                    }
+                }, { passive: false });
 
-                        if (Math.hypot(diffX, diffY) > swipeThreshold) {
-                            if (Math.abs(diffX) > Math.abs(diffY)) {
-                                // 좌우 수평 이동 제스처 판정
-                                if (diffX > 0) {
+                view.addEventListener('touchend', (e) => {
+                    if (this.isPaused) return;
+                    if (this.activeTab === 'merge' && isSwiping && e.changedTouches.length === 1) {
+                        const touch = e.changedTouches[0];
+                        const dx = touch.clientX - touchStartX;
+                        const dy = touch.clientY - touchStartY;
+                        const absDx = Math.abs(dx);
+                        const absDy = Math.abs(dy);
+                        const threshold = 25; // 2048 스와이프 민감도 한계치 (픽셀)
+                        const duration = Date.now() - touchStartTime;
+
+                        if (duration < 500 && Math.hypot(dx, dy) > threshold) {
+                            if (absDx > absDy) {
+                                // 좌우 스와이프 판정
+                                if (dx > 0) {
                                     this.board.move('right') && this.ui.updateUI();
                                 } else {
                                     this.board.move('left') && this.ui.updateUI();
                                 }
                             } else {
-                                // 상하 수직 이동 제스처 판정
-                                if (diffY > 0) {
+                                // 상하 스와이프 판정
+                                if (dy > 0) {
                                     this.board.move('down') && this.ui.updateUI();
                                 } else {
                                     this.board.move('up') && this.ui.updateUI();
@@ -704,12 +994,11 @@
                             }
                         }
                         isSwiping = false;
+                        e.preventDefault();
                     }
-                });
+                }, { passive: false });
 
-                this.app.stage.on('pointerupoutside', () => { isSwiping = false; });
-
-                // 전역 키 뉨 이벤트 바인딩
+                // 전역 키 입력 이벤트 바인딩
                 window.addEventListener('keydown', (e) => {
                     const key = e.key.toLowerCase();
                     this.keys[key] = true;
@@ -718,7 +1007,7 @@
                         this.togglePause();
                     }
 
-                    // 머지 모드 (2048 블록 합치기) 시 조작 지원 (WASD / 화살표 키 대응 완벽 수리)
+                    // 머지 모드 (2048 블록 합치기) 조작 키보드 매핑
                     if(this.activeTab==='merge') {
                         const keyMap = {
                             'arrowup': 'up', 'w': 'up',
@@ -728,23 +1017,23 @@
                         };
                         const dir = keyMap[key];
                         if (dir) {
-                            e.preventDefault(); // 스크롤 이동 방지
+                            e.preventDefault(); 
                             this.board.move(dir) && this.ui.updateUI();
                         }
                     }
 
-                    // 배틀 모드 조작키 입력 시 화면이 밀리는 브라우저 스크롤 바인딩 현상 가드
+                    // 배틀 모드 조작키 입력 시 화면이 밀리는 브라우저 스크롤 가드
                     if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
                         e.preventDefault();
                     }
                 });
 
-                // 전역 키 땜 이벤트 바인딩
                 window.addEventListener('keyup', (e) => {
                     const key = e.key.toLowerCase();
                     this.keys[key] = false;
                 });
             }
+
             togglePause() {
                 this.isPaused = !this.isPaused;
                 document.getElementById('settings-overlay').classList.toggle('hidden', !this.isPaused);
@@ -754,9 +1043,18 @@
                 this.lives--; this.ui.updateUI();
                 if(this.lives <= 0) { this.isGameOver = true; document.getElementById('game-over-overlay').classList.remove('hidden'); document.getElementById('final-wave-display').innerText = this.enemyManager.currentWave; this.app.ticker.stop(); }
             }
+            addLife() {
+                // 최대 체력 4칸까지 회복 가동
+                if (this.lives < 4) {
+                    this.lives++;
+                    this.ui.updateUI();
+                    this.showBanner("HP RECOVERED");
+                }
+            }
             showAlert() { const b = document.getElementById('alert-banner'); b.style.opacity = '1'; setTimeout(()=>b.style.opacity='0', 1000); }
             showBanner(t) { const b = document.getElementById('wave-banner'); b.innerText = t; b.style.opacity = '1'; setTimeout(()=> { if(!this.enemyManager.isWaveIntermission) b.style.opacity='0'; }, 2000); }
             restart() { location.reload(); }
+
             update(delta) {
                 this.starfield.update(delta);
 
@@ -772,7 +1070,7 @@
                     if (moveX !== 0 || moveY !== 0) {
                         // 대각선 이동 시에도 동일한 속도를 유지하도록 정규화(Normalize) 적용
                         const length = Math.hypot(moveX, moveY);
-                        const speedMultiplier = this.gun.speed; // 감도 조절값 연동
+                        const speedMultiplier = this.gun.speed; 
                         const tx = this.gun.targetX + (moveX / length) * speedMultiplier * delta;
                         const ty = this.gun.targetY + (moveY / length) * speedMultiplier * delta;
                         this.gun.updatePosition(tx, ty);
